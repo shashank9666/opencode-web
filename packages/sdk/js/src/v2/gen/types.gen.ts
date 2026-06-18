@@ -10575,6 +10575,45 @@ export type V2FsDeleteResponses = {
 
 export type V2FsDeleteResponse = V2FsDeleteResponses[keyof V2FsDeleteResponses]
 
+export type V2FsRenameData = {
+  body: {
+    oldPath: string
+    newPath: string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/fs/rename"
+}
+
+export type V2FsRenameErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2FsRenameError = V2FsRenameErrors[keyof V2FsRenameErrors]
+
+export type V2FsRenameResponses = {
+  /**
+   * Success
+   */
+  200: {
+    path: string
+  }
+}
+
+export type V2FsRenameResponse = V2FsRenameResponses[keyof V2FsRenameResponses]
+
 export type V2CommandListData = {
   body?: never
   path?: never

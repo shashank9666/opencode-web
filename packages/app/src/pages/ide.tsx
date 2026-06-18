@@ -262,7 +262,7 @@ export default function IdePage() {
     const content = editor.content()
     if (!editor.dirty()) return
     try {
-      await sdk().client.fs.write({ body: { path, content } })
+      await sdk().client.v2.fs.write({ path, content })
       editor.markClean(path)
       showToast({ variant: "success", title: "File saved", description: getFilename(path) })
     } catch (e) {
@@ -321,8 +321,10 @@ export default function IdePage() {
     const parent = oldPath.slice(0, oldPath.lastIndexOf("/"))
     const newPath = parent ? `${parent}/${renameValue()}` : renameValue()
     try {
-      const content = editor.content(oldPath)
-      await sdk().client.fs.write({ body: { path: newPath, content } })
+      await sdk().client.v2.fs.rename({ oldPath, newPath })
+      if (editor.activeFile() === oldPath) {
+        editor.closeFile(oldPath)
+      }
       showToast({ variant: "success", title: "Renamed", description: `${getFilename(oldPath)} → ${renameValue()}` })
     } catch (e) {
       showToast({ variant: "error", title: "Rename failed", description: String(e) })
@@ -343,7 +345,7 @@ export default function IdePage() {
     const newPath = parentPath ? `${parentPath}/${renameValue()}` : renameValue()
     if (creating() === "file") {
       try {
-        await sdk().client.fs.write({ body: { path: newPath, content: "" } })
+        await sdk().client.v2.fs.write({ path: newPath, content: "" })
         showToast({ variant: "success", title: "Created", description: renameValue() })
         // Auto-open newly created files
         editor.openFile(newPath, "")
@@ -354,7 +356,7 @@ export default function IdePage() {
       // Create directory by writing a .gitkeep placeholder
       const placeholder = `${newPath}/.gitkeep`
       try {
-        await sdk().client.fs.write({ body: { path: placeholder, content: "" } })
+        await sdk().client.v2.fs.write({ path: placeholder, content: "" })
         showToast({ variant: "success", title: "Folder created", description: renameValue() })
       } catch (e) {
         showToast({ variant: "error", title: "Create failed", description: String(e) })
@@ -373,7 +375,7 @@ export default function IdePage() {
     const target = deleteTarget()
     if (!target) return
     try {
-      await sdk().client.fs.delete({ body: { path: target.path } })
+      await sdk().client.v2.fs.delete({ path: target.path })
       if (!target.isDir && editor.activeFile() === target.path) editor.closeFile(target.path)
       showToast({ variant: "success", title: "Deleted", description: getFilename(target.path) })
     } catch (e) {

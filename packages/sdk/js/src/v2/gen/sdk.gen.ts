@@ -275,6 +275,8 @@ import type {
   V2FsListResponses,
   V2FsReadErrors,
   V2FsReadResponses,
+  V2FsRenameErrors,
+  V2FsRenameResponses,
   V2FsWriteErrors,
   V2FsWriteResponses,
   V2HealthGetErrors,
@@ -6133,6 +6135,46 @@ export class Fs extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<V2FsDeleteResponses, V2FsDeleteErrors, ThrowOnError>({
       url: "/api/fs/delete",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Rename file
+   *
+   * Rename a file or directory relative to the requested location.
+   */
+  public rename<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      oldPath?: string
+      newPath?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "body", key: "oldPath" },
+            { in: "body", key: "newPath" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2FsRenameResponses, V2FsRenameErrors, ThrowOnError>({
+      url: "/api/fs/rename",
       ...options,
       ...params,
       headers: {

@@ -27,6 +27,11 @@ export const DeleteBody = Schema.Struct({
   path: RelativePath,
 })
 
+export const RenameBody = Schema.Struct({
+  oldPath: RelativePath,
+  newPath: RelativePath,
+})
+
 export const FileSystemGroup = HttpApiGroup.make("server.fs")
   .add(
     HttpApiEndpoint.get("fs.read", "/api/fs/read/*", {
@@ -99,6 +104,22 @@ export const FileSystemGroup = HttpApiGroup.make("server.fs")
                 identifier: "v2.fs.delete",
                 summary: "Delete file",
                 description: "Delete a file or empty directory relative to the requested location.",
+              }),
+            ),
+        )
+        .add(
+          HttpApiEndpoint.post("fs.rename", "/api/fs/rename", {
+            query: LocationQuery,
+            payload: RenameBody,
+            success: Schema.Struct({ path: Schema.String }),
+            error: [UnauthorizedError, InvalidRequestError],
+          })
+            .annotateMerge(locationQueryOpenApi)
+            .annotateMerge(
+              OpenApi.annotations({
+                identifier: "v2.fs.rename",
+                summary: "Rename file",
+                description: "Rename a file or directory relative to the requested location.",
               }),
             ),
         )

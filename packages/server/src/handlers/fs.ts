@@ -64,8 +64,25 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
             const absolute = path.resolve(location.directory, ctx.payload.path)
             if (!FSUtil.contains(location.directory, absolute))
               return yield* Effect.fail(new InvalidRequestError({ message: "Path escapes the location" }))
-            yield* fsUtil.remove(absolute)
+            yield* fsUtil.remove(absolute, { recursive: true })
             return { path: ctx.payload.path }
+          }),
+          Effect.catch((e) =>
+            Effect.fail(e instanceof InvalidRequestError ? e : new InvalidRequestError({ message: String(e) }))
+          )
+        )
+      )
+      .handle("fs.rename", (ctx) =>
+        pipe(
+          Effect.gen(function* () {
+            const location = yield* Location.Service
+            const fsUtil = yield* FSUtil.Service
+            const absoluteOld = path.resolve(location.directory, ctx.payload.oldPath)
+            const absoluteNew = path.resolve(location.directory, ctx.payload.newPath)
+            if (!FSUtil.contains(location.directory, absoluteOld) || !FSUtil.contains(location.directory, absoluteNew))
+              return yield* Effect.fail(new InvalidRequestError({ message: "Path escapes the location" }))
+            yield* fsUtil.rename(absoluteOld, absoluteNew)
+            return { path: ctx.payload.newPath }
           }),
           Effect.catch((e) =>
             Effect.fail(e instanceof InvalidRequestError ? e : new InvalidRequestError({ message: String(e) }))
