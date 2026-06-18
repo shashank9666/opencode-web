@@ -1,5 +1,5 @@
 import { useIsRouting, useLocation } from "@solidjs/router"
-import { batch, createEffect, onCleanup, onMount } from "solid-js"
+import { batch, createEffect, onCleanup, onMount, createSignal } from "solid-js"
 import { createStore } from "solid-js/store"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -360,10 +360,61 @@ export function DebugBar() {
     })
   })
 
+  const [pos, setPos] = createSignal<{ x: number; y: number } | undefined>(undefined)
+  let dragging = false
+  let startX = 0
+  let startY = 0
+  let initialX = 0
+  let initialY = 0
+
+  const onPointerDown = (e: PointerEvent) => {
+    dragging = true
+    startX = e.clientX
+    startY = e.clientY
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    if (!pos()) {
+      initialX = rect.left
+      initialY = rect.top
+      setPos({ x: initialX, y: initialY })
+    } else {
+      initialX = pos()!.x
+      initialY = pos()!.y
+    }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (!dragging) return
+    const dx = e.clientX - startX
+    const dy = e.clientY - startY
+    setPos({ x: initialX + dx, y: initialY + dy })
+  }
+
+  const onPointerUp = (e: PointerEvent) => {
+    dragging = false
+    ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+  }
+
   return (
     <aside
       aria-label={language.t("debugBar.ariaLabel")}
       class="pointer-events-auto fixed bottom-3 right-3 z-50 w-[308px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-border-base bg-surface-raised-stronger-non-alpha p-0.5 text-text-strong shadow-[var(--shadow-lg-border-base)] sm:bottom-4 sm:right-4 sm:w-[324px]"
+      style={{
+        ...(pos()
+          ? {
+              bottom: "auto",
+              right: "auto",
+              left: `${pos()!.x}px`,
+              top: `${pos()!.y}px`,
+              cursor: dragging ? "grabbing" : "grab",
+            }
+          : { cursor: "grab" }),
+        "touch-action": "none",
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
     >
       <div class="grid grid-cols-5 gap-px font-mono">
         <Cell

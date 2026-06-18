@@ -34,6 +34,7 @@ export interface Settings {
     showSessionProgressBar: boolean
     showCustomAgents: boolean
     newLayoutDesigns?: boolean
+    showDebugBar: boolean
   }
   appearance: {
     fontSize: number
@@ -118,6 +119,7 @@ const defaultSettings: Settings = {
     editToolPartsExpanded: false,
     showSessionProgressBar: true,
     showCustomAgents: false,
+    showDebugBar: false,
   },
   appearance: {
     fontSize: 14,
@@ -251,6 +253,13 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         newLayoutDesigns,
         setNewLayoutDesigns(value: boolean) {
           setStore("general", "newLayoutDesigns", value)
+        },
+        showDebugBar: withFallback(
+          () => store.general?.showDebugBar,
+          defaultSettings.general.showDebugBar,
+        ),
+        setShowDebugBar(value: boolean) {
+          setStore("general", "showDebugBar", value)
         },
       },
       visibility: {

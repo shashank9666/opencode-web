@@ -432,6 +432,18 @@ export const SettingsGeneral: Component = () => {
             />
           </div>
         </SettingsRow>
+
+        <SettingsRow
+          title={language.t("settings.general.row.showDebugBar.title")}
+          description={language.t("settings.general.row.showDebugBar.description")}
+        >
+          <div data-action="settings-show-debug-bar">
+            <Switch
+              checked={settings.general.showDebugBar()}
+              onChange={(checked) => settings.general.setShowDebugBar(checked)}
+            />
+          </div>
+        </SettingsRow>
       </SettingsList>
     </div>
   )

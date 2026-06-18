@@ -373,15 +373,9 @@ export default function IdePage() {
     const target = deleteTarget()
     if (!target) return
     try {
-      if (target.isDir) {
-        // Use terminal to rm -rf for folder deletion
-        terminal.new()
-        showToast({ variant: "success", title: "Folder queued for deletion via terminal", description: target.path })
-      } else {
-        await sdk().client.fs.write({ body: { path: target.path, content: "" } })
-        if (editor.activeFile() === target.path) editor.closeFile(target.path)
-        showToast({ variant: "success", title: "Deleted", description: getFilename(target.path) })
-      }
+      await sdk().client.fs.delete({ body: { path: target.path } })
+      if (!target.isDir && editor.activeFile() === target.path) editor.closeFile(target.path)
+      showToast({ variant: "success", title: "Deleted", description: getFilename(target.path) })
     } catch (e) {
       showToast({ variant: "error", title: "Delete failed", description: String(e) })
     }

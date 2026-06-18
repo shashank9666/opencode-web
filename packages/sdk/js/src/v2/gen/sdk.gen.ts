@@ -267,6 +267,8 @@ import type {
   V2CredentialUpdateResponses,
   V2EventSubscribeErrors,
   V2EventSubscribeResponses,
+  V2FsDeleteErrors,
+  V2FsDeleteResponses,
   V2FsFindErrors,
   V2FsFindResponses,
   V2FsListErrors,
@@ -6069,15 +6071,13 @@ export class Fs extends HeyApiClient {
    * Write content to a file relative to the requested location.
    */
   public write<ThrowOnError extends boolean = false>(
-    parameters: {
+    parameters?: {
       location?: {
         directory?: string
         workspace?: string
       }
-      body: {
-        path: string
-        content: string
-      }
+      path?: string
+      content?: string
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -6087,13 +6087,52 @@ export class Fs extends HeyApiClient {
         {
           args: [
             { in: "query", key: "location" },
-            { key: "body", map: "body" },
+            { in: "body", key: "path" },
+            { in: "body", key: "content" },
           ],
         },
       ],
     )
     return (options?.client ?? this.client).post<V2FsWriteResponses, V2FsWriteErrors, ThrowOnError>({
       url: "/api/fs/write",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delete file
+   *
+   * Delete a file or empty directory relative to the requested location.
+   */
+  public delete<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      path?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "body", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2FsDeleteResponses, V2FsDeleteErrors, ThrowOnError>({
+      url: "/api/fs/delete",
       ...options,
       ...params,
       headers: {
@@ -6742,11 +6781,6 @@ export class OpencodeClient extends HeyApiClient {
   private _find?: Find
   get find(): Find {
     return (this._find ??= new Find({ client: this.client }))
-  }
-
-  private _fs?: Fs
-  get fs(): Fs {
-    return (this._fs ??= new Fs({ client: this.client }))
   }
 
   private _file?: File

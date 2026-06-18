@@ -836,6 +836,8 @@ export const dict = {
   "settings.general.row.showStatus.description": "Show the server status button in the title bar",
   "settings.general.row.showCustomAgents.title": "Custom agents",
   "settings.general.row.showCustomAgents.description": "Show the agent picker in the composer",
+  "settings.general.row.showDebugBar.title": "Performance Debug Bar",
+  "settings.general.row.showDebugBar.description": "Show the performance metrics debug bar",
   "settings.general.row.reasoningSummaries.title": "Show reasoning summaries",
   "settings.general.row.reasoningSummaries.description": "Display model reasoning summaries in the timeline",
   "settings.general.row.shellToolPartsExpanded.title": "Expand shell tool parts",

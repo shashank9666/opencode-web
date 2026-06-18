@@ -413,6 +413,7 @@ export default function FileTree(props: {
                       kinds={kinds()}
                       marks={marks()}
                       data-path={node.path}
+                      data-type="directory"
                     >
                       <div class="size-4 flex items-center justify-center text-icon-weak">
                         <Icon name={expanded() ? "chevron-down" : "chevron-right"} size="small" />
@@ -463,6 +464,7 @@ export default function FileTree(props: {
                   as="button"
                   type="button"
                   data-path={node.path}
+                  data-type="file"
                   onClick={() => props.onFileClick?.(node)}
                 >
                   <div class="w-4 shrink-0" />

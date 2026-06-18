@@ -10499,7 +10499,7 @@ export type V2FsFindResponses = {
 export type V2FsFindResponse = V2FsFindResponses[keyof V2FsFindResponses]
 
 export type V2FsWriteData = {
-  body?: {
+  body: {
     path: string
     content: string
   }
@@ -10514,6 +10514,10 @@ export type V2FsWriteData = {
 }
 
 export type V2FsWriteErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
   /**
    * UnauthorizedError
    */
@@ -10532,6 +10536,44 @@ export type V2FsWriteResponses = {
 }
 
 export type V2FsWriteResponse = V2FsWriteResponses[keyof V2FsWriteResponses]
+
+export type V2FsDeleteData = {
+  body: {
+    path: string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/fs/delete"
+}
+
+export type V2FsDeleteErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2FsDeleteError = V2FsDeleteErrors[keyof V2FsDeleteErrors]
+
+export type V2FsDeleteResponses = {
+  /**
+   * Success
+   */
+  200: {
+    path: string
+  }
+}
+
+export type V2FsDeleteResponse = V2FsDeleteResponses[keyof V2FsDeleteResponses]
 
 export type V2CommandListData = {
   body?: never
