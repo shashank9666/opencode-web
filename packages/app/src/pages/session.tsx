@@ -1850,7 +1850,7 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
                     </Switch>
                   </div>
 
-                  <Show when={activeSessionId() || !newSessionDesign()}>{composerRegion("dock")}</Show>
+                  <Show when={activeSessionId() || props.embedded || !newSessionDesign()}>{composerRegion("dock")}</Show>
                 </div>
 
                 <Show when={desktopReviewOpen()}>
@@ -1930,7 +1930,7 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
               </Show>
             </Show>
           </div>
-          <Show when={activeSessionId() || !newSessionDesign()}>{composerRegion("dock")}</Show>
+          <Show when={activeSessionId() || props.embedded || !newSessionDesign()}>{composerRegion("dock")}</Show>
         </div>
       </Show>
     </div>

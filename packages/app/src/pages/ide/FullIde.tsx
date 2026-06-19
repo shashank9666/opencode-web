@@ -940,6 +940,22 @@ export default function FullIde() {
         </div>
       </Show>
 
+      {/* ── Delete Session Dialog ── */}
+      <Show when={sessionDeleting() !== null}>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setSessionDeleting(null)}>
+          <div class="bg-surface-raised-base border border-border-base rounded-xl p-5 shadow-xl max-w-sm animate-in fade-in zoom-in-95 duration-150" onClick={(e) => e.stopPropagation()}>
+            <div class="text-15-medium text-text-strong mb-2">Delete Session</div>
+            <p class="text-13-regular text-text-weak mb-4">
+              Are you sure you want to delete <span class="font-semibold text-text-strong">"{sessionDeleteTitle()}"</span>? This action cannot be undone.
+            </p>
+            <div class="flex justify-end gap-2">
+              <button class="px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover rounded-lg transition-colors" onClick={() => setSessionDeleting(null)}>Cancel</button>
+              <button class="px-3 py-1.5 text-13-regular text-white bg-text-danger-base hover:bg-text-danger-hover rounded-lg transition-colors" onClick={handleDeleteSession}>Delete</button>
+            </div>
+          </div>
+        </div>
+      </Show>
+
       {/* ── Workspace Presets ── */}
       <WorkspacePresets
         open={showPresets()}
