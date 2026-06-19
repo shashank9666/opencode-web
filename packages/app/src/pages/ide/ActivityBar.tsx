@@ -13,6 +13,9 @@ export default function ActivityBar(props: {
   onTabClick: (tab: ActivityBarTab) => void
   onBottomTabClick: (tab: BottomPanelTab) => void
   onOpenFolder: () => void
+  onSettingsClick: () => void
+  onRemoteClick: () => void
+  remoteConnection?: string
 }) {
   const active = (tab: ActivityBarTab) => props.activeTab === tab && props.sidebarOpen
   const activeBottom = (tab: BottomPanelTab) => props.bottomPanelOpen && props.bottomTab === tab
@@ -222,16 +225,31 @@ export default function ActivityBar(props: {
           </button>
         </Tooltip>
 
-        <div class="w-6 h-px bg-border-base my-1" />
-
         <Tooltip value="Settings (Ctrl+,)" placement="right">
           <button
             type="button"
-            class="w-full h-12 flex items-center justify-center text-text-weak hover:text-text-strong transition-colors relative mb-2"
-            onClick={() => props.onOpenFolder()}
-            aria-label="Open Folder"
+            class="w-full h-12 flex items-center justify-center text-text-weak hover:text-text-strong transition-colors relative"
+            onClick={() => props.onSettingsClick()}
+            aria-label="Settings"
           >
             <Icon name="settings-gear" size="large" />
+          </button>
+        </Tooltip>
+
+        <div class="w-full border-t border-border-base my-0.5" />
+
+        {/* Remote Connection Button */}
+        <Tooltip value={props.remoteConnection ? `Connected to ${props.remoteConnection}` : "Open Remote Window"} placement="right">
+          <button
+            type="button"
+            class="w-full h-10 flex items-center justify-center bg-accent-base text-white hover:bg-accent-base-hover transition-colors relative"
+            onClick={() => props.onRemoteClick()}
+            aria-label="Remote Window"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="size-5">
+              <path d="M5 4L1.5 7.5L5 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M11 4L14.5 7.5L11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
         </Tooltip>
       </div>

@@ -1,6 +1,6 @@
 ## Debugging
 
-- NEVER try to restart the app, or the server process, EVER.
+- NEVER try to restart the app, or the server process, EVER. 
 
 ## Local Dev
 

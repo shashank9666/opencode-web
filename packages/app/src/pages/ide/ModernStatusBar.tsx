@@ -18,10 +18,12 @@ export default function ModernStatusBar(props: {
   problemsCount?: number
   warningsCount?: number
   syncStatus?: "synced" | "syncing" | "error"
+  remoteConnection?: string
   onLanguageClick?: () => void
   onGitClick?: () => void
   onProblemsClick?: () => void
   onCommandPalette?: () => void
+  onRemoteClick?: () => void
 }) {
   const [expanded, setExpanded] = createSignal(false)
 
@@ -32,6 +34,22 @@ export default function ModernStatusBar(props: {
     >
       {/* Left section */}
       <div class="flex items-center gap-0 h-full">
+        {/* Remote indicator */}
+        <button
+          type="button"
+          class="flex items-center justify-center gap-1.5 px-3.5 h-full text-white bg-accent-base hover:bg-accent-base-hover transition-colors font-medium cursor-pointer mr-2"
+          onClick={props.onRemoteClick}
+          title={props.remoteConnection ? `Connected to ${props.remoteConnection}` : "Open Remote Window"}
+        >
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="size-3.5">
+            <path d="M5 4L1.5 7.5L5 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M11 4L14.5 7.5L11 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <Show when={props.remoteConnection}>
+            <span class="text-11-medium ml-1">{props.remoteConnection}</span>
+          </Show>
+        </button>
+
         {/* Git branch */}
         <Show when={props.gitBranch}>
           <Tooltip value={`Git: ${props.gitBranch}${props.gitChanges ? ` (${props.gitChanges} changes)` : ""}`} placement="top">

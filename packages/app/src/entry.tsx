@@ -5,7 +5,6 @@ import { render } from "solid-js/web"
 import { AppBaseProviders, AppInterface } from "@/app"
 import { type Platform, PlatformProvider } from "@/context/platform"
 import { dict as en } from "@/i18n/en"
-import { dict as zh } from "@/i18n/zh"
 import { handleNotificationClick } from "@/utils/notification-click"
 import { authFromToken } from "@/utils/server"
 import pkg from "../package.json"
@@ -25,8 +24,7 @@ const getLocale = () => {
 
 const getRootNotFoundError = () => {
   const key = "error.dev.rootNotFound" as const
-  const locale = getLocale()
-  return locale === "zh" ? (zh[key] ?? en[key]) : en[key]
+  return en[key]
 }
 
 const getStorage = (key: string) => {

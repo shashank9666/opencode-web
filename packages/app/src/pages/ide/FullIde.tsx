@@ -60,6 +60,7 @@ import SettingsPanel from "./SettingsPanel"
 import KeybindingsPanel from "./KeybindingsPanel"
 import RemotePanel from "./RemotePanel"
 import DatabasePanel from "./DatabasePanel"
+import RemoteConnectionModal from "./RemoteConnectionModal"
 
 const MERGED_DEFAULT: PanelState[] = [
   { id: "explorer", label: "Explorer", icon: "file-tree", position: "left", visible: true, width: 280, order: 0 },
@@ -74,6 +75,8 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "terminal-area", label: "Terminal", icon: "terminal", position: "bottom", visible: true, height: 220, order: 6 },
   { id: "problems", label: "Problems", icon: "circle-x", position: "bottom", visible: false, height: 220, order: 7 },
   { id: "output", label: "Output", icon: "console", position: "bottom", visible: false, height: 220, order: 8 },
+  { id: "debug-console", label: "Debug Console", icon: "window-cursor", position: "bottom", visible: false, height: 220, order: 9 },
+  { id: "ai-logs", label: "AI Logs", icon: "brain", position: "bottom", visible: false, height: 220, order: 10 },
 ]
 
 function getShellInfo(title: string | undefined) {
@@ -136,6 +139,26 @@ export default function FullIde() {
   const [commandPaletteOpen, setCommandPaletteOpen] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
   const [showKeybindings, setShowKeybindings] = createSignal(false)
+  const [remoteModalOpen, setRemoteModalOpen] = createSignal(false)
+  const [remoteConnection, setRemoteConnection] = createSignal<string | null>(null)
+
+  const handleRemoteConnect = (type: "SSH" | "WSL" | "Container", target: string) => {
+    setRemoteModalOpen(false)
+    showToast({
+      variant: "info",
+      title: "Connecting",
+      description: `Connecting to ${type} host: ${target}...`,
+    })
+    
+    setTimeout(() => {
+      setRemoteConnection(`${type === "Container" ? "Container" : type}: ${target}`)
+      showToast({
+        variant: "success",
+        title: "Connected",
+        description: `Successfully connected to ${type} host: ${target}!`,
+      })
+    }, 1500)
+  }
 
   // ── Settings / keybinding state (mock) ──
   const [settingsOpen, setSettingsOpen] = createSignal(false)
@@ -159,6 +182,12 @@ export default function FullIde() {
   const leftPanel = () => panelManager.panels().find((p) => p.position === "left" && p.visible)
   const rightPanel = () => panelManager.panels().find((p) => p.position === "right" && p.visible)
   const bottomPanel = () => panelManager.panels().find((p) => p.position === "bottom" && p.visible)
+
+  const activeBottomTab = () => {
+    const id = bottomPanel()?.id
+    if (!id) return "terminal" as BottomPanelTab
+    return (id === "terminal-area" ? "terminal" : id) as BottomPanelTab
+  }
 
   // ── Session ──
   const [activeSessionId, setActiveSessionId] = createSignal<string | null>(null)
@@ -648,10 +677,13 @@ export default function FullIde() {
           activeTab={(leftPanel()?.id as ActivityBarTab) ?? "explorer"}
           sidebarOpen={!!leftPanel()}
           bottomPanelOpen={!!bottomPanel()}
-          bottomTab={(bottomPanel()?.id as BottomPanelTab) ?? "terminal"}
+          bottomTab={activeBottomTab()}
           onTabClick={(tab) => toggleLeftPanel(tab)}
           onBottomTabClick={(tab) => toggleBottomPanel(tab)}
           onOpenFolder={handleOpenFolder}
+          onSettingsClick={toggleSettings}
+          onRemoteClick={() => setRemoteModalOpen(true)}
+          remoteConnection={remoteConnection() ?? undefined}
         />
 
         {/* ── Left Sidebar ── */}
@@ -776,7 +808,7 @@ export default function FullIde() {
           <Show when={bottomPanel()}>
             <div class="h-1 bg-border-base hover:bg-accent-base/50 cursor-row-resize shrink-0 transition-colors" onMouseDown={handleBottomResizeStart} />
             <BottomPanel
-              activeTab={(bottomPanel()?.id as BottomPanelTab) ?? "terminal"}
+              activeTab={activeBottomTab()}
               height={bottomPanelHeight()}
               onTabChange={(tab) => toggleBottomPanel(tab)}
               onClose={() => { if (bottomPanel()) panelManager.hidePanel(bottomPanel()!.id) }}
@@ -858,6 +890,8 @@ export default function FullIde() {
             gitBranch="main"
             terminalCount={terminal.all().length} syncStatus="synced"
             onCommandPalette={() => setCommandPaletteOpen(true)}
+            remoteConnection={remoteConnection() ?? undefined}
+            onRemoteClick={() => setRemoteModalOpen(true)}
           />
         </div>
 
@@ -1004,6 +1038,13 @@ export default function FullIde() {
           </div>
         </div>
       </Show>
+
+      {/* ── Remote Connection Modal ── */}
+      <RemoteConnectionModal
+        open={remoteModalOpen()}
+        onClose={() => setRemoteModalOpen(false)}
+        onConnect={handleRemoteConnect}
+      />
     </div>
   )
 }
