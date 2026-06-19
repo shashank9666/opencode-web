@@ -1,6 +1,7 @@
 import { Show, createSignal } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
+import WorkspacePresets from "./WorkspacePresets"
 
 export default function ModernStatusBar(props: {
   line: number
@@ -20,6 +21,7 @@ export default function ModernStatusBar(props: {
   onLanguageClick?: () => void
   onGitClick?: () => void
   onProblemsClick?: () => void
+  onCommandPalette?: () => void
 }) {
   const [expanded, setExpanded] = createSignal(false)
 
@@ -135,7 +137,40 @@ export default function ModernStatusBar(props: {
             <span>{props.language}</span>
           </button>
         </Tooltip>
+
+        {/* Spacer */}
+        <div class="flex-1" />
+
+        {/* Menu & Layout Actions */}
+        <Tooltip value="Command Palette (Ctrl+Shift+P)" placement="top">
+          <button
+            type="button"
+            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            onClick={props.onCommandPalette}
+          >
+            <Icon name="keyboard" size="small" class="size-3" />
+          </button>
+        </Tooltip>
+        <WorkspacePresetsButton />
       </div>
     </div>
+  )
+}
+
+function WorkspacePresetsButton() {
+  const [open, setOpen] = createSignal(false)
+  return (
+    <>
+        <Tooltip value="Workspace Layouts" placement="top">
+          <button
+            type="button"
+            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            onClick={() => setOpen(true)}
+          >
+            <Icon name="layout-left" size="small" class="size-3" />
+          </button>
+        </Tooltip>
+      <WorkspacePresets open={open()} onClose={() => setOpen(false)} onSelect={() => {}} activePreset="" />
+    </>
   )
 }

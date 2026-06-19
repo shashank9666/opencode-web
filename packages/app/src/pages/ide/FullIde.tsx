@@ -262,11 +262,12 @@ export default function FullIde() {
   }
 
   const toggleBottomPanel = (tabId: string) => {
-    if (bottomPanel()?.id === tabId && bottomPanel()?.visible) {
-      panelManager.hidePanel(tabId)
+    const mappedId = tabId === "terminal" ? "terminal-area" : tabId
+    if (bottomPanel()?.id === mappedId && bottomPanel()?.visible) {
+      panelManager.hidePanel(mappedId)
     } else {
       panelManager.panels().filter((p) => p.position === "bottom").forEach((p) => panelManager.hidePanel(p.id))
-      panelManager.showPanel(tabId)
+      panelManager.showPanel(mappedId)
     }
   }
 
@@ -359,6 +360,7 @@ export default function FullIde() {
       if (editor.activeFile() === oldPath) editor.closeFile(oldPath)
     } catch (e) { showToast({ variant: "error", title: "Rename failed", description: String(e) }) }
     setRenaming(null)
+    void file.tree.refresh("")
   }
 
   const startCreate = (type: "file" | "directory", parent: string) => { setCreating(type); setCreateParent(parent); setRenameValue(""); setContextMenu(null) }
@@ -378,6 +380,7 @@ export default function FullIde() {
     }
     setCreating(null)
     setRenameValue("")
+    void file.tree.refresh("")
   }
 
   const promptDelete = (path: string, isDir: boolean) => { setDeleteTarget({ path, isDir }); setContextMenu(null) }
@@ -401,6 +404,7 @@ export default function FullIde() {
       if (!target.isDir && editor.activeFile() === target.path) editor.closeFile(target.path)
     } catch (e) { showToast({ variant: "error", title: "Delete failed", description: String(e) }) }
     setDeleteTarget(null)
+    void file.tree.refresh("")
   }
 
   // ── Session ops ──
@@ -540,13 +544,9 @@ export default function FullIde() {
       <HeaderBar
         workspaceName={getFilename(dir()) || "Untitled"}
         branch="main"
-        activeModel="Claude 4 Sonnet"
-        activeProvider="OpenCode"
-        syncStatus="synced"
         compact={headerCompact()}
         onSearch={() => {}}
         onCommandPalette={() => setCommandPaletteOpen(true)}
-        onSettings={toggleSettings}
         onWorkspaceSwitch={() => setShowPresets(true)}
       />
 
@@ -570,6 +570,7 @@ export default function FullIde() {
               <div class="flex items-center justify-between px-3 py-1.5 border-b border-border-base shrink-0" style={{ "min-height": "34px" }}>
                 <span class="text-11-medium text-text-weaker uppercase tracking-wider">EXPLORER</span>
                 <div class="flex items-center gap-0.5">
+                  <Tooltip value="Refresh" placement="bottom"><IconButton icon="reset" variant="ghost" size="small" class="size-6 rounded-md" onClick={() => file.tree.refresh("")} /></Tooltip>
                   <Tooltip value="New File" placement="bottom"><IconButton icon="plus" variant="ghost" size="small" class="size-6 rounded-md" onClick={() => startCreate("file", "")} /></Tooltip>
                   <Tooltip value="New Folder" placement="bottom"><IconButton icon="folder" variant="ghost" size="small" class="size-6 rounded-md" onClick={() => startCreate("directory", "")} /></Tooltip>
                   <Tooltip value="Collapse All" placement="bottom"><IconButton icon="collapse" variant="ghost" size="small" class="size-6 rounded-md" onClick={() => {}} /></Tooltip>
@@ -623,7 +624,12 @@ export default function FullIde() {
                       ? "bg-background-base text-text-strong border-b-2 border-b-accent-base"
                       : "text-text-weak hover:bg-surface-raised-base-hover"
                       }`}
-                    onClick={() => editor.setActiveFile(openFile.path)}
+                    onClick={async () => {
+                      if (editor.activeFile() && editor.activeFile() !== openFile.path && editor.dirty()) {
+                        await saveFile()
+                      }
+                      editor.setActiveFile(openFile.path)
+                    }}
                   >
                     <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
                     <span class="truncate max-w-32">{getFilename(openFile.path)}</span>
@@ -789,6 +795,7 @@ export default function FullIde() {
             encoding="UTF-8" lineEnding="LF" dirty={editor.dirty()}
             gitBranch="main"
             terminalCount={terminal.all().length} syncStatus="synced"
+            onCommandPalette={() => setCommandPaletteOpen(true)}
           />
         </div>
 
@@ -894,13 +901,14 @@ export default function FullIde() {
               class="w-full px-3 py-2 text-13-regular bg-surface-base border border-border-base rounded-lg outline-none focus:border-accent-base text-text-strong"
               placeholder={creating() ? "Enter name..." : "Enter new name..."}
               value={renameValue()}
-              onInput={(e) => setRenameValue(e.currentTarget.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") { if (creating()) confirmCreate(); else confirmRename() }
-                if (e.key === "Escape") { setRenaming(null); setCreating(null) }
-              }}
+                    onInput={(e) => setRenameValue(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { if (creating()) confirmCreate(); else confirmRename() }
+                      if (e.key === "Escape") { setRenaming(null); setCreating(null) }
+                    }}
               autofocus
             />
+
             <div class="flex justify-end gap-2 mt-4">
               <button class="px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover rounded-lg transition-colors" onClick={() => { setRenaming(null); setCreating(null) }}>Cancel</button>
               <button class="px-3 py-1.5 text-13-regular text-white bg-accent-base hover:bg-accent-base-hover rounded-lg transition-colors" onClick={() => { if (creating()) confirmCreate(); else confirmRename() }}>
