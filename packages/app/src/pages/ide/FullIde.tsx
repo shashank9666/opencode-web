@@ -373,11 +373,12 @@ export default function FullIde() {
       const state = file.get(path)
       if (!state?.content) return
       const content = state.content
-      if (content.type === "binary" && content.mediaType?.startsWith("image/")) {
-        const url = URL.createObjectURL(new Blob([content.buffer], { type: content.mediaType }))
-        dialog.show(() => <ImagePreview src={url} alt={getFilename(path)} />)
+      if (content.type === "binary") {
+        // Binary content is a data URL string in the SDK
+        const url = content.content
+        if (url) dialog.show(() => <ImagePreview src={url} alt={getFilename(path)} />)
       } else if (content.type === "text") {
-        // For SVG files that are stored as text
+        // For SVG or text image files, create a data URL
         const blob = new Blob([content.content], { type: "image/svg+xml" })
         const url = URL.createObjectURL(blob)
         dialog.show(() => <ImagePreview src={url} alt={getFilename(path)} />)
@@ -390,9 +391,39 @@ export default function FullIde() {
     return [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".svg"].includes(ext)
   }
 
+  const isMarkdownPath = (path: string) => path.toLowerCase().endsWith(".md")
+  const isPdfPath = (path: string) => path.toLowerCase().endsWith(".pdf")
+
   const isPreviewablePath = (path: string) => {
     const ext = path.toLowerCase().slice(path.lastIndexOf("."))
     return [".md", ".pdf", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".svg"].includes(ext)
+  }
+
+  const openPreview = (path: string) => {
+    if (isImagePath(path)) return openImagePreview(path)
+    if (isMarkdownPath(path)) {
+      void (async () => {
+        await file.load(path)
+        const state = file.get(path)
+        if (state?.content?.type === "text") {
+          editor.openFile(path, state.content.content)
+          showToast({ title: "Preview", description: `Opened ${getFilename(path)} in editor` })
+        }
+      })()
+    } else if (isPdfPath(path)) {
+      void (async () => {
+        await file.load(path)
+        const state = file.get(path)
+        if (state?.content?.type === "binary") {
+          const isImageDataUrl = state.content.content.startsWith("data:image/")
+          if (isImageDataUrl) {
+            dialog.show(() => <ImagePreview src={state.content.content} alt={getFilename(path)} />)
+          } else {
+            showToast({ title: "PDF Preview", description: `PDF viewer not yet implemented for ${getFilename(path)}` })
+          }
+        }
+      })()
+    }
   }
 
   // ── File ops ──
@@ -420,10 +451,11 @@ export default function FullIde() {
       console.log("file content", content)
       if (!content) return
       if (content.type === "binary") {
-        // If it's an image detected by MIME type, preview it
-        if (content.mediaType?.startsWith("image/")) {
-          const url = URL.createObjectURL(new Blob([content.buffer], { type: content.mediaType }))
-          dialog.show(() => <ImagePreview src={url} alt={getFilename(path)} />)
+        // Binary content is embedded as a data URL - check if it's an image
+        if (!content.content) return
+        const isImageDataUrl = content.content.startsWith("data:image/")
+        if (isImageDataUrl) {
+          dialog.show(() => <ImagePreview src={content.content} alt={getFilename(path)} />)
           return
         }
         showToast({ title: "Binary file", description: `${getFilename(path)} is a binary file and cannot be edited.` })
@@ -1054,12 +1086,40 @@ export default function FullIde() {
 
       {/* ── Context Menu ── */}
       <Show when={contextMenu()}>
-        <div class="fixed z-50 bg-surface-raised-base border border-border-base rounded-xl shadow-xl py-1 min-w-44 animate-in fade-in zoom-in-95 duration-100" style={{ left: `${contextMenu()!.x}px`, top: `${contextMenu()!.y}px` }}>
-          <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => startCreate("file", contextMenu()!.path)}><span class="text-12">📄</span> New File</button>
-          <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => startCreate("directory", contextMenu()!.path)}><span class="text-12">📁</span> New Folder</button>
-          <div class="h-px bg-border-base my-1" />
-          <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => startRename(contextMenu()!.path)}><span class="text-12">✏️</span> Rename</button>
-          <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => promptDelete(contextMenu()!.path, contextMenu()!.isDir)}><span class="text-12">🗑️</span> Delete</button>
+        <div class="fixed z-50 bg-surface-raised-base border border-border-base rounded-xl shadow-xl py-1 min-w-52 animate-in fade-in zoom-in-95 duration-100" style={{ left: `${contextMenu()!.x}px`, top: `${contextMenu()!.y}px` }} onClick={(e) => e.stopPropagation()}>
+          <Show when={!contextMenu()!.isDir}>
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { handleFileClick({ path: contextMenu()!.path, type: "file" }); closeContextMenu() }}>Open</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}><span class="text-12">↔️</span> Open to the Side</button>
+            <Show when={isPreviewablePath(contextMenu()!.path)}>
+              <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { openPreview(contextMenu()!.path); closeContextMenu() }}><span class="text-12">👁️</span> Preview</button>
+            </Show>
+            <div class="h-px bg-border-base my-1" />
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(contextMenu()!.path); }}>Copy Path<span class="text-11-regular ml-6 opacity-70">Shift+Alt+C</span></button>
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(getFilename(contextMenu()!.path)); }}>Copy Relative Path<span class="text-11-regular ml-6 opacity-70">Ctrl+K C</span></button>
+            <div class="h-px bg-border-base my-1" />
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { const state = workspace.getFileState(contextMenu()!.path); if (state?.dirty && state.originalContent) { setDiffMode(true); } else { showToast({ title: "No Changes", description: "File has no uncommitted changes" }); } })() }}><span class="text-12">🔄</span> Open Changes</button>
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "File History view coming soon" }); }}>File History<span class="text-11-regular ml-6 opacity-70">Ctrl+G H</span></button>
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "Open Timeline view coming soon" }); }}>Open Timeline</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "Open on Remote (Web) coming soon" }); }}><span class="text-12">🌐</span> Open on Remote (Web)</button>
+            <div class="h-px bg-border-base my-1" />
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startRename(contextMenu()!.path); }}><span class="text-12">✏️</span> Rename...</button>
+            <div class="h-px bg-border-base my-1" />
+          </Show>
+          <Show when={contextMenu()!.isDir}>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}>Open</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("file", contextMenu()!.path); }}><span class="text-12">📄</span> New File</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("directory", contextMenu()!.path); }}><span class="text-12">📁</span> New Folder</button>
+            <div class="h-px bg-border-base my-1" />
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(contextMenu()!.path); }}>Copy Path<span class="text-11-regular ml-6 opacity-70">Shift+Alt+C</span></button>
+            <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(getFilename(contextMenu()!.path)); }}>Copy Relative Path<span class="text-11-regular ml-6 opacity-70">Ctrl+K C</span></button>
+            <div class="h-px bg-border-base my-1" />
+          </Show>
+          <Show when={!contextMenu()!.isDir}>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><span class="text-12">🗑️</span> Delete</button>
+          </Show>
+          <Show when={contextMenu()!.isDir}>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><span class="text-12">🗑️</span> Delete Folder</button>
+          </Show>
         </div>
         <div class="fixed inset-0 z-40" onClick={closeContextMenu} />
       </Show>
