@@ -1,0 +1,203 @@
+import { type JSX, For, Show } from "solid-js"
+import { Icon } from "@opencode-ai/ui/icon"
+import { IconButton } from "@opencode-ai/ui/icon-button"
+import { Tooltip } from "@opencode-ai/ui/tooltip"
+import type { BottomPanelTab } from "./ActivityBar"
+
+export { type BottomPanelTab } from "./ActivityBar"
+
+type TabConfig = {
+  id: BottomPanelTab
+  label: string
+  icon: string
+}
+
+const TABS: TabConfig[] = [
+  { id: "terminal", label: "TERMINAL", icon: "terminal" },
+  { id: "problems", label: "PROBLEMS", icon: "circle-x" },
+  { id: "output", label: "OUTPUT", icon: "console" },
+  { id: "debug-console", label: "DEBUG CONSOLE", icon: "window-cursor" },
+  { id: "ai-logs", label: "AI LOGS", icon: "brain" },
+]
+
+export default function BottomPanel(props: {
+  activeTab: BottomPanelTab
+  height: number
+  onTabChange: (tab: BottomPanelTab) => void
+  onClose: () => void
+  children: (tab: BottomPanelTab) => JSX.Element
+}) {
+  return (
+    <div
+      class="flex flex-col bg-surface-base border-t border-border-base shrink-0"
+      style={{ height: `${props.height}px` }}
+    >
+      {/* Tabs bar */}
+      <div class="flex items-center justify-between border-b border-border-base bg-surface-base shrink-0" style={{ height: "36px" }}>
+        <div class="flex items-center h-full">
+          <For each={TABS}>
+            {(tab) => (
+              <button
+                type="button"
+                class="flex items-center gap-1.5 px-3 h-full text-12-regular whitespace-nowrap transition-colors relative"
+                classList={{
+                  "text-text-strong bg-background-base border-t-2 border-t-accent-base": props.activeTab === tab.id,
+                  "text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover": props.activeTab !== tab.id,
+                }}
+                onClick={() => props.onTabChange(tab.id)}
+              >
+                <Icon name={tab.icon as any} size="small" />
+                <span>{tab.label}</span>
+              </button>
+            )}
+          </For>
+        </div>
+        <div class="flex items-center gap-1 pr-2">
+          <Tooltip value="Close Panel" placement="top">
+            <IconButton
+              icon="close"
+              variant="ghost"
+              size="small"
+              class="size-6 rounded"
+              onClick={props.onClose}
+              aria-label="Close Panel"
+            />
+          </Tooltip>
+        </div>
+      </div>
+
+      {/* Content area */}
+      <div class="flex-1 min-h-0 overflow-auto">
+        {props.children(props.activeTab)}
+      </div>
+    </div>
+  )
+}
+
+export function ProblemsTab(props: {
+  problems: Array<{ file: string; line: number; column: number; message: string; severity: "error" | "warning" | "info" }>
+  onProblemClick?: (problem: { file: string; line: number }) => void
+}) {
+  return (
+    <div class="size-full overflow-auto p-2">
+      <Show
+        when={props.problems.length > 0}
+        fallback={
+          <div class="flex flex-col items-center justify-center h-full text-text-weak text-13-regular gap-2">
+            <Icon name="circle-check" size="large" class="text-icon-weaker opacity-40" />
+            <span>No problems detected</span>
+          </div>
+        }
+      >
+        <For each={props.problems}>
+          {(problem) => (
+            <button
+              type="button"
+              class="w-full flex items-start gap-2 px-2 py-1 text-13-regular hover:bg-surface-raised-base-hover rounded-md text-left transition-colors"
+              onClick={() => props.onProblemClick?.(problem)}
+            >
+              <Icon
+                name={problem.severity === "error" ? "circle-x" : problem.severity === "warning" ? "warning" : "circle-check"}
+                size="small"
+                classList={{
+                  "text-text-danger-base shrink-0 mt-0.5": problem.severity === "error",
+                  "text-text-warning-base shrink-0 mt-0.5": problem.severity === "warning",
+                  "text-accent-base shrink-0 mt-0.5": problem.severity === "info",
+                }}
+              />
+              <div class="flex-1 min-w-0">
+                <span class="text-text-strong">{problem.message}</span>
+                <span class="text-text-weaker ml-2">
+                  {problem.file}:{problem.line}:{problem.column}
+                </span>
+              </div>
+            </button>
+          )}
+        </For>
+      </Show>
+    </div>
+  )
+}
+
+export function OutputTab(props: {
+  lines: string[]
+}) {
+  return (
+    <div class="size-full overflow-auto p-3 font-mono text-13-regular">
+      <Show
+        when={props.lines.length > 0}
+        fallback={
+          <div class="flex flex-col items-center justify-center h-full text-text-weak gap-2">
+            <Icon name="console" size="large" class="text-icon-weaker opacity-40" />
+            <span>No output</span>
+          </div>
+        }
+      >
+        <For each={props.lines}>
+          {(line) => (
+            <div class="text-text-strong whitespace-pre-wrap break-all">{line}</div>
+          )}
+        </For>
+      </Show>
+    </div>
+  )
+}
+
+export function DebugConsoleTab(props: {
+  lines: string[]
+}) {
+  return (
+    <div class="size-full flex flex-col">
+      <div class="flex items-center px-3 py-1 border-b border-border-base bg-surface-base shrink-0">
+        <input
+          type="text"
+          class="flex-1 px-2 py-1 text-13-regular bg-surface-base border border-border-base rounded-md outline-none focus:border-accent-base text-text-strong"
+          placeholder="Type expression to evaluate..."
+        />
+      </div>
+      <div class="flex-1 overflow-auto p-3 font-mono text-13-regular">
+        <For each={props.lines}>
+          {(line) => (
+            <div class="text-text-strong whitespace-pre-wrap break-all">{line}</div>
+          )}
+        </For>
+      </div>
+    </div>
+  )
+}
+
+export function AILogsTab(props: {
+  logs: Array<{ timestamp: string; level: string; message: string }>
+}) {
+  return (
+    <div class="size-full overflow-auto p-3 font-mono text-13-regular">
+      <Show
+        when={props.logs.length > 0}
+        fallback={
+          <div class="flex flex-col items-center justify-center h-full text-text-weak gap-2">
+            <Icon name="brain" size="large" class="text-icon-weaker opacity-40" />
+            <span>No AI logs yet</span>
+          </div>
+        }
+      >
+        <For each={props.logs}>
+          {(log) => (
+            <div class="flex items-start gap-2 py-0.5">
+              <span class="text-text-weaker shrink-0">{log.timestamp}</span>
+              <span
+                classList={{
+                  "text-accent-base shrink-0": log.level === "info",
+                  "text-text-warning-base shrink-0": log.level === "warn",
+                  "text-text-danger-base shrink-0": log.level === "error",
+                }}
+              >
+                [{log.level.toUpperCase()}]
+              </span>
+              <span class="text-text-strong">{log.message}</span>
+            </div>
+          )}
+        </For>
+      </Show>
+    </div>
+  )
+}
