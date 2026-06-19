@@ -414,10 +414,11 @@ export default function FullIde() {
       void (async () => {
         await file.load(path)
         const state = file.get(path)
-        if (state?.content?.type === "binary") {
-          const isImageDataUrl = state.content.content.startsWith("data:image/")
+        const content = state?.content
+        if (content?.type === "binary") {
+          const isImageDataUrl = content.content.startsWith("data:image/")
           if (isImageDataUrl) {
-            dialog.show(() => <ImagePreview src={state.content.content} alt={getFilename(path)} />)
+            dialog.show(() => <ImagePreview src={content.content} alt={getFilename(path)} />)
           } else {
             showToast({ title: "PDF Preview", description: `PDF viewer not yet implemented for ${getFilename(path)}` })
           }
