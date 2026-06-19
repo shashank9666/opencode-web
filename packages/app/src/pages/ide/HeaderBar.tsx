@@ -104,9 +104,9 @@ export default function HeaderBar(props: {
       {/* ── Center: Title ── */}
       <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex items-center justify-center pointer-events-none">
         <span class="text-12-regular text-text-weaker truncate px-4">
-          {props.workspaceName ?? "Untitled"} Opencode-web
+          {props.workspaceName ?? "Untitled"} {`/`}
           <Show when={props.activeFile}>
-            {" - " + props.activeFile}
+            {props.activeFile}
           </Show>
         </span>
       </div>

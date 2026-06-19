@@ -91,7 +91,7 @@ export default function SearchPanel(props: {
               onInput={(e) => setSearchQuery(e.currentTarget.value)}
               onKeyDown={(e) => { if (e.key === "Enter") performSearch() }}
             />
-            <Icon name="magnifying-glass" size="small" class="absolute left-2 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none" />
+
           </div>
           <IconButton
             icon="chevron-right"
@@ -211,13 +211,13 @@ export default function SearchPanel(props: {
         </Show>
         <Show when={!searching() && searchQuery() && results().length === 0}>
           <div class="flex flex-col items-center justify-center py-8 text-13-regular text-text-weaker gap-2">
-            <Icon name="magnifying-glass" size="large" class="text-icon-weaker opacity-40" />
+
             <span>No results found</span>
           </div>
         </Show>
         <Show when={!searching() && !searchQuery()}>
           <div class="flex flex-col items-center justify-center py-8 text-13-regular text-text-weaker gap-2 px-4 text-center">
-            <Icon name="magnifying-glass" size="large" class="text-icon-weaker opacity-40" />
+
             <span>Search across your project files</span>
             <span class="text-12-regular">Type a search term and press Enter</span>
           </div>

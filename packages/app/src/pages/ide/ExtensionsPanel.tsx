@@ -58,7 +58,6 @@ export default function ExtensionsPanel(props: {
           when={filtered().length > 0}
           fallback={
             <div class="flex flex-col items-center justify-center py-8 text-13-regular text-text-weaker gap-2 px-4 text-center">
-              <Icon name="magnifying-glass" size="large" class="text-icon-weaker opacity-40" />
               <span>No extensions found</span>
               <Show when={props.extensions.length === 0}>
                 <span class="text-12-regular">Browse the marketplace to find extensions for your project</span>

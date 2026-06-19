@@ -46,7 +46,7 @@ import CommandPaletteV2 from "./CommandPaletteV2"
 import type { PaletteAction } from "./CommandPaletteV2"
 import SearchPanel from "./SearchPanel"
 import SourceControlPanel from "./SourceControlPanel"
-import ExtensionsPanel from "./ExtensionsPanel"
+
 import AIWorkspacePanel from "./AIWorkspacePanel"
 import WorkspacePresets from "./WorkspacePresets"
 import type { WorkspacePreset } from "./WorkspacePresets"
@@ -67,7 +67,7 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "search", label: "Search", icon: "magnifying-glass", position: "left", visible: false, width: 280, order: 1 },
   { id: "source-control", label: "Source Control", icon: "branch", position: "left", visible: false, width: 300, order: 2 },
   { id: "run-debug", label: "Run & Debug", icon: "bug", position: "left", visible: false, width: 300, order: 3 },
-  { id: "extensions", label: "Extensions", icon: "models", position: "left", visible: false, width: 300, order: 4 },
+
   { id: "ai-chat", label: "AI Assistant", icon: "brain", position: "left", visible: false, width: 320, order: 5 },
   { id: "database", label: "Database", icon: "database", position: "left", visible: false, width: 320, order: 6 },
   { id: "remote", label: "Remote Explorer", icon: "remote", position: "left", visible: false, width: 280, order: 7 },
@@ -145,7 +145,6 @@ export default function FullIde() {
   const handleRemoteConnect = (type: "SSH" | "WSL" | "Container", target: string) => {
     setRemoteModalOpen(false)
     showToast({
-      variant: "info",
       title: "Connecting",
       description: `Connecting to ${type} host: ${target}...`,
     })
@@ -740,9 +739,7 @@ export default function FullIde() {
               <SourceControlPanel branch="main" changes={0} stagedFiles={[]} unstagedFiles={[]} onFileClick={(p) => handleFindResultClick({ path: p, line: 0 })} />
             </Show>
 
-            <Show when={leftPanel()?.id === "extensions"}>
-              <ExtensionsPanel extensions={[]} />
-            </Show>
+
 
             <Show when={leftPanel()?.id === "remote"}>
               <RemotePanel />
