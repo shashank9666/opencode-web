@@ -1,6 +1,7 @@
 import { createSignal, createMemo, For, Match, Switch, Show } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { IconButton } from "@opencode-ai/ui/icon-button";
+import { ContextMenu } from "@opencode-ai/ui/context-menu";
 import { getFilename } from "@opencode-ai/core/util/path";
 import IdeEditor, { IdeDiffEditor } from "./ide-editor";
 import InlineAIToolbar from "./inline-ai-toolbar";
@@ -67,29 +68,90 @@ export function EditorArea(props: {
         <div class="flex items-center border-b border-border-base bg-surface-base overflow-x-auto shrink-0 select-none" style={{ "min-height": "36px" }}>
           <For each={group().files}>
             {(openFile: OpenFile) => (
-              <button
-                class={`flex items-center gap-1.5 px-3 py-1.5 text-13-regular border-r border-border-base whitespace-nowrap shrink-0 transition-colors ${openFile.path === activeFile()
-                  ? (isActiveGroup() ? "bg-background-base text-text-strong border-b-2 border-b-accent-base" : "bg-background-base text-text-strong opacity-80")
-                  : "text-text-weak hover:bg-surface-raised-base-hover"
-                  }`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Auto-save the current file when switching tabs
-                  const currentActiveFile = activeFile();
-                  if (currentActiveFile && currentActiveFile !== openFile.path) {
-                    const current = group().files.find(f => f.path === currentActiveFile);
-                    if (current?.dirty) {
-                      void props.onSaveFile(currentActiveFile, group().id);
+              <ContextMenu>
+                <ContextMenu.Trigger
+                  as="button"
+                  class={`flex items-center gap-1.5 px-3 py-1.5 text-13-regular border-r border-border-base whitespace-nowrap shrink-0 transition-colors ${openFile.path === activeFile()
+                    ? (isActiveGroup() ? "bg-background-base text-text-strong border-b-2 border-b-accent-base" : "bg-background-base text-text-strong opacity-80")
+                    : "text-text-weak hover:bg-surface-raised-base-hover"
+                    }`}
+                  onClick={(e: MouseEvent) => {
+                    e.stopPropagation();
+                    // Auto-save the current file when switching tabs
+                    const currentActiveFile = activeFile();
+                    if (currentActiveFile && currentActiveFile !== openFile.path) {
+                      const current = group().files.find(f => f.path === currentActiveFile);
+                      if (current?.dirty) {
+                        void props.onSaveFile(currentActiveFile, group().id);
+                      }
                     }
-                  }
-                  props.workspace.setActiveFile(openFile.path, group().id);
-                }}
-              >
-                <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
-                <span class="truncate max-w-32">{getFilename(openFile.path)}</span>
-                <Show when={openFile.dirty}><span class="text-12-medium text-text-warning-base">●</span></Show>
-                <IconButton icon="close" variant="ghost" size="small" class="size-4 rounded ml-0.5 opacity-60 hover:opacity-100" onClick={(e: MouseEvent) => { e.stopPropagation(); props.workspace.closeFile(openFile.path, group().id); }} />
-              </button>
+                    props.workspace.setActiveFile(openFile.path, group().id);
+                  }}
+                >
+                  <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
+                  <span class="truncate max-w-32">{getFilename(openFile.path)}</span>
+                  <Show when={openFile.dirty}><span class="text-12-medium text-text-warning-base">●</span></Show>
+                  <IconButton icon="close" variant="ghost" size="small" class="size-4 rounded ml-0.5 opacity-60 hover:opacity-100" onClick={(e: MouseEvent) => { e.stopPropagation(); props.workspace.closeFile(openFile.path, group().id); }} />
+                </ContextMenu.Trigger>
+                <ContextMenu.Portal>
+                  <ContextMenu.Content class="min-w-[220px]">
+                    <ContextMenu.Item onSelect={() => props.workspace.closeFile(openFile.path, group().id)}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Close</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Ctrl+F4</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onSelect={() => props.workspace.closeOthers(openFile.path, group().id)}>
+                      <ContextMenu.ItemLabel>Close Others</ContextMenu.ItemLabel>
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onSelect={() => props.workspace.closeToTheRight(openFile.path, group().id)}>
+                      <ContextMenu.ItemLabel>Close to the Right</ContextMenu.ItemLabel>
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onSelect={() => props.workspace.closeSaved(group().id)}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Close Saved</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Ctrl+K U</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onSelect={() => props.workspace.closeAll(group().id)}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Close All</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Ctrl+K W</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Item onSelect={() => void navigator.clipboard.writeText(openFile.path)}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Copy Path</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Shift+Alt+C</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Item onSelect={() => void navigator.clipboard.writeText(getFilename(openFile.path))}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Copy Relative Path</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Ctrl+K Ctrl+Shift+C</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Item onSelect={() => props.workspace.splitGroup(group().id, "horizontal")}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Split Right</ContextMenu.ItemLabel>
+                        <span class="text-12-regular text-text-weak">Ctrl+\</span>
+                      </div>
+                    </ContextMenu.Item>
+                    <ContextMenu.Separator />
+                    <ContextMenu.Item onSelect={() => {
+                      // Dispatch a custom event that FileTree could theoretically listen to, or just skip it
+                      const event = new CustomEvent('reveal-in-explorer', { detail: { path: openFile.path } });
+                      window.dispatchEvent(event);
+                    }}>
+                      <div class="flex items-center justify-between w-full">
+                        <ContextMenu.ItemLabel>Reveal in Explorer View</ContextMenu.ItemLabel>
+                      </div>
+                    </ContextMenu.Item>
+                  </ContextMenu.Content>
+                </ContextMenu.Portal>
+              </ContextMenu>
             )}
           </For>
           <div class="flex-1 flex justify-end gap-1 px-1">

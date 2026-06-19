@@ -76,6 +76,45 @@ export function createEditorWorkspace() {
     }));
   };
 
+  const closeOthers = (path: string, groupId: string) => {
+    setRootNode(prev => updateGroup(prev, groupId, (g) => {
+      const fileToKeep = g.files.find(f => f.path === path);
+      if (!fileToKeep) return g;
+      return { ...g, files: [fileToKeep], activeFile: path };
+    }));
+  };
+
+  const closeToTheRight = (path: string, groupId: string) => {
+    setRootNode(prev => updateGroup(prev, groupId, (g) => {
+      const idx = g.files.findIndex(f => f.path === path);
+      if (idx === -1) return g;
+      const remaining = g.files.slice(0, idx + 1);
+      const activeFileIdx = g.files.findIndex(f => f.path === g.activeFile);
+      let nextActive = g.activeFile;
+      if (activeFileIdx > idx) {
+        nextActive = path;
+      }
+      return { ...g, files: remaining, activeFile: nextActive };
+    }));
+  };
+
+  const closeSaved = (groupId: string) => {
+    setRootNode(prev => updateGroup(prev, groupId, (g) => {
+      const remaining = g.files.filter(f => f.dirty);
+      let nextActive = g.activeFile;
+      if (!remaining.find(f => f.path === g.activeFile)) {
+        nextActive = remaining.length > 0 ? remaining[0].path : null;
+      }
+      return { ...g, files: remaining, activeFile: nextActive };
+    }));
+  };
+
+  const closeAll = (groupId: string) => {
+    setRootNode(prev => updateGroup(prev, groupId, (g) => {
+      return { ...g, files: [], activeFile: null };
+    }));
+  };
+
   const setContent = (path: string, content: string, groupId: string) => {
     setRootNode(prev => updateGroup(prev, groupId, (g) => {
       return { ...g, files: g.files.map(f => {
@@ -145,6 +184,10 @@ export function createEditorWorkspace() {
     setActiveGroupId,
     openFile,
     closeFile,
+    closeOthers,
+    closeToTheRight,
+    closeSaved,
+    closeAll,
     setContent,
     markClean,
     setActiveFile,
