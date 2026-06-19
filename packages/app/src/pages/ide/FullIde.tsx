@@ -68,7 +68,7 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "source-control", label: "Source Control", icon: "branch", position: "left", visible: false, width: 300, order: 2 },
   { id: "run-debug", label: "Run & Debug", icon: "bug", position: "left", visible: false, width: 300, order: 3 },
 
-  { id: "ai-chat", label: "AI Assistant", icon: "brain", position: "left", visible: false, width: 320, order: 5 },
+  { id: "ai-chat", label: "AI Assistant", icon: "brain", position: "right", visible: true, width: 320, order: 5 },
   { id: "database", label: "Database", icon: "database", position: "left", visible: false, width: 320, order: 6 },
   { id: "remote", label: "Remote Explorer", icon: "remote", position: "left", visible: false, width: 280, order: 7 },
   { id: "testing", label: "Testing", icon: "beaker", position: "left", visible: false, width: 300, order: 8 },
@@ -776,18 +776,6 @@ export default function FullIde() {
               <DatabasePanel />
             </Show>
 
-            <Show when={leftPanel()?.id === "ai-chat"}>
-              <AIWorkspacePanel
-                onClose={() => panelManager.hidePanel("ai-chat")}
-                activeSessionId={activeSessionId()}
-                recentSessions={recentSessions()}
-                handleNewSession={handleNewSession}
-                confirmDeleteSession={confirmDeleteSession}
-                setActiveSessionId={setActiveSessionId}
-                dir={dir()}
-              />
-            </Show>
-
             <div class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-accent-base/30 transition-colors z-10" onMouseDown={handleSidebarResizeStart} />
           </div>
         </Show>
@@ -915,9 +903,22 @@ export default function FullIde() {
           <div class="shrink-0 flex flex-col border-l border-border-base bg-surface-base relative" style={{ width: `${rightPanelWidth()}px` }}>
             <div class="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-accent-base/30 transition-colors z-10" onMouseDown={handleRightResizeStart} />
             
-            <div class="flex-1 overflow-y-auto min-h-0 p-3 text-text-weak text-13-regular text-center mt-10">
-              Select a panel to dock here.
-            </div>
+            <Show when={rightPanel()?.id === "ai-chat"}>
+              <AIWorkspacePanel
+                onClose={() => panelManager.hidePanel("ai-chat")}
+                activeSessionId={activeSessionId()}
+                recentSessions={recentSessions()}
+                handleNewSession={handleNewSession}
+                confirmDeleteSession={confirmDeleteSession}
+                setActiveSessionId={setActiveSessionId}
+                dir={dir()}
+              />
+            </Show>
+            <Show when={rightPanel()?.id !== "ai-chat"}>
+              <div class="flex-1 overflow-y-auto min-h-0 p-3 text-text-weak text-13-regular text-center mt-10">
+                Select a panel to dock here.
+              </div>
+            </Show>
           </div>
         </Show>
       </div>
