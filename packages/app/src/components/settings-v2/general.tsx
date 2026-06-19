@@ -651,34 +651,7 @@ export const SettingsGeneralV2: Component = () => {
     </div>
   )
 
-  const UpdatesSection = () => (
-    <div class="settings-v2-section">
-      <h3 class="settings-v2-section-title">{language.t("settings.general.section.updates")}</h3>
 
-      <SettingsListV2>
-        <SettingsRowV2
-          title={language.t("settings.general.row.releaseNotes.title")}
-          description={language.t("settings.general.row.releaseNotes.description")}
-        >
-          <div data-action="settings-release-notes">
-            <Switch
-              checked={settings.general.releaseNotes()}
-              onChange={(checked) => settings.general.setReleaseNotes(checked)}
-            />
-          </div>
-        </SettingsRowV2>
-
-        <SettingsRowV2
-          title={language.t("settings.updates.row.check.title")}
-          description={language.t("settings.updates.row.check.description")}
-        >
-          <ButtonV2 size="normal" variant="neutral" disabled={!updater.action().run} onClick={updater.run}>
-            {language.t(updater.action().label)}
-          </ButtonV2>
-        </SettingsRowV2>
-      </SettingsListV2>
-    </div>
-  )
 
   // We can probably remove this, right?
   const DisplaySection = () => (
@@ -714,10 +687,6 @@ export const SettingsGeneralV2: Component = () => {
         <NotificationsSection />
 
         <SoundsSection />
-
-        <Show when={desktop()}>
-          <UpdatesSection />
-        </Show>
 
         <DisplaySection />
 

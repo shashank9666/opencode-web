@@ -25,6 +25,10 @@ export default function BottomPanel(props: {
   height: number
   onTabChange: (tab: BottomPanelTab) => void
   onClose: () => void
+  onNewTerminal?: () => void
+  onSplitTerminal?: () => void
+  onKillTerminal?: () => void
+  onMaximize?: () => void
   children: (tab: BottomPanelTab) => JSX.Element
 }) {
   return (
@@ -58,19 +62,19 @@ export default function BottomPanel(props: {
         <div class="flex items-center gap-1 pr-2 text-text-weaker">
           <Show when={props.activeTab === "terminal"}>
             <Tooltip value="New Terminal" placement="top">
-              <IconButton icon="plus" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" />
+              <IconButton icon="plus" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onNewTerminal} />
             </Tooltip>
             <div class="w-px h-4 bg-border-base mx-0.5" />
             <Tooltip value="Split Terminal" placement="top">
-              <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" />
+              <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onSplitTerminal} />
             </Tooltip>
             <Tooltip value="Kill Terminal" placement="top">
-              <IconButton icon="trash" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" />
+              <IconButton icon="trash" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onKillTerminal} />
             </Tooltip>
             <div class="w-px h-4 bg-border-base mx-0.5" />
           </Show>
           <Tooltip value="Maximize Panel Size" placement="top">
-            <IconButton icon="arrow-up" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" />
+            <IconButton icon="arrow-up" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onMaximize} />
           </Tooltip>
           <Tooltip value="Close Panel" placement="top">
             <IconButton

@@ -195,7 +195,7 @@ export default function InlineAIToolbar(props: InlineAIToolbarProps) {
         style={{
           left: `${position().x}px`,
           top: `${position().y}px`,
-          transform: `scale(${scale()})`,
+          transform: `translate(15%, -40%) scale(${scale()})`,
           opacity: `${opacity()}`,
           "transform-origin": "bottom center",
         }}

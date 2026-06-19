@@ -215,7 +215,7 @@ export function EditorArea(props: {
                 editor={editorInstance()}
                 filePath={state().path}
                 language={activeFileLanguage()}
-                onAction={(payload) => props.onInlineAIAction(payload, group.id)}
+                onAction={(payload) => props.onInlineAIAction(payload, group().id)}
               />
             </Show>
           </div>

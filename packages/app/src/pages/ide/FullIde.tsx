@@ -797,6 +797,18 @@ export default function FullIde() {
               height={bottomPanelHeight()}
               onTabChange={(tab) => toggleBottomPanel(tab)}
               onClose={() => { if (bottomPanel()) panelManager.hidePanel(bottomPanel()!.id) }}
+              onNewTerminal={() => terminal.new()}
+              onSplitTerminal={() => {
+                const activeId = terminal.active()
+                if (activeId) void terminal.clone(activeId)
+              }}
+              onKillTerminal={() => {
+                const activeId = terminal.active()
+                if (activeId) void terminal.close(activeId)
+              }}
+              onMaximize={() => {
+                setBottomPanelHeight(h => h > 300 ? 220 : window.innerHeight * 0.8)
+              }}
             >
               {(tab) => (
                 <Switch>
