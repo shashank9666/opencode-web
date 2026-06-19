@@ -51,7 +51,7 @@ import AIWorkspacePanel from "./AIWorkspacePanel"
 import WorkspacePresets from "./WorkspacePresets"
 import type { WorkspacePreset } from "./WorkspacePresets"
 import { createPanelManager, FloatingPanel, type PanelState, type PanelPosition } from "./DockablePanel"
-import MenuBar from "./MenuBar"
+import MenuBar, { type IdeActions } from "./MenuBar"
 
 // ── Extra panels (new) ──
 import DebugPanel from "./DebugPanel"
@@ -544,6 +544,89 @@ export default function FullIde() {
     { id: "settings.keybindings", title: "Open Keyboard Shortcuts", description: "Customize keybindings", category: "settings", icon: "keyboard", onSelect: () => toggleKeybindings() },
   ]
 
+  const ideActions: Partial<IdeActions> = {
+    // File
+    newFile: () => startCreate("file", dir()),
+    newWindow: () => window.open(window.location.href, "_blank"),
+    openFile: () => pickDirectory({} as any),
+    openFolder: () => pickDirectory({} as any),
+    save: async () => {
+      const activeFile = editor.activeFile()
+      if (activeFile) {
+        const group = workspace.getActiveGroup()
+        if (group) {
+          const state = workspace.getFileState(activeFile, group.id);
+          if (!state || !state.dirty) return;
+          try {
+            await sdk().client.v2.fs.write({ path: activeFile, content: state.content })
+            workspace.markClean(activeFile, group.id)
+            showToast({ variant: "success", title: "File saved", description: getFilename(activeFile) })
+          } catch (e) {
+            showToast({ variant: "error", title: "Save failed", description: String(e) })
+          }
+        }
+      }
+    },
+    saveAs: () => { showToast({ title: "Save As", description: "Save As dialog coming soon" }) },
+    saveAll: () => { showToast({ title: "Save All", description: "Save All functionality coming soon" }) },
+    closeEditor: () => {
+       const activeFile = editor.activeFile()
+       if (activeFile) workspace.closeFile(activeFile, workspace.getActiveGroup()?.id ?? "")
+    },
+    closeFolder: () => { navigate("/ide") },
+    closeWindow: () => window.close(),
+
+    // Edit
+    undo: () => document.execCommand("undo"),
+    redo: () => document.execCommand("redo"),
+    cut: () => document.execCommand("cut"),
+    copy: () => document.execCommand("copy"),
+    paste: () => document.execCommand("paste"),
+    find: () => { setCommandPaletteOpen(false); /* find logic */ },
+    replace: () => { /* replace logic */ },
+    findInFiles: () => toggleLeftPanel("search"),
+    toggleLineComment: () => { /* trigger editor format */ },
+    toggleBlockComment: () => { /* trigger editor format */ },
+    formatDocument: () => setFormatTrigger(f => f + 1),
+
+    // View
+    toggleExplorer: () => toggleLeftPanel("explorer"),
+    toggleSearch: () => toggleLeftPanel("search"),
+    toggleSourceControl: () => toggleLeftPanel("source-control"),
+    commandPalette: () => setCommandPaletteOpen(true),
+    zoomIn: () => setFontSize(s => s + 1),
+    zoomOut: () => setFontSize(s => Math.max(8, s - 1)),
+    resetZoom: () => setFontSize(13),
+    toggleFullScreen: () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {})
+      else document.exitFullscreen().catch(() => {})
+    },
+    toggleZenMode: () => { showToast({ title: "Zen Mode", description: "Coming soon" }) },
+    togglePanel: () => toggleBottomPanel("terminal-area"),
+    toggleSecondarySideBar: () => { if (rightPanel()) panelManager.hidePanel(rightPanel()!.id); else panelManager.showPanel("ai-chat") },
+
+    // Go
+    goToFile: () => setCommandPaletteOpen(true),
+    goToSymbolWorkspace: () => setCommandPaletteOpen(true),
+    goToSymbolEditor: () => setCommandPaletteOpen(true),
+    goToLine: () => setCommandPaletteOpen(true),
+    goToDefinition: () => { showToast({ title: "Go to Definition", description: "Coming soon" }) },
+    goToDeclaration: () => { showToast({ title: "Go to Declaration", description: "Coming soon" }) },
+    goToTypeDefinition: () => { showToast({ title: "Go to Type Definition", description: "Coming soon" }) },
+    goToImplementation: () => { showToast({ title: "Go to Implementation", description: "Coming soon" }) },
+    goBack: () => history.back(),
+    goForward: () => history.forward(),
+
+    // Run
+    runWithoutDebugging: () => toggleLeftPanel("run-debug"),
+    startDebugging: () => toggleLeftPanel("run-debug"),
+
+    // Terminal
+    newTerminal: () => { terminal.new(); panelManager.showPanel("terminal-area") },
+    splitTerminal: () => { terminal.new(); panelManager.showPanel("terminal-area") },
+    runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") }
+  }
+
   return (
     <div class="size-full flex flex-col overflow-hidden bg-background-base" onContextMenu={handleContextMenu}>
       {/* ── Premium Header Bar ── */}
@@ -555,6 +638,7 @@ export default function FullIde() {
         onToggleLeftPanel={() => toggleLeftPanel("explorer")}
         onToggleRightPanel={() => { if (rightPanel()) panelManager.hidePanel(rightPanel()!.id); else panelManager.showPanel("ai-chat") }}
         onToggleBottomPanel={() => toggleBottomPanel("terminal")}
+        actions={ideActions}
       />
 
       {/* ── Main Content Area ── */}

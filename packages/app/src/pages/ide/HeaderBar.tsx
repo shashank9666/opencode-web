@@ -2,7 +2,9 @@ import { createSignal, For, Show, type JSX } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
-import { MENUS } from "./MenuBar"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { StatusPopover } from "@/components/status-popover"
+import { buildMenus, type IdeActions } from "./MenuBar"
 
 export default function HeaderBar(props: {
   workspaceName?: string
@@ -12,8 +14,12 @@ export default function HeaderBar(props: {
   onToggleLeftPanel?: () => void
   onToggleBottomPanel?: () => void
   onToggleRightPanel?: () => void
+  actions?: Partial<IdeActions>
 }) {
   const [activeMenu, setActiveMenu] = createSignal<string | null>(null)
+  const dialog = useDialog()
+
+  const menus = () => buildMenus(props.actions || {})
 
   const handleMenuClick = (menuLabel: string) => {
     if (activeMenu() === menuLabel) setActiveMenu(null)
@@ -37,7 +43,7 @@ export default function HeaderBar(props: {
 
         {/* Menus */}
         <div class="flex items-center h-full">
-          <For each={MENUS}>{(menu) => (
+          <For each={menus()}>{(menu) => (
             <div class="relative h-full">
               <button
                 type="button"
@@ -92,110 +98,28 @@ export default function HeaderBar(props: {
         </span>
       </div>
 
-      {/* ── Right: Layout, Search, Settings ── */}
-      <div class="flex items-center h-full [app-region:no-drag]">
-        {/* Panel Toggles */}
-        <div class="flex items-center h-full px-1">
-          <Tooltip value="Toggle Primary Side Bar" placement="bottom">
-            <IconButton
-              icon="layout-left"
-              variant="ghost"
-              size="small"
-              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-              onClick={props.onToggleLeftPanel}
-            />
-          </Tooltip>
-          <Tooltip value="Toggle Bottom Panel" placement="bottom">
-            <IconButton
-              icon="layout-bottom"
-              variant="ghost"
-              size="small"
-              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-              onClick={props.onToggleBottomPanel}
-            />
-          </Tooltip>
-          <Tooltip value="Toggle Secondary Side Bar" placement="bottom">
-            <IconButton
-              icon="layout-right"
-              variant="ghost"
-              size="small"
-              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-              onClick={props.onToggleRightPanel}
-            />
-          </Tooltip>
-          <Tooltip value="Customize Layout" placement="bottom">
-            <IconButton
-              icon="layout-left-partial"
-              variant="ghost"
-              size="small"
-              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-            />
-          </Tooltip>
+      {/* ── Right: Status and Settings ── */}
+      <div class="flex items-center h-full [app-region:no-drag] px-2 gap-2">
+        <div class="flex items-center h-full">
+          <StatusPopover />
         </div>
-
-        <div class="h-4 w-px bg-border-base mx-1" />
-
-        {/* Global Search */}
-        <Tooltip value="Search (Ctrl+Shift+F)" placement="bottom">
-          <IconButton
-            icon="magnifying-glass"
-            variant="ghost"
-            size="small"
-            class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-            onClick={props.onSearch}
-          />
-        </Tooltip>
-
-        <div class="h-4 w-px bg-border-base mx-1" />
-
-        {/* Extensions / Settings */}
-        <Tooltip value="Manage Extension" placement="bottom">
-          <IconButton
-            icon="providers"
-            variant="ghost"
-            size="small"
-            class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-          />
-        </Tooltip>
-        <Tooltip value="Account" placement="bottom">
-          <IconButton
-            icon="github"
-            variant="ghost"
-            size="small"
-            class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-          />
-        </Tooltip>
-        <Tooltip value="Manage" placement="bottom">
-          <IconButton
-            icon="settings-gear"
-            variant="ghost"
-            size="small"
-            class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
-          />
-        </Tooltip>
-
-        {/* Window Controls (Native Desktop Emulation) */}
         <div class="flex items-center h-full ml-1">
-          <IconButton
-            icon="dash"
-            variant="ghost"
-            size="small"
-            class="size-11 text-icon-weak hover:bg-surface-raised-base hover:text-text-strong rounded-none"
-          />
-          <IconButton
-            icon="expand"
-            variant="ghost"
-            size="small"
-            class="size-11 text-icon-weak hover:bg-surface-raised-base hover:text-text-strong rounded-none"
-          />
-          <IconButton
-            icon="close"
-            variant="ghost"
-            size="small"
-            class="size-11 text-icon-weak hover:bg-text-danger-base hover:text-white rounded-none"
-          />
+          <Tooltip value="Settings" placement="bottom">
+            <IconButton
+              icon="sliders"
+              variant="ghost"
+              size="small"
+              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
+              onClick={() => {
+                void import("@/components/dialog-settings").then((x) => {
+                  dialog.show(() => <x.DialogSettings />)
+                })
+              }}
+            />
+          </Tooltip>
         </div>
       </div>
     </div>
   )
 }
+
