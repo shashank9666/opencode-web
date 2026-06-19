@@ -62,7 +62,7 @@ export default function SearchPanel(props: {
   return (
     <div class="size-full flex flex-col">
       {/* Header */}
-      <div class="flex items-center justify-between px-3 py-2 border-b border-border-base shrink-0">
+      <div class="flex items-center justify-between px-3 py-2 shrink-0">
         <span class="text-12-medium text-text-weak uppercase tracking-wider">SEARCH</span>
         <div class="flex items-center gap-1">
           <Tooltip value="Toggle Replace" placement="bottom">

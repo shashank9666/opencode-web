@@ -38,7 +38,20 @@ export default function HeaderBar(props: {
       <div class="flex items-center h-full [app-region:no-drag]">
         {/* Logo */}
         <div class="flex items-center justify-center px-3 h-full cursor-pointer hover:bg-surface-raised-base-hover transition-colors">
-          <Icon name="code" size="large" class="text-accent-base" />
+          <svg
+            width="18"
+            height="22"
+            viewBox="0 0 24 30"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M0 0V30H24V0H0ZM6 6V24H18V6H6Z"
+            />
+          </svg>
         </div>
 
         {/* Menus */}
