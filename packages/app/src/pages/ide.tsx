@@ -4,6 +4,8 @@ import {
 import { useFile } from "@/context/file"
 import FileTree from "@/components/file-tree"
 import IdeEditor, { IdeDiffEditor, createIdeEditor, type OpenFile } from "@/components/ide-editor"
+import { createProblemTracker } from "@/components/problem-tracker"
+import InlineAIToolbar, { type InlineAIActionPayload } from "@/components/inline-ai-toolbar"
 import { Terminal } from "@/components/terminal"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -16,6 +18,7 @@ import { useDirectoryPicker } from "@/components/directory-picker"
 import { useGlobal } from "@/context/global"
 import { useServer } from "@/context/server"
 import { useNavigate, useParams } from "@solidjs/router"
+import * as monaco from "monaco-editor"
 import { base64Encode } from "@opencode-ai/core/util/encode"
 import { decode64 } from "@/utils/base64"
 import { useServerSync } from "@/context/server-sync"
@@ -63,6 +66,7 @@ function getShellInfo(title: string | undefined) {
 export default function IdePage() {
   const file = useFile()
   const editor = createIdeEditor()
+  const problems = createProblemTracker()
   const sdk = useSDK()
   const language = useLanguage()
   const params = useParams()
@@ -386,6 +390,8 @@ export default function IdePage() {
     }
   }
 
+  const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined)
+
   // ── Breadcrumbs ──
   createEffect(() => {
     const path = editor.activeFile()
@@ -409,6 +415,40 @@ export default function IdePage() {
     const path = editor.activeFile()
     return path ? editor.originalContent(path) !== undefined : false
   })
+
+  // ── Inline AI Actions ──
+  const handleInlineAIAction = async (payload: InlineAIActionPayload) => {
+    let sessionId = activeSessionId()
+    if (!sessionId) {
+      try {
+        const result = await sdk().client.session.create({ title: `AI: ${payload.actionId} ${getFilename(payload.filePath)}`, directory: dir() })
+        const newSession = result.data
+        if (newSession?.id) {
+          sessionId = newSession.id
+          setActiveSessionId(sessionId)
+        }
+      } catch (e) {
+        showToast({ variant: "error", title: "Failed to create session", description: String(e) })
+        return
+      }
+    }
+    if (!sessionId) return
+
+    // Open AI chat panel
+    panelManager.hidePanel("ai-workspace")
+    panelManager.showPanel("ai-chat")
+    setRightTab("ai-chat")
+
+    // Send prompt
+    try {
+      await sdk().client.session.prompt({
+        sessionID: sessionId,
+        parts: [{ type: "text", text: payload.prompt }],
+      })
+    } catch (e) {
+      showToast({ variant: "error", title: "AI action failed", description: String(e) })
+    }
+  }
 
   // ── Keyboard shortcuts ──
   const handleKeyDown = async (e: KeyboardEvent) => {
@@ -592,7 +632,14 @@ export default function IdePage() {
                 <IdeEditor
                   path={editor.activeFile()} content={editor.content()} onChange={(v) => editor.setContent(editor.activeFile(), v)}
                   onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col) }}
+                  onEditorReady={(e) => setEditorInstance(e)}
                   formatTrigger={formatTrigger()} class="flex-1 min-h-0" fontSize={fontSize()} tabSize={tabSize()} wordWrap={wordWrap()}
+                />
+                <InlineAIToolbar
+                  editor={editorInstance()}
+                  filePath={editor.activeFile()}
+                  language={activeFileLanguage()}
+                  onAction={handleInlineAIAction}
                 />
               </Show>
             </div>
@@ -648,7 +695,23 @@ export default function IdePage() {
                       </div>
                     </div>
                   </Match>
-                  <Match when={tab === "problems"}><ProblemsTab problems={[]} /></Match>
+                  <Match when={tab === "problems"}>
+                    <ProblemsTab
+                      problems={problems.problems()}
+                      counts={problems.counts()}
+                      filter={problems.filter()}
+                      onFilterChange={problems.setFilter}
+                      onProblemClick={(problem) => {
+                        void (async () => {
+                          await file.load(problem.file)
+                          const state = file.get(problem.file)
+                          if (state?.content && state.content.type === "text") {
+                            editor.openFile(problem.file, state.content.content)
+                          }
+                        })()
+                      }}
+                    />
+                  </Match>
                   <Match when={tab === "output"}><OutputTab lines={[]} /></Match>
                   <Match when={tab === "debug-console"}><DebugConsoleTab lines={[]} /></Match>
                   <Match when={tab === "ai-logs"}><AILogsTab logs={[]} /></Match>

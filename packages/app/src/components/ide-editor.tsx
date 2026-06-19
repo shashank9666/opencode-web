@@ -106,6 +106,7 @@ export default function IdeEditor(props: {
   fontSize?: number
   tabSize?: number
   wordWrap?: "off" | "on" | "wordWrapColumn" | "bounded"
+  onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void
 }) {
   let container: HTMLDivElement | undefined
   let editor: monaco.editor.IStandaloneCodeEditor | undefined
@@ -133,6 +134,8 @@ export default function IdeEditor(props: {
       autoIndent: "full",
       formatOnPaste: true,
     })
+
+    props.onEditorReady?.(editor)
 
     editor.onDidChangeModelContent(() => {
       props.onChange?.(editor?.getValue() ?? "")

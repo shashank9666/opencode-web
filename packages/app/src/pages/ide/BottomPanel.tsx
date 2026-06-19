@@ -75,46 +75,95 @@ export default function BottomPanel(props: {
 }
 
 export function ProblemsTab(props: {
-  problems: Array<{ file: string; line: number; column: number; message: string; severity: "error" | "warning" | "info" }>
+  problems: Array<{ file: string; line: number; column: number; message: string; severity: "error" | "warning" | "info"; code?: string }>
+  counts: { errors: number; warnings: number; info: number }
+  filter: { errors: boolean; warnings: boolean; info: boolean }
+  onFilterChange: (filter: { errors: boolean; warnings: boolean; info: boolean }) => void
   onProblemClick?: (problem: { file: string; line: number }) => void
 }) {
   return (
-    <div class="size-full overflow-auto p-2">
-      <Show
-        when={props.problems.length > 0}
-        fallback={
-          <div class="flex flex-col items-center justify-center h-full text-text-weak text-13-regular gap-2">
-            <Icon name="circle-check" size="large" class="text-icon-weaker opacity-40" />
-            <span>No problems detected</span>
-          </div>
-        }
-      >
-        <For each={props.problems}>
-          {(problem) => (
-            <button
-              type="button"
-              class="w-full flex items-start gap-2 px-2 py-1 text-13-regular hover:bg-surface-raised-base-hover rounded-md text-left transition-colors"
-              onClick={() => props.onProblemClick?.(problem)}
-            >
-              <Icon
-                name={problem.severity === "error" ? "circle-x" : problem.severity === "warning" ? "warning" : "circle-check"}
-                size="small"
-                classList={{
-                  "text-text-danger-base shrink-0 mt-0.5": problem.severity === "error",
-                  "text-text-warning-base shrink-0 mt-0.5": problem.severity === "warning",
-                  "text-accent-base shrink-0 mt-0.5": problem.severity === "info",
-                }}
-              />
-              <div class="flex-1 min-w-0">
-                <span class="text-text-strong">{problem.message}</span>
-                <span class="text-text-weaker ml-2">
-                  {problem.file}:{problem.line}:{problem.column}
-                </span>
-              </div>
-            </button>
-          )}
-        </For>
-      </Show>
+    <div class="size-full flex flex-col">
+      {/* Filter bar */}
+      <div class="flex items-center gap-2 px-3 py-1.5 border-b border-border-base bg-surface-base shrink-0">
+        <button
+          type="button"
+          class="flex items-center gap-1 px-2 py-0.5 rounded text-12-regular transition-colors"
+          classList={{
+            "bg-surface-raised-base-hover text-text-strong": props.filter.errors,
+            "text-text-weaker hover:text-text-strong": !props.filter.errors,
+          }}
+          onClick={() => props.onFilterChange({ ...props.filter, errors: !props.filter.errors })}
+        >
+          <span class="w-2 h-2 rounded-full bg-text-danger-base" />
+          {props.counts.errors} Errors
+        </button>
+        <button
+          type="button"
+          class="flex items-center gap-1 px-2 py-0.5 rounded text-12-regular transition-colors"
+          classList={{
+            "bg-surface-raised-base-hover text-text-strong": props.filter.warnings,
+            "text-text-weaker hover:text-text-strong": !props.filter.warnings,
+          }}
+          onClick={() => props.onFilterChange({ ...props.filter, warnings: !props.filter.warnings })}
+        >
+          <span class="w-2 h-2 rounded-full bg-text-warning-base" />
+          {props.counts.warnings} Warnings
+        </button>
+        <button
+          type="button"
+          class="flex items-center gap-1 px-2 py-0.5 rounded text-12-regular transition-colors"
+          classList={{
+            "bg-surface-raised-base-hover text-text-strong": props.filter.info,
+            "text-text-weaker hover:text-text-strong": !props.filter.info,
+          }}
+          onClick={() => props.onFilterChange({ ...props.filter, info: !props.filter.info })}
+        >
+          <span class="w-2 h-2 rounded-full bg-accent-base" />
+          {props.counts.info} Info
+        </button>
+        <div class="flex-1" />
+        <Show when={props.problems.length > 0}>
+          <span class="text-12-regular text-text-weaker">{props.problems.length} shown</span>
+        </Show>
+      </div>
+      <div class="flex-1 overflow-auto p-2">
+        <Show
+          when={props.problems.length > 0}
+          fallback={
+            <div class="flex flex-col items-center justify-center h-full text-text-weak text-13-regular gap-2">
+              <Icon name="circle-check" size="large" class="text-icon-weaker opacity-40" />
+              <span>No problems detected</span>
+            </div>
+          }
+        >
+          <For each={props.problems}>
+            {(problem) => (
+              <button
+                type="button"
+                class="w-full flex items-start gap-2 px-2 py-1 text-13-regular hover:bg-surface-raised-base-hover rounded-md text-left transition-colors"
+                onClick={() => props.onProblemClick?.(problem)}
+              >
+                <Icon
+                  name={problem.severity === "error" ? "circle-x" : problem.severity === "warning" ? "warning" : "comment"}
+                  size="small"
+                  classList={{
+                    "text-text-danger-base shrink-0 mt-0.5": problem.severity === "error",
+                    "text-text-warning-base shrink-0 mt-0.5": problem.severity === "warning",
+                    "text-accent-base shrink-0 mt-0.5": problem.severity === "info",
+                  }}
+                />
+                <div class="flex-1 min-w-0">
+                  <span class="text-text-strong">{problem.message}</span>
+                  <div class="text-12-regular text-text-weaker truncate">
+                    {problem.file}:{problem.line}:{problem.column}
+                    {problem.code ? ` [${problem.code}]` : ""}
+                  </div>
+                </div>
+              </button>
+            )}
+          </For>
+        </Show>
+      </div>
     </div>
   )
 }
