@@ -3,7 +3,7 @@ import { Tooltip } from "@opencode-ai/ui/tooltip"
 
 export type ActivityBarTab = "explorer" | "search" | "source-control" | "run-debug" | "extensions" | "ai-chat" | "database" | "remote" | "testing"
 
-export type BottomPanelTab = "terminal" | "problems" | "output" | "debug-console" | "ai-logs"
+export type BottomPanelTab = "terminal" | "problems" | "output" | "debug-console"
 
 export default function ActivityBar(props: {
   activeTab: ActivityBarTab

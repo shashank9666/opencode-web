@@ -18,7 +18,6 @@ const TABS: TabConfig[] = [
   { id: "problems", label: "PROBLEMS", icon: "circle-x" },
   { id: "output", label: "OUTPUT", icon: "console" },
   { id: "debug-console", label: "DEBUG CONSOLE", icon: "window-cursor" },
-  { id: "ai-logs", label: "AI LOGS", icon: "brain" },
 ]
 
 export default function BottomPanel(props: {
@@ -52,7 +51,7 @@ export default function BottomPanel(props: {
                 style={props.activeTab === tab.id ? { "margin-top": "-1px" } : {}}
                 onClick={() => props.onTabChange(tab.id)}
               >
-                <Show when={tab.icon !== "terminal" && tab.icon !== "circle-x" && tab.icon !== "console" && tab.icon !== "window-cursor" && tab.icon !== "brain"}>
+                <Show when={tab.icon !== "terminal" && tab.icon !== "circle-x" && tab.icon !== "console" && tab.icon !== "window-cursor"}>
                   <Icon name={tab.icon as any} size="small" />
                 </Show>
                 <span>{tab.label}</span>
@@ -269,38 +268,3 @@ export function DebugConsoleTab(props: {
   )
 }
 
-export function AILogsTab(props: {
-  logs: Array<{ timestamp: string; level: string; message: string }>
-}) {
-  return (
-    <div class="size-full overflow-auto p-3 font-mono text-13-regular">
-      <Show
-        when={props.logs.length > 0}
-        fallback={
-          <div class="flex flex-col items-center justify-center h-full text-text-weak gap-2">
-            <Icon name="brain" size="large" class="text-icon-weaker opacity-40" />
-            <span>No AI logs yet</span>
-          </div>
-        }
-      >
-        <For each={props.logs}>
-          {(log) => (
-            <div class="flex items-start gap-2 py-0.5">
-              <span class="text-text-weaker shrink-0">{log.timestamp}</span>
-              <span
-                classList={{
-                  "text-accent-base shrink-0": log.level === "info",
-                  "text-text-warning-base shrink-0": log.level === "warn",
-                  "text-text-danger-base shrink-0": log.level === "error",
-                }}
-              >
-                [{log.level.toUpperCase()}]
-              </span>
-              <span class="text-text-strong">{log.message}</span>
-            </div>
-          )}
-        </For>
-      </Show>
-    </div>
-  )
-}

@@ -9,6 +9,8 @@ import { SplitPane } from "./SplitPane";
 import type { EditorNode, EditorGroup, OpenFile } from "./editor-workspace";
 import * as monaco from "monaco-editor";
 
+import { Button } from "@opencode-ai/ui/button";
+
 export function EditorArea(props: {
   node: EditorNode;
   activeGroupId: string;
@@ -21,6 +23,9 @@ export function EditorArea(props: {
   wordWrap: "off" | "on" | "wordWrapColumn" | "bounded";
   formatTrigger: number;
   onInlineAIAction: (payload: any, groupId: string) => void;
+  previewDiff?: { path: string; modified: string; original?: string };
+  onAcceptDiff?: () => void;
+  onRejectDiff?: () => void;
 }) {
   if (props.node.type === "split") {
     return (
@@ -177,60 +182,81 @@ export function EditorArea(props: {
         </div>
       </Show>
 
-      <Show
-        when={activeFileState()}
-        fallback={
-          <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
-            <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />
-            <div class="text-14-regular">Open a file from the Explorer</div>
-            <div class="text-12-regular text-text-weaker">or press <kbd class="px-1.5 py-0.5 bg-surface-base border border-border-base rounded text-11-medium">Ctrl+P</kbd> to search</div>
-          </div>
-        }
-      >
+      <Show when={activeFileState()} fallback={
+        <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
+          <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />
+          <div class="text-14-regular">Open a file from the Explorer</div>
+          <div class="text-12-regular text-text-weaker">or press <kbd class="px-1.5 py-0.5 bg-surface-base border border-border-base rounded text-11-medium">Ctrl+P</kbd> to search</div>
+        </div>
+      }>
         {(state) => (
           <div class="flex-1 relative min-h-0 flex flex-col">
-            <Show
-              when={!props.diffMode || !hasDiff()}
-              fallback={
-                <IdeDiffEditor
+            <Show when={!props.previewDiff && (!props.diffMode || !hasDiff())}>
+              <>
+                <IdeEditor
                   path={state().path}
-                  original={state().originalContent ?? ""}
-                  modified={state().content}
+                  content={state().content}
+                  onChange={(v) => props.workspace.setContent(state().path, v, group().id)}
+                  onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
+                  onEditorReady={(e) => setEditorInstance(e)}
+                  formatTrigger={props.formatTrigger}
+                  class="flex-1 min-h-0"
+                  fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
+                  onProvideCompletionItems={async (model, position) => {
+                    const lineContent = model.getLineContent(position.lineNumber)
+                    if (lineContent.trim() === "// mock") {
+                      return {
+                        items: [{
+                          insertText: " this is a mock autocomplete suggestion",
+                          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
+                        }]
+                      }
+                    }
+                    return { items: [] }
+                  }}
+                />
+                <InlineAIToolbar
+                  editor={editorInstance()}
+                  filePath={state().path}
+                  language={activeFileLanguage()}
+                  onAction={(payload) => props.onInlineAIAction(payload, group().id)}
+                />
+              </>
+            </Show>
+            <Show when={!(!props.previewDiff && (!props.diffMode || !hasDiff()))}>
+              <>
+                <IdeDiffEditor
+                  path={props.previewDiff?.path ?? state().path}
+                  original={props.previewDiff?.original ?? state().originalContent ?? ""}
+                  modified={props.previewDiff?.modified ?? state().content}
                   class="flex-1 min-h-0"
                   fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
                 />
-              }
-            >
-              <IdeEditor
-                path={state().path}
-                content={state().content}
-                onChange={(v) => props.workspace.setContent(state().path, v, group().id)}
-                onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
-                onEditorReady={(e) => setEditorInstance(e)}
-                formatTrigger={props.formatTrigger}
-                class="flex-1 min-h-0"
-                fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
-                onProvideCompletionItems={async (model, position) => {
-                  // TODO: Connect to real AI SDK endpoint
-                  // For now, provide a simple mock suggestion when typing "// mock"
-                  const lineContent = model.getLineContent(position.lineNumber)
-                  if (lineContent.trim() === "// mock") {
-                    return {
-                      items: [{
-                        insertText: " this is a mock autocomplete suggestion",
-                        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
-                      }]
-                    }
-                  }
-                  return { items: [] }
-                }}
-              />
-              <InlineAIToolbar
-                editor={editorInstance()}
-                filePath={state().path}
-                language={activeFileLanguage()}
-                onAction={(payload) => props.onInlineAIAction(payload, group().id)}
-              />
+                <Show when={props.previewDiff && (props.onAcceptDiff || props.onRejectDiff)}>
+                  <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised-base border border-border-base shadow-lg backdrop-blur-sm">
+                    <div class="flex items-center gap-1.5 text-12-regular text-text-weak mr-2">
+                      <Icon name="warning" size="small" class="text-yellow-400" />
+                      <span>AI wants to edit <strong class="text-text-strong">{getFilename(props.previewDiff!.path)}</strong></span>
+                    </div>
+                    <Show when={props.onRejectDiff}>
+                      <Button variant="ghost" size="normal" onClick={props.onRejectDiff}>
+                        <span class="flex items-center gap-1.5">
+                          <Icon name="close" size="small" />
+                          Reject
+                        </span>
+                      </Button>
+                    </Show>
+                    <Show when={props.onAcceptDiff}>
+                      <Button variant="primary" size="normal" onClick={props.onAcceptDiff}>
+                        <span class="flex items-center gap-1.5">
+                          <Icon name="check" size="small" />
+                          Accept Changes
+                        </span>
+                      </Button>
+                    </Show>
+                  </div>
+                </Show>
+              </>
             </Show>
           </div>
         )}

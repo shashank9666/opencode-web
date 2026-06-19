@@ -83,6 +83,9 @@ export default function SearchPanel(props: {
       <div class="p-2 border-b border-border-base shrink-0">
         <div class="flex gap-1 mb-1">
           <div class="flex-1 relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-2 pointer-events-none">
+              <Icon name="magnifying-glass" size="small" class="text-icon-weaker" />
+            </div>
             <input
               type="text"
               class="w-full pl-7 pr-2 py-1.5 text-13-regular bg-surface-base border border-border-base rounded-md outline-none focus:border-accent-base text-text-strong"
@@ -91,11 +94,20 @@ export default function SearchPanel(props: {
               onInput={(e) => setSearchQuery(e.currentTarget.value)}
               onKeyDown={(e) => { if (e.key === "Enter") performSearch() }}
             />
-
+            <Show when={searchQuery()}>
+              <button
+                type="button"
+                class="absolute inset-y-0 right-0 flex items-center pr-2 text-text-weaker hover:text-text-strong transition-colors"
+                onClick={() => { setSearchQuery(""); setResults([]) }}
+                aria-label="Clear search"
+              >
+                <Icon name="close" size="small" />
+              </button>
+            </Show>
           </div>
           <IconButton
-            icon="chevron-right"
-            variant="ghost"
+            icon="magnifying-glass"
+            variant={searchQuery() && results().length > 0 ? "secondary" : "ghost"}
             size="small"
             class="size-7 rounded-md shrink-0"
             onClick={performSearch}
@@ -212,12 +224,14 @@ export default function SearchPanel(props: {
         <Show when={!searching() && searchQuery() && results().length === 0}>
           <div class="flex flex-col items-center justify-center py-8 text-13-regular text-text-weaker gap-2">
 
+            <Icon name="circle-x" size="large" class="text-icon-weaker opacity-40" />
             <span>No results found</span>
           </div>
         </Show>
         <Show when={!searching() && !searchQuery()}>
           <div class="flex flex-col items-center justify-center py-8 text-13-regular text-text-weaker gap-2 px-4 text-center">
 
+            <Icon name="magnifying-glass" size="large" class="text-icon-weaker opacity-40" />
             <span>Search across your project files</span>
             <span class="text-12-regular">Type a search term and press Enter</span>
           </div>

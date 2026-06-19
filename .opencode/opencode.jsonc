@@ -1,24 +1,70 @@
 {
   "$schema": "https://opencode.ai/config.json",
+
+  // ─── Plugins ───────────────────────────────────────────────
+  "plugin": [
+    "opencode-dynamic-context-pruning", // prune stale tool outputs automatically
+    "opencode-shell-strategy",          // prevent agent from hanging on TTY commands
+    "opencode-vibeguard"                // redact secrets/PII before they hit the LLM
+  ],
+
+  // ─── Provider: let users bring their own key ───────────────
+  // Leave provider config minimal; expose a key input in your IDE UI
+  // and inject via env at runtime (ANTHROPIC_API_KEY, OPENAI_API_KEY etc.)
   "provider": {},
+
+  // ─── Permissions: safe defaults for public users ───────────
   "permission": {
-    "edit": "ask",
-    "bash": "ask",
-    "read": "allow",
-    "glob": "allow",
-    "grep": "allow"
+    "read": "allow",      // reading files is safe
+    "glob": "allow",      // file discovery is safe
+    "grep": "allow",      // searching is safe
+    "edit": "ask",        // always ask before modifying files
+    "bash": "ask",        // always ask before running shell commands
+    "webfetch": "ask",    // ask before fetching external URLs
+    "websearch": "ask",   // ask before web searches
+    "lsp": "allow"        // code intelligence, no risk
   },
-  "references": {
-    "effect": {
-      "repository": "github.com/Effect-TS/effect-smol",
-      "description": "Use for Effect v4 and effect-smol implementation details"
-    },
-    "opencode-local": {
-      "path": "~/.local/share/opencode",
-      "description": "Contains opencode logs and data"
+
+  // ─── MCP servers ───────────────────────────────────────────
+  "mcp": {
+    // Fresh library docs — prevents hallucinating old APIs
+    // Critical for a public IDE where users work on all kinds of projects
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
     }
   },
-  "mcp": {},
+
+  // ─── File watcher: ignore noise ────────────────────────────
+  "watcher": {
+    "ignore": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".git/**",
+      "__pycache__/**",
+      "*.pyc",
+      ".next/**",
+      ".nuxt/**",
+      "coverage/**",
+      "*.log"
+    ]
+  },
+
+  // ─── IDE-aware instructions ────────────────────────────────
+  // These tell the agent it's running inside a full IDE context
+  "instructions": [
+    ".opencode/rules/ide.md"   // create this file per project
+  ],
+
+  // ─── Context compaction ────────────────────────────────────
+  // Important for public users with long sessions
+  "compaction": {
+    "enabled": true
+  },
+
+  // ─── Disable tools irrelevant to IDE users ─────────────────
   "tools": {
     "github-triage": false,
     "github-pr-search": false

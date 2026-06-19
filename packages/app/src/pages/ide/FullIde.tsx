@@ -34,14 +34,16 @@ import { base64Encode } from "@opencode-ai/core/util/encode"
 import { decode64 } from "@/utils/base64"
 import { useServerSync } from "@/context/server-sync"
 import { sortedRootSessions } from "@/pages/layout/helpers"
-import Session from "@/pages/session"
 import { useTerminal } from "@/context/terminal"
+import { sessionPermissionRequest } from "@/pages/session/composer/session-request-tree"
+import { usePermission } from "@/context/permission"
+import { useSync } from "@/context/sync"
 
 // Reuse existing panels + extend
 import HeaderBar from "./HeaderBar"
 import ModernStatusBar from "./ModernStatusBar"
 import ActivityBar, { type ActivityBarTab, type BottomPanelTab } from "./ActivityBar"
-import BottomPanel, { ProblemsTab, OutputTab, DebugConsoleTab, AILogsTab } from "./BottomPanel"
+import BottomPanel, { ProblemsTab, OutputTab, DebugConsoleTab } from "./BottomPanel"
 import CommandPaletteV2 from "./CommandPaletteV2"
 import type { PaletteAction } from "./CommandPaletteV2"
 import SearchPanel from "./SearchPanel"
@@ -76,7 +78,6 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "problems", label: "Problems", icon: "circle-x", position: "bottom", visible: false, height: 220, order: 7 },
   { id: "output", label: "Output", icon: "console", position: "bottom", visible: false, height: 220, order: 8 },
   { id: "debug-console", label: "Debug Console", icon: "window-cursor", position: "bottom", visible: false, height: 220, order: 9 },
-  { id: "ai-logs", label: "AI Logs", icon: "brain", position: "bottom", visible: false, height: 220, order: 10 },
 ]
 
 function getShellInfo(title: string | undefined) {
@@ -111,6 +112,8 @@ export default function FullIde() {
   const serverSync = useServerSync()
   const pickDirectory = useDirectoryPicker()
   const terminal = useTerminal()
+  const permission = usePermission()
+  const sync = useSync()
 
   // ── Layout state ──
   const savedLayout = (() => {
@@ -122,12 +125,12 @@ export default function FullIde() {
   const initialPanels = savedLayout?.panels?.length ? savedLayout.panels : MERGED_DEFAULT
   const panelManager = createPanelManager(initialPanels)
   if (savedLayout?.floatingPanels?.length) {
-    ;(panelManager as any).floatingPanels.set(savedLayout.floatingPanels)
+    ; (panelManager as any).floatingPanels.set(savedLayout.floatingPanels)
   }
 
   createEffect(() => {
     const layout = { panels: panelManager.panels(), floatingPanels: panelManager.floatingPanels() }
-    try { localStorage.setItem('ideLayout', JSON.stringify(layout)) } catch {}
+    try { localStorage.setItem('ideLayout', JSON.stringify(layout)) } catch { }
   })
 
   const [sidebarWidth, setSidebarWidth] = createSignal(280)
@@ -148,7 +151,7 @@ export default function FullIde() {
       title: "Connecting",
       description: `Connecting to ${type} host: ${target}...`,
     })
-    
+
     setTimeout(() => {
       setRemoteConnection(`${type === "Container" ? "Container" : type}: ${target}`)
       showToast({
@@ -236,6 +239,44 @@ export default function FullIde() {
     const currentDir = dir()
     if (!currentDir) return
     void file.tree.refresh("")
+  })
+
+  // ── Pending Edit Diff Preview ──
+  const pendingEditPermission = createMemo(() => {
+    const sessionID = activeSessionId()
+    if (!sessionID) return undefined
+    const req = sessionPermissionRequest(sync().data.session, sync().data.permission, sessionID, (item) => {
+      return !permission.autoResponds(item, sdk().directory)
+    })
+    if (req?.permission === "edit" || req?.permission === "replace_file_content" || req?.permission === "write") return req
+    return undefined
+  })
+
+  const pendingEditToolArgs = createMemo(() => {
+    const req = pendingEditPermission()
+    if (!req || !req.tool) return undefined
+    const parts = sync().data.part[req.tool.messageID]
+    if (!parts) return undefined
+    const toolPart = parts.find((p: any) => p.type === "tool" && p.callID === req.tool!.callID)
+    if (!toolPart || toolPart.type !== "tool") return undefined
+    const input = (toolPart.state as any).input
+    if (!input) return undefined
+    const filePath = input.path || input.filePath || ""
+    const content = input.content || input.code || ""
+    if (!filePath) return undefined
+    return { path: filePath, content }
+  })
+
+  // Whenever a pending edit starts, auto-focus the file and load its content
+  createEffect(() => {
+    const args = pendingEditToolArgs()
+    if (!args?.path) return
+    void (async () => {
+      await file.load(args.path)
+      const state = file.get(args.path)
+      const original = (state?.content?.type === "text") ? state.content.content : ""
+      workspace.openFile(args.path, original)
+    })()
   })
 
   // ── Resize ──
@@ -617,8 +658,8 @@ export default function FullIde() {
     saveAs: () => { showToast({ title: "Save As", description: "Save As dialog coming soon" }) },
     saveAll: () => { showToast({ title: "Save All", description: "Save All functionality coming soon" }) },
     closeEditor: () => {
-       const activeFile = editor.activeFile()
-       if (activeFile) workspace.closeFile(activeFile, workspace.getActiveGroup()?.id ?? "")
+      const activeFile = editor.activeFile()
+      if (activeFile) workspace.closeFile(activeFile, workspace.getActiveGroup()?.id ?? "")
     },
     closeFolder: () => { navigate("/ide") },
     closeWindow: () => window.close(),
@@ -645,8 +686,8 @@ export default function FullIde() {
     zoomOut: () => setFontSize(s => Math.max(8, s - 1)),
     resetZoom: () => setFontSize(13),
     toggleFullScreen: () => {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {})
-      else document.exitFullscreen().catch(() => {})
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { })
+      else document.exitFullscreen().catch(() => { })
     },
     toggleZenMode: () => { showToast({ title: "Zen Mode", description: "Coming soon" }) },
     togglePanel: () => toggleBottomPanel("terminal-area"),
@@ -680,7 +721,7 @@ export default function FullIde() {
       <HeaderBar
         workspaceName={getFilename(dir()) || "Untitled"}
         activeFile={getFilename(editor.activeFile() ?? "") || ""}
-        onSearch={() => {}}
+        onSearch={() => { }}
         onCommandPalette={() => setCommandPaletteOpen(true)}
         onToggleLeftPanel={() => toggleLeftPanel("explorer")}
         onToggleRightPanel={() => { if (rightPanel()) panelManager.hidePanel(rightPanel()!.id); else panelManager.showPanel("ai-chat") }}
@@ -720,10 +761,10 @@ export default function FullIde() {
                       <span class="text-11-bold text-text-strong uppercase truncate">{getFilename(dir()) || "opencode-web"}</span>
                     </div>
                     <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <IconButton icon="file-add" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); startCreate("file", "") }} />
-                      <IconButton icon="folder-add" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); startCreate("directory", "") }} />
-                      <IconButton icon="refresh" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.refresh("") }} />
-                      <IconButton icon="collapse-all" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.collapse("") }} />
+                      <IconButton icon="plus" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); startCreate("file", "") }} />
+                      <IconButton icon="folder" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); startCreate("directory", "") }} />
+                      <IconButton icon="reset" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.refresh("") }} />
+                      <IconButton icon="collapse" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.collapse("") }} />
                     </div>
                   </div>
                   <FileTree path="" active={editor.activeFile()} onFileClick={handleFileClick} />
@@ -793,6 +834,31 @@ export default function FullIde() {
             wordWrap={wordWrap()}
             formatTrigger={formatTrigger()}
             onInlineAIAction={(payload, groupId) => handleInlineAIAction(payload)}
+            previewDiff={
+              (() => {
+                const args = pendingEditToolArgs()
+                if (!args?.path) return undefined
+                const state = file.get(args.path)
+                const original = (state?.content?.type === "text") ? state.content.content : ""
+                return { path: args.path, modified: args.content, original }
+              })()
+            }
+            onAcceptDiff={() => {
+              const req = pendingEditPermission()
+              if (!req) return
+              sdk().client.permission.respond({ sessionID: req.sessionID, permissionID: req.id, response: "once" })
+                .catch((err: unknown) => {
+                  showToast({ title: "Failed to accept", description: err instanceof Error ? err.message : String(err) })
+                })
+            }}
+            onRejectDiff={() => {
+              const req = pendingEditPermission()
+              if (!req) return
+              sdk().client.permission.respond({ sessionID: req.sessionID, permissionID: req.id, response: "reject" })
+                .catch((err: unknown) => {
+                  showToast({ title: "Failed to reject", description: err instanceof Error ? err.message : String(err) })
+                })
+            }}
           />
 
 
@@ -812,7 +878,7 @@ export default function FullIde() {
                 else if (profile === "Command Prompt") command = "cmd";
                 else if (profile === "Git Bash") command = "bash";
                 else if (profile === "WSL") command = "wsl";
-                
+
                 if (command) terminal.newShell({ command, title: profile });
                 else terminal.new();
               }}
@@ -892,7 +958,6 @@ export default function FullIde() {
                   </Match>
                   <Match when={tab === "output"}><OutputTab lines={[]} /></Match>
                   <Match when={tab === "debug-console"}><DebugConsoleTab lines={[]} /></Match>
-                  <Match when={tab === "ai-logs"}><AILogsTab logs={[]} /></Match>
                 </Switch>
               )}
             </BottomPanel>
@@ -913,7 +978,7 @@ export default function FullIde() {
         <Show when={rightPanel()}>
           <div class="shrink-0 flex flex-col border-l border-border-base bg-surface-base relative" style={{ width: `${rightPanelWidth()}px` }}>
             <div class="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-accent-base/30 transition-colors z-10" onMouseDown={handleRightResizeStart} />
-            
+
             <Show when={rightPanel()?.id === "ai-chat"}>
               <AIWorkspacePanel
                 onClose={() => panelManager.hidePanel("ai-chat")}
@@ -967,11 +1032,11 @@ export default function FullIde() {
               class="w-full px-3 py-2 text-13-regular bg-surface-base border border-border-base rounded-lg outline-none focus:border-accent-base text-text-strong"
               placeholder={creating() ? "Enter name..." : "Enter new name..."}
               value={renameValue()}
-                    onInput={(e) => setRenameValue(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") { if (creating()) confirmCreate(); else confirmRename() }
-                      if (e.key === "Escape") { setRenaming(null); setCreating(null) }
-                    }}
+              onInput={(e) => setRenameValue(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") { if (creating()) confirmCreate(); else confirmRename() }
+                if (e.key === "Escape") { setRenaming(null); setCreating(null) }
+              }}
               autofocus
             />
 
@@ -1048,7 +1113,7 @@ export default function FullIde() {
               theme={theme()} setTheme={setTheme}
               minimap={minimap()} setMinimap={setMinimap}
               wordWrapCol={wordWrapCol()} setWordWrapCol={setWordWrapCol}
-              onCloseKeybindings={() => {}}
+              onCloseKeybindings={() => { }}
             />
           </div>
         </div>
