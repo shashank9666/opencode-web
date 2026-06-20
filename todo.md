@@ -15,6 +15,7 @@
 - [ ] 18. Settings panel: options to dynamically operate `opencode.jsonc`.
 - [ ] 19. Fix the line and column tracker in the bottom bar (currently not working).
 - [ ] 19. Language support for popular languages (TypeScript, JavaScript, Python, C/C++, Go, Java, etc.).
+- [ ] 23. Top breadcrumbs navigation in the editor (e.g., file > function > object) similar to VS Code.
 
 ## 3. Search & Navigation
 - [ ] 4. Advanced Search Explorer with options: find word/letters, files to include, files to exclude, replace all, match case, match whole word, use regular expressions, collapse all, view as tree, open new search editor, refresh, clear search results.
@@ -35,6 +36,7 @@
 ## 6. Built-in Extensions & Remote
 - [ ] 7. Remote Explorer: after connecting (WSL, SSH, or Container), show its explorer to open files remotely.
 - [ ] 10. Built-in Extensions: Explorer, Search, Source Control, Terminal, Problems, Editor Tabs, Command Palette, Prettier, ESLint, Tailwind IntelliSense, Path IntelliSense, Error Lens, AI Chat, AI Completion, AI Actions, Git Integration, NPM Scripts.
+- [ ] 24. Additional Built-in Extensions requested: Rainbow CSV, Import Cost, NPM Intellisense, TLDR support.
 - [ ] 10. Fix Error Lens (currently doesn't show syntax errors/problems in code properly).
 - [ ] 22. Add general third-party extension support if possible.
 
