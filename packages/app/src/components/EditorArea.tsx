@@ -9,6 +9,8 @@ import { SplitPane } from "./SplitPane";
 import type { EditorNode, EditorGroup, OpenFile } from "./editor-workspace";
 import * as monaco from "monaco-editor";
 import { useFile } from "@/context/file";
+import { useSettings } from "@/context/settings";
+import { debounce } from "@solid-primitives/scheduled";
 
 import { Button } from "@opencode-ai/ui/button";
 
@@ -53,6 +55,13 @@ export function EditorArea(props: {
   const [editorColumn, setEditorColumn] = createSignal(1);
 
   const file = useFile();
+  const settings = useSettings();
+
+  const debouncedSave = debounce((filePath: string, groupId: string) => {
+    if (settings.general.autoSave()) {
+      void props.onSaveFile(filePath, groupId);
+    }
+  }, 1000);
 
   // Auto-reload file content from disk when it changes (e.g. from AI edits)
   createEffect(() => {
@@ -269,13 +278,16 @@ export function EditorArea(props: {
                 <IdeEditor
                   path={state().path}
                   content={state().content}
-                  onChange={(v) => props.workspace.setContent(state().path, v, group().id)}
+                  onChange={(v) => {
+                    props.workspace.setContent(state().path, v, group().id);
+                    debouncedSave(state().path, group().id);
+                  }}
                   onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
                   onEditorReady={(e) => setEditorInstance(e)}
                   formatTrigger={props.formatTrigger}
                   class="flex-1 min-h-0"
                   fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
-                  onProvideCompletionItems={async (model, position) => {
+                  onProvideCompletionItems={settings.general.inlineCodeSuggestions() ? async (model, position) => {
                     const lineContent = model.getLineContent(position.lineNumber)
                     if (lineContent.trim() === "// mock") {
                       return {
@@ -286,7 +298,7 @@ export function EditorArea(props: {
                       }
                     }
                     return { items: [] }
-                  }}
+                  } : undefined}
                 />
                 <InlineAIToolbar
                   editor={editorInstance()}

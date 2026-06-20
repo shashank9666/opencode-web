@@ -1,6 +1,7 @@
 import { Component, For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerSync } from "@/context/server-sync"
+import { useSync } from "@/context/sync"
 import { createStore } from "solid-js/store"
 import { TextField } from "@opencode-ai/ui/text-field"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
@@ -9,6 +10,7 @@ import { SettingsListV2 } from "./parts/list"
 export const SettingsMcpV2: Component = () => {
   const language = useLanguage()
   const serverSync = useServerSync()
+  const sync = useSync()
   const [state, setState] = createStore({
     newName: "",
     newJson: "{\n  \"type\": \"stdio\",\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"@modelcontextprotocol/server-postgres\", \"postgresql://localhost/mydb\"]\n}",
@@ -17,6 +19,14 @@ export const SettingsMcpV2: Component = () => {
   })
 
   const mcpServers = () => serverSync().data.config.mcp ?? {}
+  const activeMcp = () => sync().data.mcp ?? {}
+
+  const combinedMcpNames = () => {
+    const set = new Set<string>()
+    Object.keys(mcpServers()).forEach((k) => set.add(k))
+    Object.keys(activeMcp()).forEach((k) => set.add(k))
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }
 
   const addMcp = async () => {
     const name = state.newName.trim()
@@ -70,32 +80,46 @@ export const SettingsMcpV2: Component = () => {
           
           <SettingsListV2>
             <Show
-              when={Object.keys(mcpServers()).length > 0}
+              when={combinedMcpNames().length > 0}
               fallback={
                 <div class="settings-v2-provider-empty">No MCP servers configured</div>
               }
             >
-              <For each={Object.entries(mcpServers())}>
-                {([name, config]: [string, any]) => (
-                  <div class="settings-v2-provider-row group">
-                    <div class="settings-v2-provider-lead">
-                      <div class="settings-v2-provider-main flex flex-col gap-1">
-                        <span class="settings-v2-provider-name truncate">{name}</span>
-                        <span class="text-12-regular text-text-weak truncate">
-                          {config.type === "stdio" ? `stdio: ${config.command} ${config.args?.join(" ")}` : config.url ? `remote: ${config.url}` : "Unknown type"}
-                        </span>
+              <For each={combinedMcpNames()}>
+                {(name: string) => {
+                  const config = mcpServers()[name] as any
+                  const isUserConfigured = !!config
+                  const typeLabel = config
+                    ? config.type === "stdio"
+                      ? `stdio: ${config.command} ${config.args?.join(" ")}`
+                      : config.url
+                        ? `remote: ${config.url}`
+                        : "Unknown type"
+                    : "Provided by workspace or plugin"
+
+                  return (
+                    <div class="settings-v2-provider-row group">
+                      <div class="settings-v2-provider-lead">
+                        <div class="settings-v2-provider-main flex flex-col gap-1">
+                          <span class="settings-v2-provider-name truncate">{name}</span>
+                          <span class="text-12-regular text-text-weak truncate">
+                            {typeLabel}
+                          </span>
+                        </div>
                       </div>
+                      <Show when={isUserConfigured}>
+                        <ButtonV2 
+                          size="normal" 
+                          variant="ghost-muted" 
+                          onClick={() => void removeMcp(name)}
+                          disabled={state.pending}
+                        >
+                          Remove
+                        </ButtonV2>
+                      </Show>
                     </div>
-                    <ButtonV2 
-                      size="normal" 
-                      variant="ghost-muted" 
-                      onClick={() => void removeMcp(name)}
-                      disabled={state.pending}
-                    >
-                      Remove
-                    </ButtonV2>
-                  </div>
-                )}
+                  )
+                }}
               </For>
             </Show>
           </SettingsListV2>

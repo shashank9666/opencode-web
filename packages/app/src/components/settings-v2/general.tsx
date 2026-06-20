@@ -260,6 +260,30 @@ export const SettingsGeneralV2: Component = () => {
         </SettingsRowV2>
 
         <SettingsRowV2
+          title="Auto Save"
+          description="Automatically save files when changes are made."
+        >
+          <div data-action="settings-auto-save">
+            <Switch
+              checked={settings.general.autoSave()}
+              onChange={(checked) => settings.general.setAutoSave(checked)}
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title="Inline Code Suggestions"
+          description="Show inline code suggestions from AI as you type."
+        >
+          <div data-action="settings-inline-code-suggestions">
+            <Switch
+              checked={settings.general.inlineCodeSuggestions()}
+              onChange={(checked) => settings.general.setInlineCodeSuggestions(checked)}
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
           title={language.t("settings.general.row.shell.title")}
           description={language.t("settings.general.row.shell.description")}
         >

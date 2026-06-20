@@ -21,6 +21,7 @@ export interface SoundSettings {
 export interface Settings {
   general: {
     autoSave: boolean
+    inlineCodeSuggestions: boolean
     releaseNotes: boolean
     followup: "queue" | "steer"
     showFileTree: boolean
@@ -107,6 +108,7 @@ export function terminalFontFamily(font: string | undefined) {
 const defaultSettings: Settings = {
   general: {
     autoSave: true,
+    inlineCodeSuggestions: true,
     releaseNotes: true,
     followup: "steer",
     showFileTree: false,
@@ -186,6 +188,10 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         autoSave: withFallback(() => store.general?.autoSave, defaultSettings.general.autoSave),
         setAutoSave(value: boolean) {
           setStore("general", "autoSave", value)
+        },
+        inlineCodeSuggestions: withFallback(() => store.general?.inlineCodeSuggestions, defaultSettings.general.inlineCodeSuggestions),
+        setInlineCodeSuggestions(value: boolean) {
+          setStore("general", "inlineCodeSuggestions", value)
         },
         releaseNotes: withFallback(() => store.general?.releaseNotes, defaultSettings.general.releaseNotes),
         setReleaseNotes(value: boolean) {

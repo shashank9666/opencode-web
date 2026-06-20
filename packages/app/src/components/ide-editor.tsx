@@ -206,7 +206,16 @@ export default function IdeEditor(props: {
   createEffect(() => {
     if (!editor) return
     const current = editor.getValue()
-    if (current !== props.content) editor.setValue(props.content)
+    if (current !== props.content) {
+      const state = editor.saveViewState()
+      editor.executeEdits("auto-reload", [
+        {
+          range: editor.getModel()!.getFullModelRange(),
+          text: props.content,
+        },
+      ])
+      if (state) editor.restoreViewState(state)
+    }
   })
 
   createEffect(() => {
