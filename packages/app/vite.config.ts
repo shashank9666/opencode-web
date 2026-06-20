@@ -61,7 +61,7 @@ export default debug;\n`,
 export default defineConfig({
   plugins: [desktopPlugin, sentry, debugCjsFixPlugin()] as any,
   optimizeDeps: {
-    include: ["debug"],
+    include: ["debug", "extend"],
   },
   esbuild: {
     jsx: "automatic",
