@@ -27,12 +27,10 @@
 
   // ─── MCP servers ───────────────────────────────────────────
   "mcp": {
-    // Fresh library docs — prevents hallucinating old APIs
-    // Critical for a public IDE where users work on all kinds of projects
     "context7": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "enabled": true,
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"]
     }
   },
 
@@ -61,7 +59,7 @@
   // ─── Context compaction ────────────────────────────────────
   // Important for public users with long sessions
   "compaction": {
-    "enabled": true
+    "auto": true
   },
 
   // ─── Disable tools irrelevant to IDE users ─────────────────

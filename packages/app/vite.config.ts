@@ -19,13 +19,52 @@ const sentry =
       })
     : false
 
+function debugCjsFixPlugin(): any {
+  const proxyId = "\0debug-proxy"
+  return {
+    name: "debug-cjs-fix",
+    enforce: "pre",
+    resolveId(id: string) {
+      if (id === "debug") return proxyId
+      return null
+    },
+    load(id: string) {
+      if (id === proxyId) {
+        return {
+          code: `
+function debug() {}
+debug.formatArgs = function() {};
+debug.save = function() {};
+debug.load = function() { return []; };
+debug.useColors = function() { return false; };
+debug.storage = typeof localStorage !== 'undefined' ? localStorage : {};
+debug.destroy = function() {};
+debug.colors = [6, 2, 3, 4, 5, 1];
+debug.createDebug = function(ns) { var d = function() {}; d.namespace = ns; d.log = function(){}; d.extend = function(){return d;}; d.enabled = false; return d; };
+debug.log = typeof console !== 'undefined' ? (console.debug || console.log || function() {}) : function() {};
+debug.init = function() {};
+debug.enable = function() {};
+debug.disable = function() {};
+debug.enabled = function() { return false; };
+debug.humanize = function() { return 0; };
+debug.names = [];
+debug.skips = [];
+debug.selectColor = function() { return 0; };
+export default debug;\n`,
+        }
+      }
+      return null
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [desktopPlugin, sentry] as any,
-  esbuild: {
-    jsx: "automatic",
-  },
+  plugins: [desktopPlugin, sentry, debugCjsFixPlugin()] as any,
   optimizeDeps: {
     include: ["debug"],
+  },
+  esbuild: {
+    jsx: "automatic",
   },
   server: {
     host: "0.0.0.0",

@@ -14,7 +14,7 @@ export const SettingsMcpV2: Component = () => {
   const sync = useSync()
   const [state, setState] = createStore({
     newName: "",
-    newJson: "{\n  \"type\": \"stdio\",\n  \"command\": \"npx\",\n  \"args\": [\"-y\", \"@modelcontextprotocol/server-postgres\", \"postgresql://localhost/mydb\"]\n}",
+    newJson: "{\n  \"type\": \"local\",\n  \"command\": [\"npx\", \"-y\", \"@modelcontextprotocol/server-postgres\", \"postgresql://localhost/mydb\"]\n}",
     pending: false,
     error: "",
   })
@@ -107,8 +107,8 @@ export const SettingsMcpV2: Component = () => {
                   const config = mcpServers()[name] as any
                   const isUserConfigured = !!config
                   const typeLabel = config
-                    ? config.type === "stdio"
-                      ? `stdio: ${config.command} ${config.args?.join(" ")}`
+                    ? config.type === "local" || config.type === "stdio"
+                      ? `local: ${Array.isArray(config.command) ? config.command.join(" ") : config.command}${config.args ? " " + config.args.join(" ") : ""}`
                       : config.url
                         ? `remote: ${config.url}`
                         : "Unknown type"
