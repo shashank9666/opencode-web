@@ -87,8 +87,15 @@ export default function InlineAIToolbar(props: InlineAIToolbarProps) {
     const editor = props.editor
     if (!editor) return
 
+    let isDragging = false
+
     const updateToolbar = () => {
       if (props.disabled) {
+        setVisible(false)
+        return
+      }
+
+      if (isDragging) {
         setVisible(false)
         return
       }
@@ -143,6 +150,20 @@ export default function InlineAIToolbar(props: InlineAIToolbarProps) {
 
     const disposables = [
       editor.onDidChangeCursorSelection(updateToolbar),
+      editor.onDidScrollChange(() => {
+        if (visible()) updateToolbar()
+      }),
+      editor.onMouseDown(() => {
+        isDragging = true
+        setVisible(false)
+      }),
+      editor.onMouseUp(() => {
+        isDragging = false
+        updateToolbar()
+      }),
+      editor.onKeyUp(() => {
+        updateToolbar()
+      }),
       editor.onDidBlurEditorWidget(() => setTimeout(() => setVisible(false), 150)),
     ]
 
