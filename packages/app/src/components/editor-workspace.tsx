@@ -48,14 +48,14 @@ export function createEditorWorkspace() {
     setRootNode(prev => updateGroup(prev, groupId, (g) => {
       const existing = g.files.find(f => f.path === path);
       if (existing) {
-        // Update content if file was reloaded from disk; keep originalContent for diff
+        // Update content if file was reloaded from disk
         return {
           ...g,
           files: g.files.map(f => f.path === path ? { ...f, content, savedContent: content, dirty: false } : f),
           activeFile: path
         };
       }
-      return { ...g, files: [...g.files, { path, content, savedContent: content, originalContent: content, dirty: false }], activeFile: path };
+      return { ...g, files: [...g.files, { path, content, savedContent: content, dirty: false }], activeFile: path };
     }));
   };
 
