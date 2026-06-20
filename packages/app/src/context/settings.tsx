@@ -178,6 +178,46 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       const root = document.documentElement
       root.style.setProperty("--font-family-mono", monoFontFamily(store.appearance?.mono))
       root.style.setProperty("--font-family-sans", sansFontFamily(store.appearance?.sans))
+
+      const accent = store.appearance?.customAccentColor
+      if (accent) {
+        root.style.setProperty("--surface-brand-base", accent)
+        root.style.setProperty("--surface-brand-hover", accent)
+        root.style.setProperty("--surface-interactive-base", accent)
+        root.style.setProperty("--surface-interactive-hover", accent)
+        root.style.setProperty("--border-selected", accent)
+        root.style.setProperty("--border-interactive-base", accent)
+        root.style.setProperty("--border-interactive-hover", accent)
+        root.style.setProperty("--icon-interactive-base", accent)
+        root.style.setProperty("--v2-text-text-accent", accent)
+        root.style.setProperty("--v2-text-text-accent-hover", accent)
+        root.style.setProperty("--v2-border-border-accent", accent)
+        root.style.setProperty("--v2-icon-icon-accent", accent)
+      } else {
+        root.style.removeProperty("--surface-brand-base")
+        root.style.removeProperty("--surface-brand-hover")
+        root.style.removeProperty("--surface-interactive-base")
+        root.style.removeProperty("--surface-interactive-hover")
+        root.style.removeProperty("--border-selected")
+        root.style.removeProperty("--border-interactive-base")
+        root.style.removeProperty("--border-interactive-hover")
+        root.style.removeProperty("--icon-interactive-base")
+        root.style.removeProperty("--v2-text-text-accent")
+        root.style.removeProperty("--v2-text-text-accent-hover")
+        root.style.removeProperty("--v2-border-border-accent")
+        root.style.removeProperty("--v2-icon-icon-accent")
+      }
+
+      const bg = store.appearance?.customBackgroundColor
+      if (bg) {
+        root.style.setProperty("--background-base", bg)
+        root.style.setProperty("--input-base", bg)
+        root.style.setProperty("--v2-background-bg-base", bg)
+      } else {
+        root.style.removeProperty("--background-base")
+        root.style.removeProperty("--input-base")
+        root.style.removeProperty("--v2-background-bg-base")
+      }
     })
 
     createEffect(() => {
