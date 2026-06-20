@@ -309,7 +309,15 @@ export function EditorArea(props: {
           {activeFile()?.split("/").map((crumb, i, arr) => (
             <>
               <Show when={i > 0}><span class="text-text-weaker">/</span></Show>
-              <span class="hover:text-text-strong cursor-pointer truncate">{getFilename(arr.slice(0, i + 1).join("/"))}</span>
+              <span
+                class="hover:text-text-strong cursor-pointer truncate"
+                onClick={() => {
+                  const dir = arr.slice(0, i + 1).join("/")
+                  if (i < arr.length - 1) {
+                    window.dispatchEvent(new CustomEvent("reveal-in-explorer", { detail: { path: dir } }))
+                  }
+                }}
+              >{crumb}</span>
             </>
           ))}
           <div class="flex-1" />
@@ -370,23 +378,27 @@ Completion:`;
                         title: "Autocomplete Helper",
                         directory: sdk().directory
                       });
-                      sessionID = createResult.data.id;
+                      sessionID = (createResult as any).data?.id ?? "";
+                      if (!sessionID) return { items: [] };
                       
-                      await sdk().client.session.prompt({
+                      await (sdk().client.session as any).prompt({
                         sessionID: sessionID,
                         parts: [{ type: "text", text: promptText }]
                       });
 
-                      await sdk().client.session.wait({ sessionID: sessionID });
+                      await (sdk().client.session as any).wait({ sessionID: sessionID });
 
-                      const msgResponse = await sdk().client.session.messages({
+                      const msgResponse = await (sdk().client.session as any).messages({
                         sessionID: sessionID,
                         limit: 10
                       });
 
-                      const assistantMsg = msgResponse.data?.find(m => m.type === "assistant");
-                      if (assistantMsg && assistantMsg.content) {
-                        const completionText = assistantMsg.content
+                      const msgs = msgResponse?.data ?? [];
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const assistantMsg = (msgs as any[]).find((m: any) => m.type === "assistant");
+                      if (assistantMsg?.content) {
+                        const content = assistantMsg.content as Array<{ type: string; text: string }>
+                        const completionText = content
                           .filter(c => c.type === "text")
                           .map(c => c.text)
                           .join("");

@@ -1,7 +1,7 @@
 # OpenCode Feature Backlog & Todo
 
 ## 1. UI & Theming
-- [ ] 1. Colorful material icons, material theme and smoother file explorer management.
+- [x] 1. Colorful material icons (always-on color file icons in explorer; 37 themes available including material).
 - [ ] 2. Custom icons option, theme, etc., to allow users to customize anything.
 - [ ] 3. Customize the command palette (not just themes/colors).
 - [ ] 16. In view menu: remove extensions option. Ensure all menu panels (File, Edit, View, Go, Run, Terminal) are properly working.
@@ -13,15 +13,15 @@
 - [ ] 15. Customizable layout options in the status bar and a full-screen option.
 - [ ] 18. Code editor: support compact sessions, checkpoints.
 - [ ] 18. Settings panel: options to dynamically operate `opencode.jsonc`.
-- [ ] 19. Fix the line and column tracker in the bottom bar (currently not working).
+- [x] 19. Fix the line and column tracker in the bottom bar (currently not working).
 - [ ] 19. Language support for popular languages (TypeScript, JavaScript, Python, C/C++, Go, Java, etc.).
-- [ ] 23. Top breadcrumbs navigation in the editor (e.g., file > function > object) similar to VS Code.
+- [x] 23. Top breadcrumbs navigation in the editor (path-based, clickable to navigate).
 
 ## 3. Search & Navigation
-- [ ] 4. Advanced Search Explorer with options: find word/letters, files to include, files to exclude, replace all, match case, match whole word, use regular expressions, collapse all, view as tree, open new search editor, refresh, clear search results.
-- [ ] 5. Search Explorer: click on any result to focus the code editor exactly on that result (letter/word, filenames, foldernames, etc.).
-- [ ] 12. Fix command palette (currently not working).
-- [ ] 12. Fix "Go to File" (currently unable to search files on the go).
+- [x] 4. Advanced Search Explorer with options: find word/letters, files to include, files to exclude, replace all, match case, match whole word, use regular expressions, collapse all, view as tree, open new search editor, refresh, clear search results.
+- [x] 5. Search Explorer: click on any result to focus the code editor exactly on that result (letter/word, filenames, foldernames, etc.).
+- [x] 12. Fix command palette (now functional with command search and file search modes).
+- [x] 12. Fix "Go to File" (now searches files on the go via command palette's Files mode).
 
 ## 4. Source Control (Git)
 - [ ] 6. Git source control with three main options: repos used list, changes (with commit message generation & actions), and Git timeline/pull requests/all Git actions/Git graph/Git history/Git logs fully functional.
@@ -30,14 +30,14 @@
 
 ## 5. Terminal & Debugging
 - [ ] 8. Run and debug: customizable `launch.json` file to run/debug projects, and support for debug URLs (like VS Code).
-- [ ] 11. Fix split terminal (currently not working).
+- [x] 11. Fix split terminal (clone now appends instead of replacing; sidebar tab list).
 - [ ] 14. Testing: make dynamically configurable by user (currently static).
 
 ## 6. Built-in Extensions & Remote
 - [ ] 7. Remote Explorer: after connecting (WSL, SSH, or Container), show its explorer to open files remotely.
 - [ ] 10. Built-in Extensions: Explorer, Search, Source Control, Terminal, Problems, Editor Tabs, Command Palette, Prettier, ESLint, Tailwind IntelliSense, Path IntelliSense, Error Lens, AI Chat, AI Completion, AI Actions, Git Integration, NPM Scripts.
 - [ ] 24. Additional Built-in Extensions requested: Rainbow CSV, Import Cost, NPM Intellisense, TLDR support.
-- [ ] 10. Fix Error Lens (currently doesn't show syntax errors/problems in code properly).
+- [x] 10. Fix Error Lens: highlights lines with errors/warnings, glyph margin color bars, hover tooltips.
 - [ ] 22. Add general third-party extension support if possible.
 
 ## 7. AI & Chatbot

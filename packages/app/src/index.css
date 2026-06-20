@@ -178,4 +178,28 @@
       opacity: 1;
     }
   }
+
+  /* Error Lens */
+  .error-lens-line {
+    display: block;
+  }
+  .error-lens-line-error {
+    background: color-mix(in srgb, var(--v2-background-bg-deep, #1e1e1e) 70%, rgba(255, 60, 60, 0.08));
+    border-left: 3px solid rgba(255, 60, 60, 0.4);
+  }
+  .error-lens-line-warning {
+    background: color-mix(in srgb, var(--v2-background-bg-deep, #1e1e1e) 70%, rgba(255, 200, 60, 0.06));
+    border-left: 3px solid rgba(255, 200, 60, 0.3);
+  }
+  .error-lens-glyph {
+    width: 4px !important;
+    margin-left: 8px;
+    border-radius: 1px;
+  }
+  .error-lens-glyph-error {
+    background: rgb(255, 60, 60);
+  }
+  .error-lens-glyph-warning {
+    background: rgb(255, 200, 60);
+  }
 }

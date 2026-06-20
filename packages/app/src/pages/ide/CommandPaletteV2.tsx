@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 
 type CommandCategory = "files" | "editor" | "view" | "ai" | "git" | "terminal" | "settings" | "workspace"
@@ -40,14 +40,20 @@ export default function CommandPaletteV2(props: {
   onClose: () => void
   commands: PaletteAction[]
   onSearch?: (query: string) => void
+  onFileSearch?: (query: string) => Promise<string[]>
+  onFileSelect?: (path: string) => void
 }) {
   const [query, setQuery] = createSignal("")
   const [selectedIndex, setSelectedIndex] = createSignal(0)
   const [mode, setMode] = createSignal<"commands" | "files">("commands")
+  const [fileResults, setFileResults] = createSignal<string[]>([])
+  const [searching, setSearching] = createSignal(false)
   let inputRef: HTMLInputElement | undefined
   let listRef: HTMLDivElement | undefined
+  let searchTimer: ReturnType<typeof setTimeout> | undefined
 
   const filtered = createMemo(() => {
+    if (mode() === "files") return []
     const q = query().toLowerCase().trim()
     if (!q) return props.commands.slice(0, 50)
     return props.commands
@@ -71,10 +77,12 @@ export default function CommandPaletteV2(props: {
   })
 
   const executeSelected = () => {
-    const cmd = filtered()[selectedIndex()]
-    if (cmd) {
-      props.onClose()
-      cmd.onSelect()
+    if (mode() === "commands") {
+      const cmd = filtered()[selectedIndex()]
+      if (cmd) {
+        props.onClose()
+        cmd.onSelect()
+      }
     }
   }
 
@@ -83,6 +91,7 @@ export default function CommandPaletteV2(props: {
       setSelectedIndex(0)
       setQuery("")
       setMode("commands")
+      setFileResults([])
       setTimeout(() => inputRef?.focus(), 50)
     }
   })
@@ -95,16 +104,54 @@ export default function CommandPaletteV2(props: {
     if (el) el.scrollIntoView({ block: "nearest" })
   })
 
+  const handleQueryInput = (value: string) => {
+    setQuery(value)
+    setSelectedIndex(0)
+    props.onSearch?.(value)
+
+    if (mode() !== "files" || !props.onFileSearch) return
+
+    clearTimeout(searchTimer)
+    if (!value.trim()) {
+      setFileResults([])
+      setSearching(false)
+      return
+    }
+
+    setSearching(true)
+    searchTimer = setTimeout(async () => {
+      try {
+        const results = await props.onFileSearch!(value)
+        if (query() === value) {
+          setFileResults(results)
+        }
+      } catch {
+        // ignore
+      } finally {
+        setSearching(false)
+      }
+    }, 150)
+  }
+
   const handleKeyDown = (e: KeyboardEvent) => {
+    const maxIndex = mode() === "files" ? fileResults().length - 1 : filtered().length - 1
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setSelectedIndex(Math.min(selectedIndex() + 1, filtered().length - 1))
+      setSelectedIndex(Math.min(selectedIndex() + 1, maxIndex < 0 ? 0 : maxIndex))
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
       setSelectedIndex(Math.max(selectedIndex() - 1, 0))
     } else if (e.key === "Enter") {
       e.preventDefault()
-      executeSelected()
+      if (mode() === "files") {
+        const file = fileResults()[selectedIndex()]
+        if (file) {
+          props.onClose()
+          props.onFileSelect?.(file)
+        }
+      } else {
+        executeSelected()
+      }
     } else if (e.key === "Escape") {
       e.preventDefault()
       props.onClose()
@@ -128,9 +175,9 @@ export default function CommandPaletteV2(props: {
               ref={inputRef}
               type="text"
               class="flex-1 bg-transparent text-14-regular text-text-strong outline-none placeholder:text-text-weaker"
-              placeholder="Search commands, files, symbols..."
+              placeholder={mode() === "files" ? "Search files by name..." : "Search commands, files, symbols..."}
               value={query()}
-              onInput={(e) => { setQuery(e.currentTarget.value); setSelectedIndex(0); props.onSearch?.(e.currentTarget.value) }}
+              onInput={(e) => handleQueryInput(e.currentTarget.value)}
               onKeyDown={handleKeyDown}
             />
             <Show when={query()}>
@@ -153,7 +200,7 @@ export default function CommandPaletteV2(props: {
                 "bg-background-base text-text-strong": mode() === "commands",
                 "text-text-weaker hover:text-text-weak": mode() !== "commands",
               }}
-              onClick={() => setMode("commands")}
+              onClick={() => { setMode("commands"); setQuery(""); setFileResults([]) }}
             >
               Commands
             </button>
@@ -164,7 +211,7 @@ export default function CommandPaletteV2(props: {
                 "bg-background-base text-text-strong": mode() === "files",
                 "text-text-weaker hover:text-text-weak": mode() !== "files",
               }}
-              onClick={() => setMode("files")}
+              onClick={() => { setMode("files"); setQuery(""); setFileResults([]) }}
             >
               Files
             </button>
@@ -177,72 +224,106 @@ export default function CommandPaletteV2(props: {
             onKeyDown={handleKeyDown}
           >
             <Show
-              when={filtered().length > 0}
+              when={mode() === "files" ? fileResults().length > 0 : filtered().length > 0}
               fallback={
                 <div class="flex flex-col items-center gap-2 px-6 py-10 text-center">
                   <Icon name="magnifying-glass-menu" size="large" class="text-icon-weaker opacity-30" />
                   <div class="text-13-regular text-text-weaker">
-                    {query() ? "No matching commands" : "Type a command name"}
+                    {mode() === "files"
+                      ? (query() ? (searching() ? "Searching..." : "No matching files") : "Type a file name to search")
+                      : (query() ? "No matching commands" : "Type a command name")}
                   </div>
                 </div>
               }
             >
-              <For each={grouped()}>
-                {([category, cmds]) => (
-                  <div class="pb-1">
-                    <div class="flex items-center gap-1.5 px-4 py-1.5 text-11-medium text-text-weaker uppercase tracking-wider">
-                      <Icon name={CATEGORY_ICONS[category] as any} size="small" class="text-icon-weaker" />
-                      {CATEGORY_LABELS[category]}
-                    </div>
-                    <For each={cmds}>
-                      {(cmd, i) => {
-                        const globalIndex = () => {
-                          let count = 0
-                          for (const [, group] of grouped()) {
-                            for (const item of group) {
-                              if (item === cmd) return count
-                              count++
-                            }
-                          }
-                          return -1
-                        }
-                        const isSelected = () => globalIndex() === selectedIndex()
-                        return (
-                          <div
-                            data-command-item
-                            class="flex items-center gap-3 px-4 py-2 mx-2 rounded-lg cursor-pointer transition-colors"
-                            classList={{
-                              "bg-accent-base/10 text-text-strong": isSelected(),
-                              "text-text-base hover:bg-surface-raised-base-hover": !isSelected(),
-                            }}
-                            onClick={() => {
-                              const idx = globalIndex()
-                              if (idx === selectedIndex()) executeSelected()
-                              else setSelectedIndex(idx)
-                            }}
-                            onDblClick={executeSelected}
-                          >
-                            <Show when={cmd.icon}>
-                              <Icon name={cmd.icon as any} size="small" class="text-icon-weak shrink-0" />
-                            </Show>
-                            <div class="flex-1 min-w-0">
-                              <div class="text-13-regular truncate">{cmd.title}</div>
-                              <Show when={cmd.description}>
-                                <div class="text-11-regular text-text-weaker truncate">{cmd.description}</div>
-                              </Show>
-                            </div>
-                            <Show when={cmd.keybind}>
-                              <div class="flex items-center gap-1 shrink-0">
-                                <span class="px-1.5 py-0.5 text-11-medium text-text-weaker bg-surface-base border border-border-base rounded-md font-mono">{cmd.keybind}</span>
-                              </div>
-                            </Show>
+              <Switch>
+                <Match when={mode() === "files"}>
+                  <For each={fileResults()}>
+                    {(file, i) => {
+                      const isSelected = () => i() === selectedIndex()
+                      return (
+                        <div
+                          data-command-item
+                          class="flex items-center gap-3 px-4 py-2 mx-2 rounded-lg cursor-pointer transition-colors"
+                          classList={{
+                            "bg-accent-base/10 text-text-strong": isSelected(),
+                            "text-text-base hover:bg-surface-raised-base-hover": !isSelected(),
+                          }}
+                          onClick={() => {
+                            setSelectedIndex(i())
+                            props.onClose()
+                            props.onFileSelect?.(file)
+                          }}
+                        >
+                          <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
+                          <div class="flex-1 min-w-0">
+                            <div class="text-13-regular truncate">{file.split("/").pop()}</div>
+                            <div class="text-11-regular text-text-weaker truncate">{file}</div>
                           </div>
-                        )
-                      }}
-                    </For>
-                  </div>
-                )}
-              </For>
+                        </div>
+                      )
+                    }}
+                  </For>
+                </Match>
+                <Match when={mode() === "commands"}>
+                  <For each={grouped()}>
+                    {([category, cmds]) => (
+                      <div class="pb-1">
+                        <div class="flex items-center gap-1.5 px-4 py-1.5 text-11-medium text-text-weaker uppercase tracking-wider">
+                          <Icon name={CATEGORY_ICONS[category] as any} size="small" class="text-icon-weaker" />
+                          {CATEGORY_LABELS[category]}
+                        </div>
+                        <For each={cmds}>
+                          {(cmd, i) => {
+                            const globalIndex = () => {
+                              let count = 0
+                              for (const [, group] of grouped()) {
+                                for (const item of group) {
+                                  if (item === cmd) return count
+                                  count++
+                                }
+                              }
+                              return -1
+                            }
+                            const isSelected = () => globalIndex() === selectedIndex()
+                            return (
+                              <div
+                                data-command-item
+                                class="flex items-center gap-3 px-4 py-2 mx-2 rounded-lg cursor-pointer transition-colors"
+                                classList={{
+                                  "bg-accent-base/10 text-text-strong": isSelected(),
+                                  "text-text-base hover:bg-surface-raised-base-hover": !isSelected(),
+                                }}
+                                onClick={() => {
+                                  const idx = globalIndex()
+                                  if (idx === selectedIndex()) executeSelected()
+                                  else setSelectedIndex(idx)
+                                }}
+                                onDblClick={executeSelected}
+                              >
+                                <Show when={cmd.icon}>
+                                  <Icon name={cmd.icon as any} size="small" class="text-icon-weak shrink-0" />
+                                </Show>
+                                <div class="flex-1 min-w-0">
+                                  <div class="text-13-regular truncate">{cmd.title}</div>
+                                  <Show when={cmd.description}>
+                                    <div class="text-11-regular text-text-weaker truncate">{cmd.description}</div>
+                                  </Show>
+                                </div>
+                                <Show when={cmd.keybind}>
+                                  <div class="flex items-center gap-1 shrink-0">
+                                    <span class="px-1.5 py-0.5 text-11-medium text-text-weaker bg-surface-base border border-border-base rounded-md font-mono">{cmd.keybind}</span>
+                                  </div>
+                                </Show>
+                              </div>
+                            )
+                          }}
+                        </For>
+                      </div>
+                    )}
+                  </For>
+                </Match>
+              </Switch>
             </Show>
           </div>
 

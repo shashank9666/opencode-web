@@ -224,12 +224,11 @@ function createWorkspaceTerminalSession(
   }
 
   const clone = async (client: DirectorySDK["client"], id: string) => {
-    const index = store.all.findIndex((x) => x.id === id)
-    const pty = store.all[index]
-    if (!pty) return
+    const original = store.all.find((x) => x.id === id)
+    if (!original) return
     const next = await client.pty
       .create({
-        title: pty.title,
+        title: original.title,
       })
       .catch((error: unknown) => {
         console.error("Failed to clone terminal", error)
@@ -237,22 +236,18 @@ function createWorkspaceTerminalSession(
       })
     if (!next?.data) return
 
-    const active = store.active === pty.id
-
     batch(() => {
-      setStore("all", index, {
+      setStore("all", (all) => [...all, {
         id: next.data.id,
-        title: next.data.title ?? pty.title,
-        titleNumber: pty.titleNumber,
+        title: next.data.title ?? original.title,
+        titleNumber: original.titleNumber,
         buffer: undefined,
         cursor: undefined,
         scrollY: undefined,
         rows: undefined,
         cols: undefined,
-      })
-      if (active) {
-        setStore("active", next.data.id)
-      }
+      }])
+      setStore("active", next.data.id)
     })
   }
 

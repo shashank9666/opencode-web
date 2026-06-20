@@ -23,9 +23,13 @@ export default function SearchPanel(props: {
   const [searching, setSearching] = createSignal(false)
   const [showReplace, setShowReplace] = createSignal(false)
   const [caseSensitive, setCaseSensitive] = createSignal(false)
+  const [matchWholeWord, setMatchWholeWord] = createSignal(false)
   const [useRegex, setUseRegex] = createSignal(false)
   const [includePattern, setIncludePattern] = createSignal("")
+  const [excludePattern, setExcludePattern] = createSignal("")
   const [showFilters, setShowFilters] = createSignal(false)
+  const [collapsed, setCollapsed] = createSignal(false)
+  const [viewAsTree, setViewAsTree] = createSignal(false)
 
   const groupedResults = () => {
     const groups = new Map<string, SearchResultItem[]>()
@@ -54,6 +58,10 @@ export default function SearchPanel(props: {
     }
   }
 
+  const refreshSearch = () => {
+    if (searchQuery()) performSearch()
+  }
+
   const clearResults = () => {
     setSearchQuery("")
     setResults([])
@@ -65,6 +73,38 @@ export default function SearchPanel(props: {
       <div class="flex items-center justify-between px-3 py-2 shrink-0">
         <span class="text-12-medium text-text-weak uppercase tracking-wider">SEARCH</span>
         <div class="flex items-center gap-1">
+          <Show when={results().length > 0}>
+            <Tooltip value="Refresh" placement="bottom">
+              <IconButton
+                icon="reset"
+                variant="ghost"
+                size="small"
+                class="size-6 rounded-md"
+                onClick={refreshSearch}
+                aria-label="Refresh search results"
+              />
+            </Tooltip>
+            <Tooltip value="Collapse All" placement="bottom">
+              <IconButton
+                icon="collapse"
+                variant="ghost"
+                size="small"
+                class="size-6 rounded-md"
+                onClick={() => setCollapsed(!collapsed())}
+                aria-label="Collapse All"
+              />
+            </Tooltip>
+            <Tooltip value={viewAsTree() ? "View as List" : "View as Tree"} placement="bottom">
+              <IconButton
+                icon={viewAsTree() ? "bullet-list" : "file-tree"}
+                variant="ghost"
+                size="small"
+                class="size-6 rounded-md"
+                onClick={() => setViewAsTree(!viewAsTree())}
+                aria-label="Toggle view mode"
+              />
+            </Tooltip>
+          </Show>
           <Tooltip value="Toggle Replace" placement="bottom">
             <IconButton
               icon="edit-small-2"
@@ -131,13 +171,20 @@ export default function SearchPanel(props: {
 
         {/* Filter options */}
         <Show when={showFilters()}>
-          <div class="mt-1">
+          <div class="mt-1 flex flex-col gap-1">
             <input
               type="text"
               class="w-full px-2 py-1 text-12-regular bg-surface-base border border-border-base rounded-md outline-none focus:border-accent-base text-text-strong"
               placeholder="Files to include (e.g. *.ts, src/**)"
               value={includePattern()}
               onInput={(e) => setIncludePattern(e.currentTarget.value)}
+            />
+            <input
+              type="text"
+              class="w-full px-2 py-1 text-12-regular bg-surface-base border border-border-base rounded-md outline-none focus:border-accent-base text-text-strong"
+              placeholder="Files to exclude (e.g. node_modules, dist)"
+              value={excludePattern()}
+              onInput={(e) => setExcludePattern(e.currentTarget.value)}
             />
           </div>
         </Show>
@@ -154,6 +201,17 @@ export default function SearchPanel(props: {
             onClick={() => setCaseSensitive(!caseSensitive())}
           >
             Aa
+          </button>
+          <button
+            type="button"
+            class="text-11-medium px-1.5 py-0.5 rounded transition-colors"
+            classList={{
+              "bg-accent-base/10 text-accent-base": matchWholeWord(),
+              "text-text-weaker hover:text-text-weak hover:bg-surface-raised-base-hover": !matchWholeWord(),
+            }}
+            onClick={() => setMatchWholeWord(!matchWholeWord())}
+          >
+            ab
           </button>
           <button
             type="button"

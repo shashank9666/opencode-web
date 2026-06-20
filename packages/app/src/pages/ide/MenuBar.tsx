@@ -137,7 +137,6 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
         { label: "Focus on Source Control", action: () => {} },
       ]},
       { label: "Run and Debug", shortcut: "Ctrl+Shift+D", action: actions.startDebugging },
-      { label: "Extensions", shortcut: "Ctrl+Shift+X", action: () => {} },
       { separator: true },
       { label: "Command Palette...", shortcut: "Ctrl+Shift+P", action: actions.commandPalette },
       { separator: true },

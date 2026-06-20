@@ -1207,6 +1207,27 @@ export default function FullIde() {
         open={commandPaletteOpen()}
         onClose={() => setCommandPaletteOpen(false)}
         commands={paletteActions}
+        onFileSearch={async (query) => {
+          try {
+            return await file.searchFiles(query)
+          } catch {
+            return []
+          }
+        }}
+        onFileSelect={async (path) => {
+          try {
+            await file.load(path)
+            const state = file.get(path)
+            if (state?.content?.type === "text") {
+              const current = editor.activeFile()
+              if (current) editor.closeFile(current)
+              workspace.openFile(path, state.content.content)
+              setDiffMode(false)
+            }
+          } catch (err) {
+            showToast({ variant: "error", title: "Failed to open file", description: String(err) })
+          }
+        }}
       />
 
       {/* ── Settings Modal ── */}

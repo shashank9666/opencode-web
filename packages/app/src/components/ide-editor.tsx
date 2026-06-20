@@ -16,13 +16,39 @@ self.MonacoEnvironment = {
 
 const extToLanguage = new Map([
   [".ts", "typescript"], [".tsx", "typescript"], [".js", "javascript"], [".jsx", "javascript"],
-  [".json", "json"], [".md", "markdown"], [".css", "css"], [".html", "html"],
-  [".rs", "rust"], [".py", "python"], [".go", "go"], [".toml", "ini"],
+  [".mjs", "javascript"], [".cjs", "javascript"], [".mts", "typescript"], [".cts", "typescript"],
+  [".json", "json"], [".jsonc", "json"], [".json5", "json"],
+  [".md", "markdown"], [".mdx", "markdown"],
+  [".css", "css"], [".scss", "scss"], [".sass", "scss"], [".less", "less"],
+  [".html", "html"], [".htm", "html"], [".xhtml", "html"],
+  [".rs", "rust"], [".py", "python"], [".pyw", "python"], [".go", "go"], [".toml", "ini"],
   [".yaml", "yaml"], [".yml", "yaml"], [".sh", "shell"], [".bash", "shell"],
-  [".sql", "sql"], [".xml", "xml"], [".svg", "xml"], [".svelte", "html"],
-  [".vue", "html"], [".c", "c"], [".cpp", "cpp"], [".h", "c"],
-  [".java", "java"], [".rb", "ruby"], [".php", "php"], [".swift", "swift"],
-  [".kt", "kotlin"], [".dart", "dart"],
+  [".zsh", "shell"], [".fish", "shell"], [".ps1", "powershell"],
+  [".sql", "sql"], [".xml", "xml"], [".svg", "xml"], [".xsl", "xml"],
+  [".svelte", "html"], [".vue", "html"], [".astro", "html"],
+  [".c", "c"], [".cpp", "cpp"], [".cc", "cpp"], [".cxx", "cpp"], [".h", "c"],
+  [".hpp", "cpp"], [".hxx", "cpp"], [".java", "java"], [".rb", "ruby"],
+  [".php", "php"], [".phtml", "php"], [".swift", "swift"],
+  [".kt", "kotlin"], [".kts", "kotlin"], [".dart", "dart"],
+  [".lua", "lua"], [".pl", "perl"], [".pm", "perl"],
+  [".r", "r"], [".R", "r"], [".scala", "scala"], [".sc", "scala"],
+  [".elixir", "elixir"], [".ex", "elixir"], [".exs", "elixir"],
+  [".erl", "erlang"], [".hrl", "erlang"],
+  [".hs", "haskell"], [".lhs", "haskell"],
+  [".clj", "clojure"], [".cljs", "clojure"], [".edn", "clojure"],
+  [".cs", "csharp"], [".fs", "fsharp"], [".fsx", "fsharp"],
+  [".cr", "crystal"], [".nim", "nim"], [".zig", "zig"],
+  [".tex", "latex"], [".bib", "bibtex"],
+  [".gradle", "groovy"], [".groovy", "groovy"],
+  [".makefile", "makefile"], [".mk", "makefile"],
+  [".dockerfile", "dockerfile"], [".containerfile", "dockerfile"],
+  [".ignore", "ignore"], [".gitignore", "ignore"],
+  [".env", "dotenv"], [".properties", "properties"],
+  [".ini", "ini"], [".cfg", "ini"], [".conf", "ini"],
+  [".csv", "csv"], [".tsv", "csv"],
+  [".graphql", "graphql"], [".gql", "graphql"],
+  [".proto", "protobuf"],
+  [".lock", "json"],
 ])
 
 export function languageFromPath(path: string): string {
@@ -190,7 +216,40 @@ export default function IdeEditor(props: {
       })
     }
 
+    // Error Lens: highlight error/warning lines with background and gutter markers
+    let errorLensDecorations: string[] = []
+    const updateErrorLens = () => {
+      const model = editor?.getModel()
+      if (!model) return
+      const markers = monaco.editor.getModelMarkers({ resource: model.uri })
+      const decorations: monaco.editor.IModelDeltaDecoration[] = markers.map((m) => ({
+        range: new monaco.Range(m.startLineNumber, 1, m.startLineNumber, 1),
+        options: {
+          isWholeLine: true,
+          className: m.severity === monaco.MarkerSeverity.Error ? "error-lens-line error-lens-line-error" : "error-lens-line error-lens-line-warning",
+          glyphMarginClassName: m.severity === monaco.MarkerSeverity.Error ? "error-lens-glyph error-lens-glyph-error" : "error-lens-glyph error-lens-glyph-warning",
+          glyphMarginHoverMessage: { value: `**${m.severity === monaco.MarkerSeverity.Error ? "Error" : "Warning"}**: ${m.message}` },
+          description: "error-lens",
+        },
+      }))
+      errorLensDecorations = editor!.deltaDecorations(errorLensDecorations, decorations)
+    }
+
+    const markerListener = monaco.editor.onDidChangeMarkers((uris) => {
+      const model = editor?.getModel()
+      if (model && uris.some((u) => u.toString() === model.uri.toString())) {
+        updateErrorLens()
+      }
+    })
+
+    editor.onDidChangeModel(() => {
+      updateErrorLens()
+    })
+
+    setTimeout(updateErrorLens, 500)
+
     onCleanup(() => {
+      markerListener.dispose()
       completionsProvider?.dispose()
       editor?.dispose()
     })
