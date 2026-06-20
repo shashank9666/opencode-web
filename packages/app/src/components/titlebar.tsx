@@ -480,7 +480,7 @@ export function Titlebar(props: { update?: TitlebarUpdate }) {
                         onClick={() => {
                           const sid = activeSessionId()
                           layout.fileTree.close()
-                          layout.view("ide").setTerminalOpened(false)
+                          layout.view("ide").terminal.close()
                           if (sid) {
                             navigate(`/${dir()}/session/${sid}`)
                           } else {

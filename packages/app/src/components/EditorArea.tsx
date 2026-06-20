@@ -10,7 +10,6 @@ import type { EditorNode, EditorGroup, OpenFile } from "./editor-workspace";
 import * as monaco from "monaco-editor";
 import { useFile } from "@/context/file";
 import { useSettings } from "@/context/settings";
-import { debounce } from "@solid-primitives/scheduled";
 
 import { Button } from "@opencode-ai/ui/button";
 
@@ -57,11 +56,17 @@ export function EditorArea(props: {
   const file = useFile();
   const settings = useSettings();
 
-  const debouncedSave = debounce((filePath: string, groupId: string) => {
-    if (settings.general.autoSave()) {
-      void props.onSaveFile(filePath, groupId);
+  let prevActiveFile: string | null = null;
+  createEffect(() => {
+    const currentActive = activeFile();
+    if (settings.general.autoSave() && prevActiveFile && prevActiveFile !== currentActive) {
+      const prevFile = group().files.find(f => f.path === prevActiveFile);
+      if (prevFile && prevFile.dirty) {
+        void props.onSaveFile(prevActiveFile, group().id);
+      }
     }
-  }, 1000);
+    prevActiveFile = currentActive;
+  });
 
   // Auto-reload file content from disk when it changes (e.g. from AI edits)
   createEffect(() => {
@@ -144,7 +149,7 @@ export function EditorArea(props: {
                     e.stopPropagation();
                     // Auto-save the current file when switching tabs
                     const currentActiveFile = activeFile();
-                    if (currentActiveFile && currentActiveFile !== openFile.path) {
+                    if (settings.general.autoSave() && currentActiveFile && currentActiveFile !== openFile.path) {
                       const current = group().files.find(f => f.path === currentActiveFile);
                       if (current?.dirty) {
                         void props.onSaveFile(currentActiveFile, group().id);
@@ -156,20 +161,54 @@ export function EditorArea(props: {
                   <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
                   <span class="truncate max-w-32">{getFilename(openFile.path)}</span>
                   <Show when={openFile.dirty}><span class="text-12-medium text-text-warning-base">●</span></Show>
-                  <IconButton icon="close" variant="ghost" size="small" class="size-4 rounded ml-0.5 opacity-60 hover:opacity-100" onClick={(e: MouseEvent) => { e.stopPropagation(); props.workspace.closeFile(openFile.path, group().id); }} />
+                  <IconButton
+                    icon="close"
+                    variant="ghost"
+                    size="small"
+                    class="size-4 rounded ml-0.5 opacity-60 hover:opacity-100"
+                    onClick={(e: MouseEvent) => {
+                      e.stopPropagation();
+                      if (settings.general.autoSave() && openFile.dirty) {
+                        void props.onSaveFile(openFile.path, group().id);
+                      }
+                      props.workspace.closeFile(openFile.path, group().id);
+                    }}
+                  />
                 </ContextMenu.Trigger>
                 <ContextMenu.Portal>
                   <ContextMenu.Content class="min-w-[220px]">
-                    <ContextMenu.Item onSelect={() => props.workspace.closeFile(openFile.path, group().id)}>
+                    <ContextMenu.Item onSelect={() => {
+                      if (settings.general.autoSave() && openFile.dirty) {
+                        void props.onSaveFile(openFile.path, group().id);
+                      }
+                      props.workspace.closeFile(openFile.path, group().id);
+                    }}>
                       <div class="flex items-center justify-between w-full">
                         <ContextMenu.ItemLabel>Close</ContextMenu.ItemLabel>
                         <span class="text-12-regular text-text-weak">Ctrl+F4</span>
                       </div>
                     </ContextMenu.Item>
-                    <ContextMenu.Item onSelect={() => props.workspace.closeOthers(openFile.path, group().id)}>
+                    <ContextMenu.Item onSelect={() => {
+                      if (settings.general.autoSave()) {
+                        group().files
+                          .filter(f => f.path !== openFile.path && f.dirty)
+                          .forEach(f => void props.onSaveFile(f.path, group().id));
+                      }
+                      props.workspace.closeOthers(openFile.path, group().id);
+                    }}>
                       <ContextMenu.ItemLabel>Close Others</ContextMenu.ItemLabel>
                     </ContextMenu.Item>
-                    <ContextMenu.Item onSelect={() => props.workspace.closeToTheRight(openFile.path, group().id)}>
+                    <ContextMenu.Item onSelect={() => {
+                      if (settings.general.autoSave()) {
+                        const idx = group().files.findIndex(f => f.path === openFile.path);
+                        if (idx !== -1) {
+                          group().files.slice(idx + 1)
+                            .filter(f => f.dirty)
+                            .forEach(f => void props.onSaveFile(f.path, group().id));
+                        }
+                      }
+                      props.workspace.closeToTheRight(openFile.path, group().id);
+                    }}>
                       <ContextMenu.ItemLabel>Close to the Right</ContextMenu.ItemLabel>
                     </ContextMenu.Item>
                     <ContextMenu.Item onSelect={() => props.workspace.closeSaved(group().id)}>
@@ -178,7 +217,14 @@ export function EditorArea(props: {
                         <span class="text-12-regular text-text-weak">Ctrl+K U</span>
                       </div>
                     </ContextMenu.Item>
-                    <ContextMenu.Item onSelect={() => props.workspace.closeAll(group().id)}>
+                    <ContextMenu.Item onSelect={() => {
+                      if (settings.general.autoSave()) {
+                        group().files
+                          .filter(f => f.dirty)
+                          .forEach(f => void props.onSaveFile(f.path, group().id));
+                      }
+                      props.workspace.closeAll(group().id);
+                    }}>
                       <div class="flex items-center justify-between w-full">
                         <ContextMenu.ItemLabel>Close All</ContextMenu.ItemLabel>
                         <span class="text-12-regular text-text-weak">Ctrl+K W</span>
@@ -280,7 +326,6 @@ export function EditorArea(props: {
                   content={state().content}
                   onChange={(v) => {
                     props.workspace.setContent(state().path, v, group().id);
-                    debouncedSave(state().path, group().id);
                   }}
                   onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
                   onEditorReady={(e) => setEditorInstance(e)}

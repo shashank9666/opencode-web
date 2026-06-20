@@ -210,7 +210,19 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
           () => [],
         )
 
+    const justWritten = new Map<string, number>()
+
     const stop = sdk().event.listen((e) => {
+      if (e.details?.type === "file.watcher.updated") {
+        const props = e.details.properties as any
+        if (props && typeof props.file === "string") {
+          const normalizedPath = path.normalize(props.file)
+          const lastWrite = justWritten.get(normalizedPath)
+          if (lastWrite && Date.now() - lastWrite < 2000) {
+            return
+          }
+        }
+      }
       invalidateFromWatcher(e.details, {
         normalize: path.normalize,
         hasFile: (file) => Boolean(store.file[file]),
@@ -225,6 +237,25 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
         },
       })
     })
+
+    const write = async (input: string, content: string) => {
+      const file = path.normalize(input)
+      if (!file) return
+      justWritten.set(file, Date.now())
+      setStore(
+        "file",
+        file,
+        produce((draft) => {
+          if (draft.content && draft.content.type === "text") {
+            draft.content.content = content
+          } else {
+            draft.content = { type: "text", content }
+          }
+          draft.loaded = true
+        }),
+      )
+      await sdk().client.v2.fs.write({ path: file, content })
+    }
 
     const get = (input: string) => {
       const file = path.normalize(input)
@@ -278,6 +309,7 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
       },
       get,
       load,
+      write,
       scrollTop,
       scrollLeft,
       setScrollTop,

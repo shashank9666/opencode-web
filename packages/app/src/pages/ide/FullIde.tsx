@@ -12,6 +12,7 @@ import {
 } from "solid-js"
 import { useFile } from "@/context/file"
 import FileTree from "@/components/file-tree"
+import { useSettings } from "@/context/settings"
 import IdeEditor, { IdeDiffEditor, createIdeEditor, type OpenFile } from "@/components/ide-editor"
 import { createProblemTracker } from "@/components/problem-tracker"
 import InlineAIToolbar, { type InlineAIActionPayload } from "@/components/inline-ai-toolbar"
@@ -94,6 +95,7 @@ function getShellInfo(title: string | undefined) {
 
 export default function FullIde() {
   const file = useFile()
+  const settings = useSettings()
   const workspace = createEditorWorkspace()
   const editor = {
     activeFile: () => workspace.getActiveGroup()?.activeFile ?? "",
@@ -101,7 +103,20 @@ export default function FullIde() {
     content: (path?: string) => workspace.getFileState(path ?? workspace.getActiveGroup()?.activeFile ?? "")?.content ?? "",
     markClean: (path: string) => workspace.markClean(path, workspace.getActiveGroup()?.id ?? ""),
     openFile: (path: string, content: string) => workspace.openFile(path, content, workspace.getActiveGroup()?.id ?? ""),
-    closeFile: (path: string) => workspace.closeFile(path, workspace.getActiveGroup()?.id ?? ""),
+    closeFile: (path: string) => {
+      const group = workspace.getActiveGroup()
+      if (group) {
+        const state = workspace.getFileState(path, group.id)
+        if (state && state.dirty && settings.general.autoSave()) {
+          void file.write(path, state.content)
+            .then(() => workspace.markClean(path, group.id))
+            .catch((err: unknown) => {
+              showToast({ variant: "error", title: "Save failed", description: String(err) })
+            })
+        }
+      }
+      workspace.closeFile(path, group?.id ?? "")
+    },
   }
   const problems = createProblemTracker()
   const sdk = useSDK()
@@ -480,7 +495,7 @@ export default function FullIde() {
     const path = editor.activeFile()
     if (!path || !editor.dirty()) return
     try {
-      await sdk().client.v2.fs.write({ path, content: editor.content() })
+      await file.write(path, editor.content())
       editor.markClean(path)
       showToast({ variant: "success", title: "File saved", description: getFilename(path) })
     } catch (e) {
@@ -729,7 +744,20 @@ export default function FullIde() {
     saveAll: () => { showToast({ title: "Save All", description: "Save All functionality coming soon" }) },
     closeEditor: () => {
       const activeFile = editor.activeFile()
-      if (activeFile) workspace.closeFile(activeFile, workspace.getActiveGroup()?.id ?? "")
+      if (activeFile) {
+        const group = workspace.getActiveGroup()
+        if (group) {
+          const state = workspace.getFileState(activeFile, group.id)
+          if (state && state.dirty && settings.general.autoSave()) {
+            void file.write(activeFile, state.content)
+              .then(() => workspace.markClean(activeFile, group.id))
+              .catch((err: unknown) => {
+                showToast({ variant: "error", title: "Save failed", description: String(err) })
+              })
+          }
+        }
+        workspace.closeFile(activeFile, workspace.getActiveGroup()?.id ?? "")
+      }
     },
     closeFolder: () => { navigate("/ide") },
     closeWindow: () => window.close(),
@@ -880,7 +908,7 @@ export default function FullIde() {
               const state = workspace.getFileState(path, groupId);
               if (!state || !state.dirty) return;
               try {
-                await sdk().client.v2.fs.write({ path, content: state.content })
+                await file.write(path, state.content)
                 workspace.markClean(path, groupId)
                 showToast({ variant: "success", title: "File saved", description: getFilename(path) })
               } catch (e) {
