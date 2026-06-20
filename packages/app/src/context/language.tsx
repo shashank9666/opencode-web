@@ -6,25 +6,7 @@ import { Persist, persisted } from "@/utils/persist"
 import { dict as en } from "@/i18n/en"
 import { dict as uiEn } from "@opencode-ai/ui/i18n/en"
 
-export type Locale =
-  | "en"
-  | "zh"
-  | "zht"
-  | "ko"
-  | "de"
-  | "es"
-  | "fr"
-  | "da"
-  | "ja"
-  | "pl"
-  | "ru"
-  | "uk"
-  | "ar"
-  | "no"
-  | "br"
-  | "th"
-  | "bs"
-  | "tr"
+export type Locale = "en"
 
 type RawDictionary = typeof en & typeof uiEn
 type Dictionary = i18n.Flatten<RawDictionary>
@@ -34,106 +16,26 @@ function cookie(locale: Locale) {
   return `oc_locale=${encodeURIComponent(locale)}; Path=/; Max-Age=31536000; SameSite=Lax`
 }
 
-const LOCALES: readonly Locale[] = [
-  "en",
-  "zh",
-  "zht",
-  "ko",
-  "de",
-  "es",
-  "fr",
-  "da",
-  "ja",
-  "pl",
-  "ru",
-  "uk",
-  "bs",
-  "ar",
-  "no",
-  "br",
-  "th",
-  "tr",
-]
+const LOCALES: readonly Locale[] = ["en"]
 
 const INTL: Record<Locale, string> = {
   en: "en",
-  zh: "zh-Hans",
-  zht: "zh-Hant",
-  ko: "ko",
-  de: "de",
-  es: "es",
-  fr: "fr",
-  da: "da",
-  ja: "ja",
-  pl: "pl",
-  ru: "ru",
-  uk: "uk",
-  ar: "ar",
-  no: "nb-NO",
-  br: "pt-BR",
-  th: "th",
-  bs: "bs",
-  tr: "tr",
 }
 
 const LABEL_KEY: Record<Locale, keyof Dictionary> = {
   en: "language.en",
-  zh: "language.zh",
-  zht: "language.zht",
-  ko: "language.ko",
-  de: "language.de",
-  es: "language.es",
-  fr: "language.fr",
-  da: "language.da",
-  ja: "language.ja",
-  pl: "language.pl",
-  ru: "language.ru",
-  uk: "language.uk",
-  ar: "language.ar",
-  no: "language.no",
-  br: "language.br",
-  th: "language.th",
-  bs: "language.bs",
-  tr: "language.tr",
 }
 
 const base = i18n.flatten({ ...en, ...uiEn })
 const dicts = new Map<Locale, Dictionary>([["en", base]])
 
-const merge = (app: Promise<Source>, ui: Promise<Source>) =>
-  Promise.all([app, ui]).then(([a, b]) => ({ ...base, ...i18n.flatten({ ...a.dict, ...b.dict }) }) as Dictionary)
-
-const emptyAppDict = Promise.resolve({ dict: {} })
-
-const loaders: Record<Exclude<Locale, "en">, () => Promise<Dictionary>> = {
-  zh: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/zh")),
-  zht: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/zht")),
-  ko: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/ko")),
-  de: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/de")),
-  es: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/es")),
-  fr: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/fr")),
-  da: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/da")),
-  ja: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/ja")),
-  pl: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/pl")),
-  ru: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/ru")),
-  uk: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/uk")),
-  ar: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/ar")),
-  no: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/no")),
-  br: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/br")),
-  th: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/th")),
-  bs: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/bs")),
-  tr: () => merge(emptyAppDict, import("@opencode-ai/ui/i18n/tr")),
-}
+const loaders: Record<never, () => Promise<Dictionary>> = {}
 
 function loadDict(locale: Locale) {
   const hit = dicts.get(locale)
   if (hit) return Promise.resolve(hit)
   if (locale === "en") return Promise.resolve(base)
-  const load = loaders[locale]
-  return load().then((next: Dictionary) => {
-    dicts.set(locale, next)
-    return next
-  })
+  return Promise.resolve(base)
 }
 
 export function loadLocaleDict(locale: Locale) {
@@ -142,26 +44,6 @@ export function loadLocaleDict(locale: Locale) {
 
 const localeMatchers: Array<{ locale: Locale; match: (language: string) => boolean }> = [
   { locale: "en", match: (language) => language.startsWith("en") },
-  { locale: "zht", match: (language) => language.startsWith("zh") && language.includes("hant") },
-  { locale: "zh", match: (language) => language.startsWith("zh") },
-  { locale: "ko", match: (language) => language.startsWith("ko") },
-  { locale: "de", match: (language) => language.startsWith("de") },
-  { locale: "es", match: (language) => language.startsWith("es") },
-  { locale: "fr", match: (language) => language.startsWith("fr") },
-  { locale: "da", match: (language) => language.startsWith("da") },
-  { locale: "ja", match: (language) => language.startsWith("ja") },
-  { locale: "pl", match: (language) => language.startsWith("pl") },
-  { locale: "ru", match: (language) => language.startsWith("ru") },
-  { locale: "uk", match: (language) => language.startsWith("uk") },
-  { locale: "ar", match: (language) => language.startsWith("ar") },
-  {
-    locale: "no",
-    match: (language) => language.startsWith("no") || language.startsWith("nb") || language.startsWith("nn"),
-  },
-  { locale: "br", match: (language) => language.startsWith("pt") },
-  { locale: "th", match: (language) => language.startsWith("th") },
-  { locale: "bs", match: (language) => language.startsWith("bs") },
-  { locale: "tr", match: (language) => language.startsWith("tr") },
 ]
 
 function detectLocale(): Locale {

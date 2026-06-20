@@ -831,7 +831,6 @@ export default function FullIde() {
           }}
           onBottomTabClick={(tab) => toggleBottomPanel(tab)}
           onOpenFolder={handleOpenFolder}
-          onSettingsClick={toggleSettings}
           onRemoteClick={() => setRemoteModalOpen(true)}
           remoteConnection={remoteConnection() ?? undefined}
         />

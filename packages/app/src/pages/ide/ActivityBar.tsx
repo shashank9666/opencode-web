@@ -15,7 +15,6 @@ export default function ActivityBar(props: {
   onTabClick: (tab: ActivityBarTab) => void
   onBottomTabClick: (tab: BottomPanelTab) => void
   onOpenFolder: () => void
-  onSettingsClick: () => void
   onRemoteClick: () => void
   remoteConnection?: string
 }) {
@@ -199,17 +198,6 @@ export default function ActivityBar(props: {
             aria-label="Debug Console"
           >
             <Icon name="window-cursor" size="large" />
-          </button>
-        </Tooltip>
-
-        <Tooltip value="Settings (Ctrl+,)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center text-text-weak hover:text-text-strong transition-colors relative"
-            onClick={() => props.onSettingsClick()}
-            aria-label="Settings"
-          >
-            <Icon name="settings-gear" size="large" />
           </button>
         </Tooltip>
 

@@ -25,8 +25,7 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
         <div class="flex-1 overflow-y-auto min-h-0 relative">
           {/* Workspace Root Section */}
           <div class="flex items-center justify-between px-1 py-1 hover:bg-surface-raised-base-hover cursor-pointer sticky top-0 bg-surface-base z-10 border-b border-border-base/50 group/root">
-            <div class="flex items-center gap-1 min-w-0" onClick={() => file.tree.refresh("")}>
-              <Icon name="chevron-down" size="small" class="text-text-weaker size-3.5" />
+            <div class="flex items-center gap-1 min-w-0 px-2" onClick={() => file.tree.refresh("")}>
               <span class="text-11-bold text-text-strong uppercase truncate">{props.dirName}</span>
             </div>
             <div class="flex items-center opacity-0 group-hover/root:opacity-100 transition-opacity">
