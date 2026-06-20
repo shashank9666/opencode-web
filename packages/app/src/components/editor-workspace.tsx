@@ -125,6 +125,15 @@ export function createEditorWorkspace() {
     }));
   };
 
+  const reloadFileContent = (path: string, content: string, groupId: string) => {
+    setRootNode(prev => updateGroup(prev, groupId, (g) => {
+      return { ...g, files: g.files.map(f => {
+        if (f.path !== path) return f;
+        return { ...f, content, savedContent: content, dirty: false };
+      }) };
+    }));
+  };
+
   const markClean = (path: string, groupId: string) => {
     setRootNode(prev => updateGroup(prev, groupId, (g) => {
       return { ...g, files: g.files.map(f => f.path === path ? { ...f, dirty: false, savedContent: f.content } : f) };
@@ -189,6 +198,7 @@ export function createEditorWorkspace() {
     closeSaved,
     closeAll,
     setContent,
+    reloadFileContent,
     markClean,
     setActiveFile,
     splitGroup,

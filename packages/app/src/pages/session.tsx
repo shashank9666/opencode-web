@@ -1351,7 +1351,11 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
 
   const line = (id: string) => {
     const text = draft(id)
-      .map((part) => (part.type === "image" ? `[image:${part.filename}]` : part.content))
+      .map((part) => {
+        if (part.type === "image") return `[image:${part.filename}]`
+        if (part.type === "audio") return `[audio:${part.filename}]`
+        return part.content
+      })
       .join("")
       .replace(/\s+/g, " ")
       .trim()
@@ -1447,6 +1451,7 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
         if (part.type === "image") return `[image:${part.filename}]`
         if (part.type === "file") return `[file:${part.path}]`
         if (part.type === "agent") return `@${part.name}`
+        if (part.type === "audio") return `[audio:${part.filename}]`
         return part.content
       })
       .join("")

@@ -60,14 +60,14 @@ export function VoiceRecorder(props: {
       <div class="flex flex-col items-center justify-center py-8">
         <Show when={recording()} fallback={
           <Button size="large" variant="primary" class="rounded-full size-16 p-0 flex items-center justify-center" onClick={startRecording}>
-            <Icon name="microphone" class="size-6 text-white" />
+            <Icon name="plus" class="size-6 text-white" />
           </Button>
         }>
           <div class="flex flex-col items-center gap-6">
             <div class="animate-pulse flex items-center justify-center size-20 rounded-full bg-red-500/20 text-red-500">
-              <Icon name="microphone" class="size-8" />
+              <Icon name="plus" class="size-8" />
             </div>
-            <Button size="normal" variant="outline" onClick={stopRecording}>
+            <Button size="normal" variant="secondary" onClick={stopRecording}>
               Stop Recording
             </Button>
           </div>

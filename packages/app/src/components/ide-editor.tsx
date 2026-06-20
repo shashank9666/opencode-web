@@ -246,7 +246,7 @@ export function IdeDiffEditor(props: {
       automaticLayout: true,
       fontSize: props.fontSize ?? 13,
       fontFamily: "'Cascadia Code', 'Fira Code', 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace",
-      renderSideBySide: true,
+      renderSideBySide: false,
       scrollBeyondLastLine: true,
       wordWrap: props.wordWrap ?? "off",
       readOnly: true,

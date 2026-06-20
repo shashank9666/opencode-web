@@ -452,9 +452,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         selection ??
         (item.selection
           ? ({
-              start: item.selection.startLine,
-              end: item.selection.endLine,
-            } satisfies SelectedLineRange)
+            start: item.selection.startLine,
+            end: item.selection.endLine,
+          } satisfies SelectedLineRange)
           : undefined)
       if (!nextSelection) return []
 
@@ -1615,7 +1615,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       editorRef?.focus()
                     }}
                     onVoice={() => {
-                      showToast({ title: "Voice Mode", description: "Recording started... (Coming Soon)" })
+                      showToast({ title: "Voice Mode", description: "Recording started... " })
                     }}
                     class="size-7 rounded-md p-[6px] text-v2-icon-icon-muted"
                     style={buttons()}

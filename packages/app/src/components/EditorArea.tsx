@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Match, Switch, Show } from "solid-js";
+import { createSignal, createMemo, createEffect, For, Match, Switch, Show } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { IconButton } from "@opencode-ai/ui/icon-button";
 import { ContextMenu } from "@opencode-ai/ui/context-menu";
@@ -8,6 +8,7 @@ import InlineAIToolbar from "./inline-ai-toolbar";
 import { SplitPane } from "./SplitPane";
 import type { EditorNode, EditorGroup, OpenFile } from "./editor-workspace";
 import * as monaco from "monaco-editor";
+import { useFile } from "@/context/file";
 
 import { Button } from "@opencode-ai/ui/button";
 
@@ -50,6 +51,23 @@ export function EditorArea(props: {
   const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [editorLine, setEditorLine] = createSignal(1);
   const [editorColumn, setEditorColumn] = createSignal(1);
+
+  const file = useFile();
+
+  // Auto-reload file content from disk when it changes (e.g. from AI edits)
+  createEffect(() => {
+    for (const openFile of group().files) {
+      if (openFile.dirty) continue; // Don't auto-reload if user has unsaved changes
+      
+      const state = file.get(openFile.path);
+      if (state && state.content && state.content.type === "text") {
+        const diskContent = state.content.content;
+        if (diskContent !== openFile.savedContent) {
+          props.workspace.reloadFileContent(openFile.path, diskContent, group().id);
+        }
+      }
+    }
+  });
 
   const activeFileLanguage = createMemo(() => {
     const currentActiveFile = activeFile();
