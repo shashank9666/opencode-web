@@ -126,7 +126,15 @@ export default function FullIde() {
       return raw ? JSON.parse(raw) as { panels: PanelState[]; floatingPanels: PanelState[] } : null
     } catch { return null }
   })()
-  const initialPanels = savedLayout?.panels?.length ? savedLayout.panels : MERGED_DEFAULT
+  
+  // Merge missing panels from MERGED_DEFAULT
+  const initialPanels = savedLayout?.panels?.length 
+    ? [
+        ...savedLayout.panels,
+        ...MERGED_DEFAULT.filter(def => !savedLayout.panels.some((p: PanelState) => p.id === def.id))
+      ]
+    : MERGED_DEFAULT
+
   const panelManager = createPanelManager(initialPanels)
   if (savedLayout?.floatingPanels?.length) {
     ; (panelManager as any).floatingPanels.set(savedLayout.floatingPanels)

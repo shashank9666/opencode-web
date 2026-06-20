@@ -101,7 +101,10 @@ export default function ActivityBar(props: {
             }}
             onClick={() => props.onTabClick("ai-chat")}
             aria-label="AI Chat"
-
+          >
+            <Icon name="brain" size="large" />
+          </button>
+        </Tooltip>
 
         <Tooltip value="Remote Explorer" placement="right">
           <button
