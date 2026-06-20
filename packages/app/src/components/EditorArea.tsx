@@ -13,6 +13,9 @@ import { useSettings } from "@/context/settings";
 import { useSDK } from "@/context/sdk";
 
 import { Button } from "@opencode-ai/ui/button";
+import { MarkdownPreviewPanel } from "./MarkdownPreviewPanel";
+
+let draggedTab: { path: string; sourceGroupId: string } | null = null
 
 export function EditorArea(props: {
   node: EditorNode;
@@ -54,6 +57,11 @@ export function EditorArea(props: {
   const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [editorLine, setEditorLine] = createSignal(1);
   const [editorColumn, setEditorColumn] = createSignal(1);
+  const [showPreview, setShowPreview] = createSignal(false)
+  const isMarkdownFile = () => {
+    const f = activeFile()
+    return f ? f.toLowerCase().endsWith(".md") : false
+  }
 
   const file = useFile();
   const settings = useSettings();
@@ -142,7 +150,26 @@ export function EditorArea(props: {
   });
 
   return (
-    <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-background-base overflow-hidden relative" onClick={() => props.workspace.setActiveGroupId(group().id)}>
+    <div
+      class="flex-1 flex flex-col min-w-0 min-h-0 bg-background-base overflow-hidden relative"
+      onClick={() => props.workspace.setActiveGroupId(group().id)}
+      onDragOver={(e) => { e.preventDefault() }}
+      onDrop={(e) => {
+        e.preventDefault()
+        const dt = draggedTab
+        if (dt && dt.sourceGroupId !== group().id) {
+          const targetFiles = group().files
+          if (!targetFiles.find(f => f.path === dt.path)) {
+            const state = props.workspace.getFileState(dt.path, dt.sourceGroupId)
+            if (state) {
+              props.workspace.openFile(dt.path, state.content, group().id)
+              props.workspace.closeFile(dt.path, dt.sourceGroupId)
+            }
+          }
+          draggedTab = null
+        }
+      }}
+    >
       <Show when={group().files.length > 0}>
         <div class="flex items-center border-b border-border-base bg-surface-base overflow-x-auto shrink-0 select-none" style={{ "min-height": "36px" }}>
           <For each={group().files}>
@@ -150,10 +177,13 @@ export function EditorArea(props: {
               <ContextMenu>
                 <ContextMenu.Trigger
                   as="button"
+                  draggable="true"
                   class={`flex items-center gap-1.5 px-3 py-1.5 text-13-regular border-r border-border-base whitespace-nowrap shrink-0 transition-colors ${openFile.path === activeFile()
                     ? (isActiveGroup() ? "bg-background-base text-text-strong border-b-2 border-b-accent-base" : "bg-background-base text-text-strong opacity-80")
                     : "text-text-weak hover:bg-surface-raised-base-hover"
                     }`}
+                  onDragStart={() => { draggedTab = { path: openFile.path, sourceGroupId: group().id } }}
+                  onDragEnd={() => { draggedTab = null }}
                   onClick={(e: MouseEvent) => {
                     e.stopPropagation();
                     // Auto-save the current file when switching tabs
@@ -297,6 +327,17 @@ export function EditorArea(props: {
             )}
           </For>
           <div class="flex-1 flex justify-end gap-1 px-1">
+            <Show when={isMarkdownFile()}>
+              <IconButton
+                icon={showPreview() ? "code" : "eye"}
+                variant="ghost"
+                size="small"
+                class="size-6 rounded"
+                title={showPreview() ? "Hide Preview" : "Open Preview"}
+                classList={{ "text-accent-base": showPreview() }}
+                onClick={(e: MouseEvent) => { e.stopPropagation(); setShowPreview((p) => !p) }}
+              />
+            </Show>
             <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded" title="Split Right" onClick={(e) => { e.stopPropagation(); props.workspace.splitGroup(group().id, "horizontal"); }} />
             <IconButton icon="layout-bottom" variant="ghost" size="small" class="size-6 rounded" title="Split Down" onClick={(e) => { e.stopPropagation(); props.workspace.splitGroup(group().id, "vertical"); }} />
           </div>
@@ -335,33 +376,34 @@ export function EditorArea(props: {
         </div>
       }>
         {(state) => (
-          <div class="flex-1 relative min-h-0 flex flex-col">
-            <Show when={!props.previewDiff && (!effectiveDiffMode() || !hasDiff())}>
-              <>
-                <IdeEditor
-                  path={state().path}
-                  content={state().content}
-                  onChange={(v) => {
-                    props.workspace.setContent(state().path, v, group().id);
-                  }}
-                  onCursorChange={(line, col) => {
-                    setEditorLine(line);
-                    setEditorColumn(col);
-                    if (isActiveGroup()) {
-                      props.onCursorChange?.(line, col);
-                    }
-                  }}
-                  onEditorReady={(e) => setEditorInstance(e)}
-                  formatTrigger={props.formatTrigger}
-                  class="flex-1 min-h-0"
-                  fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
-                  onProvideCompletionItems={settings.general.inlineCodeSuggestions() ? async (model, position) => {
-                    const offset = model.getOffsetAt(position);
-                    const text = model.getValue();
-                    const prefix = text.substring(0, offset).slice(-2000);
-                    const suffix = text.substring(offset).slice(0, 2000);
+          <div class="flex-1 relative min-h-0 flex" classList={{ "flex-row": showPreview() && isMarkdownFile(), "flex-col": !(showPreview() && isMarkdownFile()) }}>
+            <div class="flex-1 flex flex-col min-h-0">
+              <Show when={!props.previewDiff && (!effectiveDiffMode() || !hasDiff())}>
+                <>
+                  <IdeEditor
+                    path={state().path}
+                    content={state().content}
+                    onChange={(v) => {
+                      props.workspace.setContent(state().path, v, group().id);
+                    }}
+                    onCursorChange={(line, col) => {
+                      setEditorLine(line);
+                      setEditorColumn(col);
+                      if (isActiveGroup()) {
+                        props.onCursorChange?.(line, col);
+                      }
+                    }}
+                    onEditorReady={(e) => setEditorInstance(e)}
+                    formatTrigger={props.formatTrigger}
+                    class="flex-1 min-h-0"
+                    fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
+                    onProvideCompletionItems={settings.general.inlineCodeSuggestions() ? async (model, position) => {
+                      const offset = model.getOffsetAt(position);
+                      const text = model.getValue();
+                      const prefix = text.substring(0, offset).slice(-2000);
+                      const suffix = text.substring(offset).slice(0, 2000);
 
-                    const promptText = `You are a code autocomplete assistant. Generate the code that should be inserted at the cursor position.
+                      const promptText = `You are a code autocomplete assistant. Generate the code that should be inserted at the cursor position.
 Respond with ONLY the code to be inserted, without markdown formatting or code blocks.
 
 CODE BEFORE CURSOR:
@@ -372,113 +414,117 @@ ${suffix}
 
 Completion:`;
 
-                    let sessionID = "";
-                    try {
-                      const createResult = await sdk().client.session.create({
-                        title: "Autocomplete Helper",
-                        directory: sdk().directory
-                      });
-                      sessionID = (createResult as any).data?.id ?? "";
-                      if (!sessionID) return { items: [] };
-                      
-                      await (sdk().client.session as any).prompt({
-                        sessionID: sessionID,
-                        parts: [{ type: "text", text: promptText }]
-                      });
+                      let sessionID = "";
+                      try {
+                        const createResult = await sdk().client.session.create({
+                          title: "Autocomplete Helper",
+                          directory: sdk().directory
+                        });
+                        sessionID = (createResult as any).data?.id ?? "";
+                        if (!sessionID) return { items: [] };
 
-                      await (sdk().client.session as any).wait({ sessionID: sessionID });
+                        await (sdk().client.session as any).prompt({
+                          sessionID: sessionID,
+                          parts: [{ type: "text", text: promptText }]
+                        });
 
-                      const msgResponse = await (sdk().client.session as any).messages({
-                        sessionID: sessionID,
-                        limit: 10
-                      });
+                        await (sdk().client.session as any).wait({ sessionID: sessionID });
 
-                      const msgs = msgResponse?.data ?? [];
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      const assistantMsg = (msgs as any[]).find((m: any) => m.type === "assistant");
-                      if (assistantMsg?.content) {
-                        const content = assistantMsg.content as Array<{ type: string; text: string }>
-                        const completionText = content
-                          .filter(c => c.type === "text")
-                          .map(c => c.text)
-                          .join("");
-                        
-                        let insertText = completionText;
-                        if (insertText.startsWith("```")) {
-                          const lines = insertText.split("\n");
-                          if (lines[0].startsWith("```")) {
-                            lines.shift();
+                        const msgResponse = await (sdk().client.session as any).messages({
+                          sessionID: sessionID,
+                          limit: 10
+                        });
+
+                        const msgs = msgResponse?.data ?? [];
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const assistantMsg = (msgs as any[]).find((m: any) => m.type === "assistant");
+                        if (assistantMsg?.content) {
+                          const content = assistantMsg.content as Array<{ type: string; text: string }>
+                          const completionText = content
+                            .filter(c => c.type === "text")
+                            .map(c => c.text)
+                            .join("");
+
+                          let insertText = completionText;
+                          if (insertText.startsWith("```")) {
+                            const lines = insertText.split("\n");
+                            if (lines[0].startsWith("```")) {
+                              lines.shift();
+                            }
+                            if (lines[lines.length - 1].startsWith("```")) {
+                              lines.pop();
+                            }
+                            insertText = lines.join("\n");
                           }
-                          if (lines[lines.length - 1].startsWith("```")) {
-                            lines.pop();
+
+                          if (insertText) {
+                            return {
+                              items: [{
+                                insertText: insertText,
+                                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
+                              }]
+                            };
                           }
-                          insertText = lines.join("\n");
                         }
-
-                        if (insertText) {
-                          return {
-                            items: [{
-                              insertText: insertText,
-                              range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
-                            }]
-                          };
+                      } catch (e) {
+                        console.error("Autocomplete failed:", e);
+                      } finally {
+                        if (sessionID) {
+                          void sdk().client.session.delete({ sessionID }).catch(() => {});
                         }
                       }
-                    } catch (e) {
-                      console.error("Autocomplete failed:", e);
-                    } finally {
-                      if (sessionID) {
-                        void sdk().client.session.delete({ sessionID }).catch(() => {});
-                      }
-                    }
-                    return { items: [] };
-                  } : undefined}
-                />
-                <InlineAIToolbar
-                  editor={editorInstance()}
-                  filePath={state().path}
-                  language={activeFileLanguage()}
-                  onAction={(payload) => props.onInlineAIAction(payload, group().id)}
-                />
-              </>
-            </Show>
-            <Show when={!(!props.previewDiff && (!effectiveDiffMode() || !hasDiff()))}>
-              <>
-                <IdeDiffEditor
-                  path={props.previewDiff?.path ?? state().path}
-                  original={props.previewDiff?.original ?? state().originalContent ?? state().savedContent ?? ""}
-                  modified={props.previewDiff?.modified ?? state().content}
-                  class="flex-1 min-h-0"
-                  fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
-                  onAccept={props.onAcceptDiff}
-                  onReject={props.onRejectDiff}
-                  onChange={(v) => props.workspace.setContent(state().path, v, group().id)}
-                />
-                <Show when={props.previewDiff && (props.onAcceptDiff || props.onRejectDiff)}>
-                  <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised-base border border-border-base shadow-lg backdrop-blur-sm">
-                    <Show when={props.onAcceptDiff}>
-                      <Button variant="primary" size="normal" onClick={props.onAcceptDiff}>
-                        <span class="flex items-center gap-1.5">
-                          Accept Changes <span class="opacity-70 text-11-regular">Ctrl+Enter</span>
-                        </span>
-                      </Button>
-                    </Show>
-                    <Show when={props.onRejectDiff}>
-                      <Button variant="ghost" size="normal" onClick={props.onRejectDiff}>
-                        <span class="flex items-center gap-1.5">
-                          Reject <span class="opacity-70 text-11-regular">Ctrl+⌫</span>
-                        </span>
-                      </Button>
-                    </Show>
-                    <div class="w-px h-4 bg-border-base mx-1" />
-                    <div class="flex items-center gap-1 text-text-weak text-12-regular">
-                      <Icon name="arrow-up" size="small" />
-                      <Icon name="chevron-down" size="small" />
-                      <span class="opacity-70">Alt+J</span>
+                      return { items: [] };
+                    } : undefined}
+                  />
+                  <InlineAIToolbar
+                    editor={editorInstance()}
+                    filePath={state().path}
+                    language={activeFileLanguage()}
+                    onAction={(payload) => props.onInlineAIAction(payload, group().id)}
+                  />
+                </>
+              </Show>
+              <Show when={!(!props.previewDiff && (!effectiveDiffMode() || !hasDiff()))}>
+                <>
+                  <IdeDiffEditor
+                    path={props.previewDiff?.path ?? state().path}
+                    original={props.previewDiff?.original ?? state().originalContent ?? state().savedContent ?? ""}
+                    modified={props.previewDiff?.modified ?? state().content}
+                    class="flex-1 min-h-0"
+                    fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
+                    onAccept={props.onAcceptDiff}
+                    onReject={props.onRejectDiff}
+                    onChange={(v) => props.workspace.setContent(state().path, v, group().id)}
+                  />
+                  <Show when={props.previewDiff && (props.onAcceptDiff || props.onRejectDiff)}>
+                    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-raised-base border border-border-base shadow-lg backdrop-blur-sm">
+                      <Show when={props.onAcceptDiff}>
+                        <Button variant="primary" size="normal" onClick={props.onAcceptDiff}>
+                          <span class="flex items-center gap-1.5">
+                            Accept Changes <span class="opacity-70 text-11-regular">Ctrl+Enter</span>
+                          </span>
+                        </Button>
+                      </Show>
+                      <Show when={props.onRejectDiff}>
+                        <Button variant="ghost" size="normal" onClick={props.onRejectDiff}>
+                          <span class="flex items-center gap-1.5">
+                            Reject <span class="opacity-70 text-11-regular">Ctrl+⌫</span>
+                          </span>
+                        </Button>
+                      </Show>
+                      <div class="w-px h-4 bg-border-base mx-1" />
+                      <div class="flex items-center gap-1 text-text-weak text-12-regular">
+                        <Icon name="arrow-up" size="small" />
+                        <Icon name="chevron-down" size="small" />
+                        <span class="opacity-70">Alt+J</span>
+                      </div>
                     </div>
-                  </div>
-                </Show>
-              </>
+                  </Show>
+                </>
+              </Show>
+            </div>
+            <Show when={showPreview() && isMarkdownFile()}>
+              <MarkdownPreviewPanel content={state().content} visible={true} />
             </Show>
           </div>
         )}

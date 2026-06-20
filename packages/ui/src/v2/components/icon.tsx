@@ -69,6 +69,14 @@ const icons = {
     viewBox: "0 0 16 16",
     body: `<rect x="1.5" y="2.5" width="13" height="11" rx="1" stroke="currentColor" stroke-linejoin="round"/><path d="M1.5 5.5H14.5" stroke="currentColor"/>`,
   },
+  pin: {
+    viewBox: "0 0 16 16",
+    body: `<path d="M10.5 2.5L13.5 5.5M8.5 4L12 7.5M4.5 11.5L7.5 14.5M2 14L5.5 10.5M5.5 7.5C5.5 7.5 7 5.5 9.5 3L13 6.5C10.5 9 8.5 10.5 8.5 10.5M5.5 7.5L3.5 9.5M5.5 7.5L8.5 10.5" stroke="currentColor" stroke-linejoin="round"/>`,
+  },
+  "pin-filled": {
+    viewBox: "0 0 16 16",
+    body: `<path d="M10.5 2.5L13.5 5.5M8.5 4L12 7.5M4.5 11.5L7.5 14.5M2 14L5.5 10.5M5.5 7.5C5.5 7.5 7 5.5 9.5 3L13 6.5C10.5 9 8.5 10.5 8.5 10.5M5.5 7.5L3.5 9.5M5.5 7.5L8.5 10.5" stroke="currentColor" fill="currentColor" stroke-linejoin="round"/>`,
+  },
 }
 
 const spriteID = "opencode-v2-icon-sprite"

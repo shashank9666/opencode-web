@@ -45,11 +45,45 @@ const extToLanguage = new Map([
   [".ignore", "ignore"], [".gitignore", "ignore"],
   [".env", "dotenv"], [".properties", "properties"],
   [".ini", "ini"], [".cfg", "ini"], [".conf", "ini"],
-  [".csv", "csv"], [".tsv", "csv"],
+  [".csv", "rainbowcsv"], [".tsv", "rainbowcsv"], [".psv", "rainbowcsv"],
   [".graphql", "graphql"], [".gql", "graphql"],
   [".proto", "protobuf"],
   [".lock", "json"],
 ])
+
+monaco.languages.register({ id: "rainbowcsv" })
+
+const CSV_COLORS = [
+  { token: "csv.column0", fg: "E06C75" },
+  { token: "csv.column1", fg: "56B6C2" },
+  { token: "csv.column2", fg: "61AFEF" },
+  { token: "csv.column3", fg: "D19A66" },
+  { token: "csv.column4", fg: "C678DD" },
+  { token: "csv.column5", fg: "56B6C2" },
+  { token: "csv.column6", fg: "E5C07B" },
+  { token: "csv.column7", fg: "98C379" },
+]
+
+monaco.editor.defineTheme("rainbowcsv-dark", {
+  base: "vs-dark", inherit: true,
+  rules: [
+    { token: "csv.delimiter", foreground: "3E4452" },
+    ...CSV_COLORS.map(({ token, fg }) => ({ token, foreground: fg })),
+  ], colors: {},
+})
+
+monaco.editor.defineTheme("rainbowcsv-light", {
+  base: "vs", inherit: true,
+  rules: [
+    { token: "csv.delimiter", foreground: "D0D0D0" },
+    ...CSV_COLORS.map(({ token, fg }) => ({ token, foreground: fg })),
+  ], colors: {},
+})
+
+const RAINBOW_HTML_COLORS = [
+  "#E06C75", "#56B6C2", "#61AFEF", "#D19A66",
+  "#C678DD", "#56B6C2", "#E5C07B", "#98C379",
+]
 
 export function languageFromPath(path: string): string {
   const ext = path.slice(path.lastIndexOf("."))
@@ -248,10 +282,47 @@ export default function IdeEditor(props: {
 
     setTimeout(updateErrorLens, 500)
 
+    // Rainbow CSV: column-based coloring
+    let rainbowDecos: string[] = []
+    const applyRainbowDecorations = () => {
+      if (!editor) return
+      const model = editor.getModel()
+      if (!model || model.isDisposed()) return
+      const lang = languageFromPath(props.path)
+      if (lang !== "rainbowcsv") return
+      const lineCount = model.getLineCount()
+      const decos: monaco.editor.IModelDeltaDecoration[] = []
+      for (let line = 1; line <= lineCount; line++) {
+        const text = model.getLineContent(line)
+        const cols = text.split(",")
+        let offset = 0
+        for (let ci = 0; ci < cols.length; ci++) {
+          const colText = cols[ci]
+          const leading = colText.length - colText.trimStart().length
+          const colorIdx = ci % RAINBOW_HTML_COLORS.length
+          decos.push({
+            range: new monaco.Range(line, offset + leading + 1, line, offset + colText.length),
+            options: {
+              inlineClassName: `rainbow-csv-col${colorIdx}`,
+            },
+          })
+          offset += colText.length + 1
+        }
+      }
+      rainbowDecos = editor?.deltaDecorations(rainbowDecos, decos) ?? []
+    }
+
+    applyRainbowDecorations()
+
+    const rainbowListener = editor?.onDidChangeModelContent(() => {
+      applyRainbowDecorations()
+    })
+
     onCleanup(() => {
-      markerListener.dispose()
-      completionsProvider?.dispose()
-      editor?.dispose()
+      rainbowListener?.dispose()
+      if (editor) {
+        rainbowDecos = editor.deltaDecorations(rainbowDecos, [])
+      }
     })
   })
 
@@ -291,7 +362,6 @@ export default function IdeEditor(props: {
       wordWrap: props.wordWrap ?? "off",
     })
   })
-
 
   return <div ref={container} class={props.class ?? "size-full"} />
 }

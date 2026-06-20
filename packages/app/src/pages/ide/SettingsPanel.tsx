@@ -1,6 +1,7 @@
 import { For, Show, createSignal } from "solid-js"
+import { Button } from "@opencode-ai/ui/button"
 
-export type SettingsTab = "general" | "editor" | "theme" | "keybinds"
+export type SettingsTab = "general" | "editor" | "theme" | "keybinds" | "config"
 
 export default function SettingsPanel(props: {
   fontSize: number
@@ -16,6 +17,7 @@ export default function SettingsPanel(props: {
   wordWrapCol: number
   setWordWrapCol: (v: number) => void
   onCloseKeybindings: () => void
+  onOpenConfig?: () => void
 }) {
   const [tab, setTab] = createSignal<SettingsTab>("general")
 
@@ -23,7 +25,7 @@ export default function SettingsPanel(props: {
     <div class="flex-1 min-h-0 flex flex-col">
       {/* Tabs */}
       <div class="flex items-center gap-0 border-b border-border-base px-2 shrink-0">
-        {(["general", "editor", "theme", "keybinds"] as SettingsTab[]).map((t) => (
+        {(["general", "editor", "theme", "keybinds", "config"] as SettingsTab[]).map((t) => (
           <button
             class="px-3 py-2 text-13-regular transition-colors border-b-2"
             classList={{
@@ -32,7 +34,7 @@ export default function SettingsPanel(props: {
             }}
             onClick={() => setTab(t)}
           >
-            {t === "general" ? "General" : t === "editor" ? "Editor" : t === "theme" ? "Theme" : "Keybinds"}
+            {t === "general" ? "General" : t === "editor" ? "Editor" : t === "theme" ? "Theme" : t === "keybinds" ? "Keybinds" : "Config"}
           </button>
         ))}
       </div>
@@ -113,6 +115,28 @@ export default function SettingsPanel(props: {
         <Show when={tab() === "keybinds"}>
           <div class="text-13-regular text-text-weak">
             Use <button class="text-accent-base underline" onClick={props.onCloseKeybindings}>Keyboard Shortcuts editor</button> for full customization.
+          </div>
+        </Show>
+
+        <Show when={tab() === "config"}>
+          <div class="flex flex-col gap-4">
+            <div class="flex flex-col gap-1.5">
+              <h3 class="text-14-medium text-text-strong">Project Configuration</h3>
+              <p class="text-12-regular text-text-weak">
+                Edit <code class="px-1 py-0.5 bg-surface-base rounded text-11-medium">opencode.jsonc</code> to configure your project settings, plugins, MCP servers, and more.
+              </p>
+            </div>
+            <Button
+              variant="primary"
+              size="normal"
+              onClick={() => props.onOpenConfig?.()}
+            >
+              Open opencode.jsonc
+            </Button>
+            <div class="text-12-regular text-text-weak mt-2">
+              <p>You can also configure via the Settings dialog (File &rarr; Preferences &rarr; Settings).</p>
+              <p class="mt-1">See <a class="text-accent-base underline" href="https://opencode.ai/docs/config/" target="_blank" rel="noopener noreferrer">online documentation</a> for all available options.</p>
+            </div>
           </div>
         </Show>
       </div>

@@ -145,6 +145,36 @@ export function createEditorWorkspace() {
     setActiveGroupId(groupId);
   };
 
+  const mergeAllPanels = () => {
+    const collectFiles = (node: EditorNode): OpenFile[] => {
+      if (node.type === "group") return node.group.files
+      return node.children.flatMap(collectFiles)
+    }
+    const allFiles = collectFiles(rootNode())
+    const mergedGroup: EditorGroup = { id: "group-1", files: allFiles, activeFile: allFiles[0]?.path ?? null }
+    setRootNode({ type: "group", group: mergedGroup })
+    setActiveGroupId("group-1")
+  }
+
+  const swapSplitChildren = (parentId: string, indexA: number, indexB: number) => {
+    const swapRec = (node: EditorNode): EditorNode => {
+      if (node.type === "group") return node
+      if (node.type === "split") {
+        const id = `${node.direction}-${node.sizes.join("-")}`
+        if (id === parentId || node.children.some(c => c.type === "group" && c.group.id === parentId)) {
+          const newChildren = [...node.children]
+          const temp = newChildren[indexA]
+          newChildren[indexA] = newChildren[indexB]
+          newChildren[indexB] = temp
+          return { ...node, children: newChildren }
+        }
+        return { ...node, children: node.children.map(swapRec) }
+      }
+      return node
+    }
+    setRootNode(prev => swapRec(prev))
+  }
+
   const splitGroup = (groupId: string, direction: SplitDirection) => {
     const splitNodeRec = (node: EditorNode): EditorNode => {
       if (node.type === "group" && node.group.id === groupId) {
@@ -202,6 +232,8 @@ export function createEditorWorkspace() {
     markClean,
     setActiveFile,
     splitGroup,
+    mergeAllPanels,
+    swapSplitChildren,
     getFileState,
     getActiveGroup,
     getDirtyFiles

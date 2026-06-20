@@ -202,4 +202,14 @@
   .error-lens-glyph-warning {
     background: rgb(255, 200, 60);
   }
+
+  /* Rainbow CSV */
+  .rainbow-csv-col0 { color: #E06C75; }
+  .rainbow-csv-col1 { color: #56B6C2; }
+  .rainbow-csv-col2 { color: #61AFEF; }
+  .rainbow-csv-col3 { color: #D19A66; }
+  .rainbow-csv-col4 { color: #C678DD; }
+  .rainbow-csv-col5 { color: #56B6C2; }
+  .rainbow-csv-col6 { color: #E5C07B; }
+  .rainbow-csv-col7 { color: #98C379; }
 }

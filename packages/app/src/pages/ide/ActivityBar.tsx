@@ -1,9 +1,22 @@
+import { createResizeObserver } from "@solid-primitives/resize-observer"
+import { createSignal, For, Show } from "solid-js"
+import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 
 export type ActivityBarTab = "explorer" | "search" | "source-control" | "run-debug" | "extensions" | "ai-chat" | "database" | "remote" | "testing"
 
 export type BottomPanelTab = "terminal" | "problems" | "output" | "debug-console"
+
+const SIDEBAR_TABS = [
+  { tab: "explorer" as const, icon: "file-tree" as const, activeIcon: "file-tree-active" as const, label: "Explorer", shortcut: "Ctrl+Shift+E" },
+  { tab: "search" as const, icon: "magnifying-glass" as const, label: "Search", shortcut: "Ctrl+Shift+F" },
+  { tab: "source-control" as const, icon: "branch" as const, label: "Source Control", shortcut: "Ctrl+Shift+G" },
+  { tab: "run-debug" as const, icon: "window-cursor" as const, label: "Run & Debug", shortcut: "Ctrl+Shift+D" },
+  { tab: "ai-chat" as const, icon: "brain" as const, label: "AI Assistant", shortcut: "Ctrl+Shift+I" },
+  { tab: "remote" as const, icon: "arrow-right" as const, label: "Remote Explorer", shortcut: "" },
+  { tab: "testing" as const, icon: "check" as const, label: "Testing", shortcut: "" },
+]
 
 export default function ActivityBar(props: {
   activeTab: ActivityBarTab
@@ -24,116 +37,76 @@ export default function ActivityBar(props: {
   }
   const activeBottom = (tab: BottomPanelTab) => props.bottomPanelOpen && props.bottomTab === tab
 
+  let topContainerRef!: HTMLDivElement
+  const [visibleCount, setVisibleCount] = createSignal(SIDEBAR_TABS.length)
+
+  createResizeObserver(() => topContainerRef, () => {
+    if (!topContainerRef) return
+    const containerHeight = topContainerRef.clientHeight
+    const buttonHeight = 48
+    const maxButtons = Math.floor(containerHeight / buttonHeight)
+    setVisibleCount(Math.max(1, Math.min(maxButtons, SIDEBAR_TABS.length)))
+  })
+
+  const visibleTabs = () => SIDEBAR_TABS.slice(0, visibleCount())
+  const overflowTabs = () => SIDEBAR_TABS.slice(visibleCount())
+
   return (
     <div class="w-12 shrink-0 flex flex-col items-center py-0 border-r border-border-base bg-surface-base select-none [app-region:no-drag]">
       {/* Top section - sidebar panels */}
-      <div class="flex flex-col items-center w-full">
-        <Tooltip value="Explorer (Ctrl+Shift+E)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("explorer"),
-              "text-text-weak hover:text-text-strong": !active("explorer"),
-            }}
-            onClick={() => props.onTabClick("explorer")}
-            aria-label="Explorer"
-          >
-            <Icon name={active("explorer") ? "file-tree-active" : "file-tree"} size="large" />
-          </button>
-        </Tooltip>
+      <div class="flex flex-col items-center w-full" ref={topContainerRef}>
+        <For each={visibleTabs()}>
+          {(item) => (
+            <Tooltip value={`${item.label}${item.shortcut ? ` (${item.shortcut})` : ""}`} placement="right">
+              <button
+                type="button"
+                class="w-full h-12 flex items-center justify-center transition-colors relative"
+                classList={{
+                  "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active(item.tab),
+                  "text-text-weak hover:text-text-strong": !active(item.tab),
+                }}
+                onClick={() => props.onTabClick(item.tab)}
+                aria-label={item.label}
+              >
+                <Icon name={item.activeIcon && active(item.tab) ? item.activeIcon : item.icon} size="large" />
+              </button>
+            </Tooltip>
+          )}
+        </For>
 
-        <Tooltip value="Search (Ctrl+Shift+F)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("search"),
-              "text-text-weak hover:text-text-strong": !active("search"),
-            }}
-            onClick={() => props.onTabClick("search")}
-            aria-label="Search"
-          >
-            <Icon name="magnifying-glass" size="large" />
-          </button>
-        </Tooltip>
-
-        <Tooltip value="Source Control (Ctrl+Shift+G)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("source-control"),
-              "text-text-weak hover:text-text-strong": !active("source-control"),
-            }}
-            onClick={() => props.onTabClick("source-control")}
-            aria-label="Source Control"
-          >
-            <Icon name="branch" size="large" />
-          </button>
-        </Tooltip>
-
-        <Tooltip value="Run & Debug (Ctrl+Shift+D)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("run-debug"),
-              "text-text-weak hover:text-text-strong": !active("run-debug"),
-            }}
-            onClick={() => props.onTabClick("run-debug")}
-            aria-label="Run and Debug"
-          >
-            <Icon name="window-cursor" size="large" />
-          </button>
-        </Tooltip>
-
-
-
-        <Tooltip value="AI Assistant (Ctrl+Shift+I)" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("ai-chat"),
-              "text-text-weak hover:text-text-strong": !active("ai-chat"),
-            }}
-            onClick={() => props.onTabClick("ai-chat")}
-            aria-label="AI Chat"
-          >
-            <Icon name="brain" size="large" />
-          </button>
-        </Tooltip>
-
-        <Tooltip value="Remote Explorer" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("remote"),
-              "text-text-weak hover:text-text-strong": !active("remote"),
-            }}
-            onClick={() => props.onTabClick("remote")}
-            aria-label="Remote Explorer"
-          >
-            <Icon name="arrow-right" size="large" />
-          </button>
-        </Tooltip>
-
-        <Tooltip value="Testing" placement="right">
-          <button
-            type="button"
-            class="w-full h-12 flex items-center justify-center transition-colors relative"
-            classList={{
-              "text-text-strong before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-accent-base": active("testing"),
-              "text-text-weak hover:text-text-strong": !active("testing"),
-            }}
-            onClick={() => props.onTabClick("testing")}
-            aria-label="Testing"
-          >
-            <Icon name="check" size="large" />
-          </button>
-        </Tooltip>
+        <Show when={overflowTabs().length > 0}>
+          <DropdownMenu>
+            <Tooltip value="More Actions..." placement="right">
+              <DropdownMenu.Trigger
+                as="button"
+                type="button"
+                class="w-full h-12 flex items-center justify-center transition-colors text-text-weak hover:text-text-strong relative"
+                aria-label="More Actions"
+              >
+                <span class="text-16-bold leading-none tracking-wider">...</span>
+              </DropdownMenu.Trigger>
+            </Tooltip>
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content class="ml-1 min-w-40">
+                <For each={overflowTabs()}>
+                  {(item) => (
+                    <DropdownMenu.Item
+                      onSelect={() => props.onTabClick(item.tab)}
+                      classList={{
+                        "text-text-strong": active(item.tab),
+                      }}
+                    >
+                      <div class="flex items-center gap-2">
+                        <Icon name={item.activeIcon && active(item.tab) ? item.activeIcon : item.icon} size="small" />
+                        <span>{item.label}</span>
+                      </div>
+                    </DropdownMenu.Item>
+                  )}
+                </For>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu>
+        </Show>
       </div>
 
       {/* Spacer */}
@@ -141,7 +114,7 @@ export default function ActivityBar(props: {
 
       {/* Bottom section - panel toggles */}
       <div class="flex flex-col items-center w-full">
-        <Tooltip value="Terminal (Ctrl+`)" placement="right">
+        <Tooltip value='Terminal (Ctrl+`)' placement="right">
           <button
             type="button"
             class="w-full h-12 flex items-center justify-center transition-colors relative"

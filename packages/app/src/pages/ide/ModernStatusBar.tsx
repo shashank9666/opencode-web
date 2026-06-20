@@ -20,11 +20,17 @@ export default function ModernStatusBar(props: {
   syncStatus?: "synced" | "syncing" | "error"
   remoteConnection?: string
   activeSessionId?: string | null
+  hasSplit?: boolean
+  fullScreen?: boolean
   onLanguageClick?: () => void
   onGitClick?: () => void
   onProblemsClick?: () => void
   onCommandPalette?: () => void
   onRemoteClick?: () => void
+  onSplitHorizontal?: () => void
+  onSplitVertical?: () => void
+  onMergeAll?: () => void
+  onToggleFullScreen?: () => void
 }) {
   const [expanded, setExpanded] = createSignal(false)
 
@@ -162,6 +168,48 @@ export default function ModernStatusBar(props: {
 
         {/* Spacer */}
         <div class="flex-1" />
+
+        {/* Split controls */}
+        <Show when={props.hasSplit}>
+          <Tooltip value="Merge All Panels" placement="top">
+            <button
+              type="button"
+              class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+              onClick={props.onMergeAll}
+            >
+              <Icon name="collapse" size="small" class="size-3" />
+            </button>
+          </Tooltip>
+        </Show>
+        <Tooltip value="Split Editor Right" placement="top">
+          <button
+            type="button"
+            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            onClick={props.onSplitHorizontal}
+          >
+            <Icon name="layout-right" size="small" class="size-3" />
+          </button>
+        </Tooltip>
+        <Tooltip value="Split Editor Down" placement="top">
+          <button
+            type="button"
+            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            onClick={props.onSplitVertical}
+          >
+            <Icon name="layout-bottom" size="small" class="size-3" />
+          </button>
+        </Tooltip>
+
+        {/* Full Screen */}
+        <Tooltip value={props.fullScreen ? "Exit Full Screen" : "Full Screen"} placement="top">
+          <button
+            type="button"
+            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            onClick={props.onToggleFullScreen}
+          >
+            <Icon name={props.fullScreen ? "collapse" : "expand"} size="small" class="size-3" />
+          </button>
+        </Tooltip>
 
         {/* Menu & Layout Actions */}
         <Tooltip value="Command Palette (Ctrl+Shift+P)" placement="top">

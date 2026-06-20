@@ -48,32 +48,59 @@ export default function CommandPaletteV2(props: {
   const [mode, setMode] = createSignal<"commands" | "files">("commands")
   const [fileResults, setFileResults] = createSignal<string[]>([])
   const [searching, setSearching] = createSignal(false)
+  const [pinned, setPinned] = createSignal<Set<string>>(new Set())
   let inputRef: HTMLInputElement | undefined
   let listRef: HTMLDivElement | undefined
   let searchTimer: ReturnType<typeof setTimeout> | undefined
 
+  createEffect(() => {
+    try {
+      const raw = localStorage.getItem("opencode-palette-pins")
+      if (raw) setPinned(new Set(JSON.parse(raw) as string[]))
+    } catch {}
+  })
+
+  const togglePin = (id: string) => {
+    setPinned((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      localStorage.setItem("opencode-palette-pins", JSON.stringify([...next]))
+      return next
+    })
+  }
+
   const filtered = createMemo(() => {
     if (mode() === "files") return []
     const q = query().toLowerCase().trim()
-    if (!q) return props.commands.slice(0, 50)
-    return props.commands
-      .filter((cmd) => {
-        const title = cmd.title.toLowerCase()
-        const desc = cmd.description?.toLowerCase() ?? ""
-        const cat = CATEGORY_LABELS[cmd.category].toLowerCase()
-        return title.includes(q) || desc.includes(q) || cat.includes(q)
-      })
-      .slice(0, 50)
+    const cmds = !q ? props.commands : props.commands.filter((cmd) => {
+      const title = cmd.title.toLowerCase()
+      const desc = cmd.description?.toLowerCase() ?? ""
+      const cat = CATEGORY_LABELS[cmd.category].toLowerCase()
+      return title.includes(q) || desc.includes(q) || cat.includes(q)
+    })
+    return cmds.slice(0, 50)
   })
 
   const grouped = createMemo(() => {
-    const groups = new Map<CommandCategory, PaletteAction[]>()
+    const pinSet = pinned()
+    const pinGroup: PaletteAction[] = []
+    const normalGroups = new Map<CommandCategory, PaletteAction[]>()
     for (const cmd of filtered()) {
-      const existing = groups.get(cmd.category) ?? []
-      existing.push(cmd)
-      groups.set(cmd.category, existing)
+      if (pinSet.has(cmd.id)) {
+        pinGroup.push(cmd)
+      } else {
+        const existing = normalGroups.get(cmd.category) ?? []
+        existing.push(cmd)
+        normalGroups.set(cmd.category, existing)
+      }
     }
-    return [...groups.entries()]
+    const result: [string, CommandCategory, PaletteAction[]][] = []
+    if (pinGroup.length > 0) result.push(["Pinned", "files" as CommandCategory, pinGroup])
+    for (const [cat, cmds] of normalGroups) {
+      result.push([CATEGORY_LABELS[cat], cat, cmds])
+    }
+    return result
   })
 
   const executeSelected = () => {
@@ -267,17 +294,17 @@ export default function CommandPaletteV2(props: {
                 </Match>
                 <Match when={mode() === "commands"}>
                   <For each={grouped()}>
-                    {([category, cmds]) => (
+                    {([label, category, cmds]) => (
                       <div class="pb-1">
                         <div class="flex items-center gap-1.5 px-4 py-1.5 text-11-medium text-text-weaker uppercase tracking-wider">
                           <Icon name={CATEGORY_ICONS[category] as any} size="small" class="text-icon-weaker" />
-                          {CATEGORY_LABELS[category]}
+                          {label}
                         </div>
                         <For each={cmds}>
                           {(cmd, i) => {
                             const globalIndex = () => {
                               let count = 0
-                              for (const [, group] of grouped()) {
+                              for (const [, , group] of grouped()) {
                                 for (const item of group) {
                                   if (item === cmd) return count
                                   count++
@@ -286,10 +313,11 @@ export default function CommandPaletteV2(props: {
                               return -1
                             }
                             const isSelected = () => globalIndex() === selectedIndex()
+                            const isPinned = () => pinned().has(cmd.id)
                             return (
                               <div
                                 data-command-item
-                                class="flex items-center gap-3 px-4 py-2 mx-2 rounded-lg cursor-pointer transition-colors"
+                                class="flex items-center gap-3 px-4 py-2 mx-2 rounded-lg cursor-pointer transition-colors group"
                                 classList={{
                                   "bg-accent-base/10 text-text-strong": isSelected(),
                                   "text-text-base hover:bg-surface-raised-base-hover": !isSelected(),
@@ -315,6 +343,15 @@ export default function CommandPaletteV2(props: {
                                     <span class="px-1.5 py-0.5 text-11-medium text-text-weaker bg-surface-base border border-border-base rounded-md font-mono">{cmd.keybind}</span>
                                   </div>
                                 </Show>
+                                <button
+                                  type="button"
+                                  class="shrink-0 size-5 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface-base"
+                                  classList={{ "opacity-100": isPinned() }}
+                                  onClick={(e) => { e.stopPropagation(); togglePin(cmd.id) }}
+                                  title={isPinned() ? "Unpin" : "Pin"}
+                                >
+                                  <Icon name={isPinned() ? "pin-filled" : "pin"} size="small" class={isPinned() ? "text-accent-base" : "text-icon-weaker"} />
+                                </button>
                               </div>
                             )
                           }}

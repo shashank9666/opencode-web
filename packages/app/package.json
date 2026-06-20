@@ -68,14 +68,15 @@
     "effect": "catalog:",
     "fuzzysort": "catalog:",
     "ghostty-web": "github:anomalyco/ghostty-web#main",
-    "monaco-editor": "0.52.2",
     "luxon": "catalog:",
     "marked": "catalog:",
     "marked-shiki": "catalog:",
+    "monaco-editor": "0.52.2",
     "remeda": "catalog:",
     "shiki": "catalog:",
     "solid-js": "catalog:",
     "solid-list": "catalog:",
+    "solid-markdown": "2.1.1",
     "tailwindcss": "catalog:",
     "virtua": "catalog:"
   }

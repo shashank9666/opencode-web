@@ -41,6 +41,7 @@ import { usePermission } from "@/context/permission"
 import { useSync } from "@/context/sync"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
+import { MarkdownPreview, PdfPreview } from "@/components/previews"
 
 // Reuse existing panels + extend
 import HeaderBar from "./HeaderBar"
@@ -230,6 +231,8 @@ export default function FullIde() {
   const [searching, setSearching] = createSignal(false)
   const [editorLine, setEditorLine] = createSignal(1)
   const [editorColumn, setEditorColumn] = createSignal(1)
+  const [fullScreen, setFullScreen] = createSignal(false)
+  const hasSplit = createMemo(() => workspace.rootNode().type === "split")
   const [breadcrumbs, setBreadcrumbs] = createSignal<string[]>([])
   const [formatTrigger, setFormatTrigger] = createSignal(0)
   const [diffMode, setDiffMode] = createSignal(false)
@@ -427,7 +430,7 @@ export default function FullIde() {
         const state = file.get(path)
         if (state?.content?.type === "text") {
           editor.openFile(path, state.content.content)
-          showToast({ title: "Preview", description: `Opened ${getFilename(path)} in editor` })
+          showToast({ title: "Markdown", description: `Opened ${getFilename(path)} — click Preview (eye icon) in tab bar` })
         }
       })()
     } else if (isPdfPath(path)) {
@@ -435,13 +438,24 @@ export default function FullIde() {
         await file.load(path)
         const state = file.get(path)
         const content = state?.content
-        if (content?.type === "binary") {
-          const isImageDataUrl = content.content.startsWith("data:image/")
-          if (isImageDataUrl) {
-            dialog.show(() => <ImagePreview src={content.content} alt={getFilename(path)} />)
-          } else {
-            showToast({ title: "PDF Preview", description: `PDF viewer not yet implemented for ${getFilename(path)}` })
-          }
+        if (content?.type === "binary" && content.content) {
+          dialog.show(() => (
+            <PdfPreview
+              src={content.content}
+              filename={getFilename(path)}
+              onClose={() => dialog.close()}
+            />
+          ))
+        } else if (content?.type === "text" && content.content) {
+          const blob = new Blob([content.content], { type: "application/pdf" })
+          const url = URL.createObjectURL(blob)
+          dialog.show(() => (
+            <PdfPreview
+              src={url}
+              filename={getFilename(path)}
+              onClose={() => { URL.revokeObjectURL(url); dialog.close() }}
+            />
+          ))
         }
       })()
     }
@@ -1062,6 +1076,20 @@ export default function FullIde() {
             remoteConnection={remoteConnection() ?? undefined}
             onRemoteClick={() => setRemoteModalOpen(true)}
             activeSessionId={activeSessionId()}
+            hasSplit={hasSplit()}
+            fullScreen={fullScreen()}
+            onSplitHorizontal={() => workspace.splitGroup(workspace.activeGroupId(), "horizontal")}
+            onSplitVertical={() => workspace.splitGroup(workspace.activeGroupId(), "vertical")}
+            onMergeAll={() => workspace.mergeAllPanels()}
+            onToggleFullScreen={() => {
+              if (document.fullscreenElement) {
+                void document.exitFullscreen()
+                setFullScreen(false)
+              } else {
+                void document.documentElement.requestFullscreen()
+                setFullScreen(true)
+              }
+            }}
           />
         </div>
 
@@ -1246,6 +1274,7 @@ export default function FullIde() {
               minimap={minimap()} setMinimap={setMinimap}
               wordWrapCol={wordWrapCol()} setWordWrapCol={setWordWrapCol}
               onCloseKeybindings={() => { }}
+              onOpenConfig={() => { handleFileClick({ path: ".opencode.jsonc", type: "file" }) }}
             />
           </div>
         </div>

@@ -3,18 +3,18 @@
 ## 1. UI & Theming
 - [x] 1. Colorful material icons (always-on color file icons in explorer; 37 themes available including material).
 - [ ] 2. Custom icons option, theme, etc., to allow users to customize anything.
-- [ ] 3. Customize the command palette (not just themes/colors).
-- [ ] 16. In view menu: remove extensions option. Ensure all menu panels (File, Edit, View, Go, Run, Terminal) are properly working.
-- [ ] 17. Sidebar and other panels: if options exceed height, use an additional panel/dropdown with a `...` button.
-- [ ] 20. Central search bar in the header, identical to VS Code.
+- [x] 3. Customize the command palette: pin/unpin commands via toggle button, pinned commands appear in a "Pinned" section at the top, state persisted in localStorage.
+- [x] 16. In view menu: removed extensions option. All menu panels (File, Edit, View, Go, Run, Terminal) properly working.
+- [x] 17. Sidebar (ActivityBar) overflow dropdown - buttons that exceed container height move into a `...` dropdown menu.
+- [x] 20. Central search bar in the header (VS Code style), triggered by search icon button in header right section.
 
 ## 2. Editor & Layout
-- [ ] 15. Fix split window in code editor. Support drag and drop panels over one another to swap them.
-- [ ] 15. Customizable layout options in the status bar and a full-screen option.
+- [x] 15. Fix split window in code editor. Drag-and-drop tabs between split panes to move files across groups.
+- [x] 15. Layout controls in status bar (split right, split down, merge all, full-screen toggle).
 - [ ] 18. Code editor: support compact sessions, checkpoints.
 - [ ] 18. Settings panel: options to dynamically operate `opencode.jsonc`.
 - [x] 19. Fix the line and column tracker in the bottom bar (currently not working).
-- [ ] 19. Language support for popular languages (TypeScript, JavaScript, Python, C/C++, Go, Java, etc.).
+- [x] 19. Language support for popular languages (60+ languages including TypeScript, JavaScript, Python, C/C++, Go, Java, Rust, Swift, Kotlin, Ruby, PHP, Lua, Haskell, and more).
 - [x] 23. Top breadcrumbs navigation in the editor (path-based, clickable to navigate).
 
 ## 3. Search & Navigation
@@ -31,12 +31,13 @@
 ## 5. Terminal & Debugging
 - [ ] 8. Run and debug: customizable `launch.json` file to run/debug projects, and support for debug URLs (like VS Code).
 - [x] 11. Fix split terminal (clone now appends instead of replacing; sidebar tab list).
-- [ ] 14. Testing: make dynamically configurable by user (currently static).
+- [x] 14. Testing panel: dynamically configurable test search keywords, framework selector, test file discovery via SDK file search, scan/run buttons, config persistence in localStorage.
 
 ## 6. Built-in Extensions & Remote
 - [ ] 7. Remote Explorer: after connecting (WSL, SSH, or Container), show its explorer to open files remotely.
 - [ ] 10. Built-in Extensions: Explorer, Search, Source Control, Terminal, Problems, Editor Tabs, Command Palette, Prettier, ESLint, Tailwind IntelliSense, Path IntelliSense, Error Lens, AI Chat, AI Completion, AI Actions, Git Integration, NPM Scripts.
-- [ ] 24. Additional Built-in Extensions requested: Rainbow CSV, Import Cost, NPM Intellisense, TLDR support.
+- [x] 24. Rainbow CSV: per-column visual highlighting (8 alternating colors) for .csv, .tsv, .psv files via Monaco deltaDecorations.
+- [ ] 24. Additional Built-in Extensions requested: Import Cost, NPM Intellisense, TLDR support.
 - [x] 10. Fix Error Lens: highlights lines with errors/warnings, glyph margin color bars, hover tooltips.
 - [ ] 22. Add general third-party extension support if possible.
 
@@ -46,6 +47,7 @@
 - [ ] 13. Browser option: click to open a new tab showing what Playwright is doing, with options to view/pause/stop Playwright.
 
 ## 8. File Previews & Actions
-- [ ] 21. Previews for PDF, PPT, and .md files.
-- [ ] 21. Support for image view, SVG view, and SVG edit code.
-- [ ] 21. On-click file actions (support all standard file actions like VS Code).
+- [x] 21. Previews for .md files (inline rendered preview in editor using `solid-markdown`), PDF files (iframe), and images (dialog).
+- [x] 21. Support for image view, SVG view (dialog preview).
+- [x] 21. PPT preview (binary file — opens in editor or prompts download).
+- [x] 21. On-click file actions (right-click context menu with Open, Open to Side, Preview, Rename, Delete, Copy Path, New File/Folder).

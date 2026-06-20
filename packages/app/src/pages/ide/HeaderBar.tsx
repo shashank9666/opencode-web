@@ -16,6 +16,9 @@ export default function HeaderBar(props: {
   actions?: Partial<IdeActions>
 }) {
   const [activeMenu, setActiveMenu] = createSignal<string | null>(null)
+  const [searchOpen, setSearchOpen] = createSignal(false)
+  const [searchQuery, setSearchQuery] = createSignal("")
+  let searchInputRef: HTMLInputElement | undefined
   const dialog = useDialog()
 
   const menus = () => buildMenus(props.actions || {})
@@ -26,6 +29,16 @@ export default function HeaderBar(props: {
   }
 
   const handleMouseLeave = () => setActiveMenu(null)
+
+  const handleSearchKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape") {
+      setSearchOpen(false)
+      setSearchQuery("")
+    } else if (e.key === "Enter" && searchQuery()) {
+      setSearchOpen(false)
+      props.onSearch()
+    }
+  }
 
   return (
     <div
@@ -96,18 +109,59 @@ export default function HeaderBar(props: {
         </div>
       </div>
 
-      {/* ── Center: Title ── */}
-      <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex items-center justify-center pointer-events-none">
-        <span class="text-12-regular text-text-weaker truncate px-4">
-          {props.workspaceName ?? "Untitled"} {`/`}
-          <Show when={props.activeFile}>
-            {props.activeFile}
-          </Show>
-        </span>
+      {/* ── Center: Search Bar (VS Code style) ── */}
+      <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex items-center justify-center">
+        <Show when={searchOpen()}>
+          <div class="flex items-center gap-1 bg-surface-base border border-border-base rounded-md px-2 py-0.5 w-[400px] max-w-[50vw] pointer-events-auto">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="text-icon-weaker shrink-0">
+              <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5" />
+              <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              type="text"
+              class="flex-1 bg-transparent text-12-regular text-text-strong outline-none placeholder:text-text-weaker"
+              placeholder="Search files by name..."
+              value={searchQuery()}
+              onInput={(e) => setSearchQuery(e.currentTarget.value)}
+              onKeyDown={handleSearchKeyDown}
+              onBlur={() => setTimeout(() => setSearchOpen(false), 200)}
+            />
+            <button
+              type="button"
+              class="text-icon-weaker hover:text-text-strong p-0.5"
+              onClick={() => { setSearchOpen(false); setSearchQuery("") }}
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+            </button>
+          </div>
+        </Show>
+        <Show when={!searchOpen()}>
+          <span class="text-12-regular text-text-weaker truncate px-4 pointer-events-none">
+            {props.workspaceName ?? "Untitled"} {`/`}
+            <Show when={props.activeFile}>
+              {props.activeFile}
+            </Show>
+          </span>
+        </Show>
       </div>
 
       {/* ── Right: Status and Settings ── */}
       <div class="flex items-center h-full [app-region:no-drag] px-2 gap-2">
+        <div class="flex items-center h-full">
+          <Tooltip value="Search Files" placement="bottom">
+            <IconButton
+              icon="magnifying-glass"
+              variant="ghost"
+              size="small"
+              class="size-6 text-icon-weak hover:text-text-strong rounded-[4px]"
+              onClick={() => {
+                setSearchOpen(true)
+                setTimeout(() => searchInputRef?.focus(), 50)
+              }}
+            />
+          </Tooltip>
+        </div>
         <div class="flex items-center h-full">
           <StatusPopover />
         </div>
