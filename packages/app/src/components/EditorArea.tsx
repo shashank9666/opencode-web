@@ -10,6 +10,7 @@ import type { EditorNode, EditorGroup, OpenFile } from "./editor-workspace";
 import * as monaco from "monaco-editor";
 import { useFile } from "@/context/file";
 import { useSettings } from "@/context/settings";
+import { useSDK } from "@/context/sdk";
 
 import { Button } from "@opencode-ai/ui/button";
 
@@ -28,6 +29,7 @@ export function EditorArea(props: {
   previewDiff?: { path: string; modified: string; original?: string };
   onAcceptDiff?: () => void;
   onRejectDiff?: () => void;
+  onCursorChange?: (line: number, column: number) => void;
 }) {
   if (props.node.type === "split") {
     return (
@@ -55,6 +57,7 @@ export function EditorArea(props: {
 
   const file = useFile();
   const settings = useSettings();
+  const sdk = useSDK();
 
   let prevActiveFile: string | null = null;
   createEffect(() => {
@@ -80,6 +83,12 @@ export function EditorArea(props: {
           props.workspace.reloadFileContent(openFile.path, diskContent, group().id);
         }
       }
+    }
+  });
+
+  createEffect(() => {
+    if (isActiveGroup()) {
+      props.onCursorChange?.(editorLine(), editorColumn());
     }
   });
 
@@ -327,22 +336,90 @@ export function EditorArea(props: {
                   onChange={(v) => {
                     props.workspace.setContent(state().path, v, group().id);
                   }}
-                  onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
+                  onCursorChange={(line, col) => {
+                    setEditorLine(line);
+                    setEditorColumn(col);
+                    if (isActiveGroup()) {
+                      props.onCursorChange?.(line, col);
+                    }
+                  }}
                   onEditorReady={(e) => setEditorInstance(e)}
                   formatTrigger={props.formatTrigger}
                   class="flex-1 min-h-0"
                   fontSize={props.fontSize} tabSize={props.tabSize} wordWrap={props.wordWrap}
                   onProvideCompletionItems={settings.general.inlineCodeSuggestions() ? async (model, position) => {
-                    const lineContent = model.getLineContent(position.lineNumber)
-                    if (lineContent.trim() === "// mock") {
-                      return {
-                        items: [{
-                          insertText: " this is a mock autocomplete suggestion",
-                          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
-                        }]
+                    const offset = model.getOffsetAt(position);
+                    const text = model.getValue();
+                    const prefix = text.substring(0, offset).slice(-2000);
+                    const suffix = text.substring(offset).slice(0, 2000);
+
+                    const promptText = `You are a code autocomplete assistant. Generate the code that should be inserted at the cursor position.
+Respond with ONLY the code to be inserted, without markdown formatting or code blocks.
+
+CODE BEFORE CURSOR:
+${prefix}
+
+CODE AFTER CURSOR:
+${suffix}
+
+Completion:`;
+
+                    let sessionID = "";
+                    try {
+                      const createResult = await sdk().client.session.create({
+                        title: "Autocomplete Helper",
+                        directory: sdk().directory
+                      });
+                      sessionID = createResult.data.id;
+                      
+                      await sdk().client.session.prompt({
+                        sessionID: sessionID,
+                        parts: [{ type: "text", text: promptText }]
+                      });
+
+                      await sdk().client.session.wait({ sessionID: sessionID });
+
+                      const msgResponse = await sdk().client.session.messages({
+                        sessionID: sessionID,
+                        limit: 10
+                      });
+
+                      const assistantMsg = msgResponse.data?.find(m => m.type === "assistant");
+                      if (assistantMsg && assistantMsg.content) {
+                        const completionText = assistantMsg.content
+                          .filter(c => c.type === "text")
+                          .map(c => c.text)
+                          .join("");
+                        
+                        let insertText = completionText;
+                        if (insertText.startsWith("```")) {
+                          const lines = insertText.split("\n");
+                          if (lines[0].startsWith("```")) {
+                            lines.shift();
+                          }
+                          if (lines[lines.length - 1].startsWith("```")) {
+                            lines.pop();
+                          }
+                          insertText = lines.join("\n");
+                        }
+
+                        if (insertText) {
+                          return {
+                            items: [{
+                              insertText: insertText,
+                              range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column)
+                            }]
+                          };
+                        }
+                      }
+                    } catch (e) {
+                      console.error("Autocomplete failed:", e);
+                    } finally {
+                      if (sessionID) {
+                        void sdk().client.session.delete({ sessionID }).catch(() => {});
                       }
                     }
-                    return { items: [] }
+                    return { items: [] };
                   } : undefined}
                 />
                 <InlineAIToolbar

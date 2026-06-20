@@ -42,6 +42,9 @@ export interface Settings {
     mono: string
     sans: string
     terminal: string
+    colorfulIcons: boolean
+    customAccentColor: string
+    customBackgroundColor: string
   }
   keybinds: Record<string, string>
   permissions: {
@@ -128,6 +131,9 @@ const defaultSettings: Settings = {
     mono: "",
     sans: "",
     terminal: "",
+    colorfulIcons: false,
+    customAccentColor: "",
+    customBackgroundColor: "",
   },
   keybinds: {},
   permissions: {

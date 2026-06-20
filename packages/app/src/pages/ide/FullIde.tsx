@@ -904,6 +904,7 @@ export default function FullIde() {
             node={workspace.rootNode()}
             activeGroupId={workspace.activeGroupId()}
             workspace={workspace}
+            onCursorChange={(line, col) => { setEditorLine(line); setEditorColumn(col); }}
             onSaveFile={async (path, groupId) => {
               const state = workspace.getFileState(path, groupId);
               if (!state || !state.dirty) return;
