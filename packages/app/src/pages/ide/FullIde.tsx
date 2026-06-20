@@ -53,8 +53,6 @@ import SearchPanel from "./SearchPanel"
 import SourceControlPanel from "./SourceControlPanel"
 
 import AIWorkspacePanel from "./AIWorkspacePanel"
-import WorkspacePresets from "./WorkspacePresets"
-import type { WorkspacePreset } from "./WorkspacePresets"
 import { createPanelManager, FloatingPanel, type PanelState, type PanelPosition } from "./DockablePanel"
 import MenuBar, { type IdeActions } from "./MenuBar"
 
@@ -149,8 +147,6 @@ export default function FullIde() {
   const [rightPanelWidth, setRightPanelWidth] = createSignal(320)
   const [bottomPanelHeight, setBottomPanelHeight] = createSignal(220)
   const [headerCompact, setHeaderCompact] = createSignal(false)
-  const [showPresets, setShowPresets] = createSignal(false)
-  const [activePreset, setActivePreset] = createSignal("coding")
   const [commandPaletteOpen, setCommandPaletteOpen] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
   const [showKeybindings, setShowKeybindings] = createSignal(false)
@@ -613,17 +609,6 @@ export default function FullIde() {
     })
   }
 
-  // ── Workspace presets ──
-  const applyPreset = (preset: WorkspacePreset) => {
-    setActivePreset(preset.id)
-    for (const panel of panelManager.panels()) {
-      const config = preset.panels[panel.id]
-      if (config) {
-        panelManager.movePanel(panel.id, config.position as PanelPosition)
-        config.visible ? panelManager.showPanel(panel.id) : panelManager.hidePanel(panel.id)
-      }
-    }
-  }
 
   const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined)
 
@@ -708,7 +693,6 @@ export default function FullIde() {
     { id: "view.testing", title: "Toggle Testing", description: "Show/hide testing panel", category: "view", keybind: "Ctrl+Shift+T", icon: "beaker", onSelect: () => toggleRightPanel("testing") },
     { id: "view.terminal", title: "Toggle Terminal", description: "Show/hide terminal panel", category: "view", keybind: "Ctrl+`", icon: "terminal", onSelect: () => toggleBottomPanel("terminal-area") },
     { id: "view.problems", title: "Toggle Problems", description: "Show/hide problems panel", category: "view", keybind: "Ctrl+Shift+M", icon: "circle-x", onSelect: () => toggleBottomPanel("problems") },
-    { id: "view.presets", title: "Workspace Presets", description: "Choose a workspace layout preset", category: "workspace", icon: "layout-left", onSelect: () => setShowPresets(true) },
     { id: "ai.newSession", title: "New AI Chat Session", description: "Start a new AI conversation", category: "ai", icon: "comment", onSelect: () => { void handleNewSession() } },
     { id: "ai.explain", title: "Explain Code", description: "Get AI explanation of selected code", category: "ai", icon: "brain", onSelect: () => { showToast({ title: "Coming soon", description: "AI code explain coming in a future update" }) } },
     { id: "terminal.new", title: "New Terminal", description: "Create a new terminal", category: "terminal", icon: "terminal", onSelect: () => { terminal.new(); panelManager.showPanel("terminal-area") } },
@@ -1188,13 +1172,6 @@ export default function FullIde() {
         </div>
       </Show>
 
-      {/* ── Workspace Presets ── */}
-      <WorkspacePresets
-        open={showPresets()}
-        activePreset={activePreset()}
-        onSelect={applyPreset}
-        onClose={() => setShowPresets(false)}
-      />
 
       {/* ── Command Palette ── */}
       <CommandPaletteV2
