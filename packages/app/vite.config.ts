@@ -76,6 +76,9 @@ function extendCjsFixPlugin(): any {
           const paths = [
             join(process.cwd(), "node_modules", ".bun", "extend@3.0.2", "node_modules", "extend", "index.js"),
             join(process.cwd(), "node_modules", "extend", "index.js"),
+            join(process.cwd(), "../../node_modules", ".bun", "extend@3.0.2", "node_modules", "extend", "index.js"),
+            join(process.cwd(), "../../node_modules", "extend", "index.js"),
+            join(process.cwd(), "../../node_modules", ".bun", "extend@3.0.3", "node_modules", "extend", "index.js"),
           ]
           for (const p of paths) {
             if (existsSync(p)) {
