@@ -31,7 +31,7 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
             <div class="flex items-center opacity-0 group-hover/root:opacity-100 transition-opacity">
               <IconButton icon="plus" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); props.onCreateFile() }} aria-label="New File" />
               <IconButton icon="folder" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); props.onCreateFolder() }} aria-label="New Folder" />
-              <IconButton icon="reset" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.refresh("") }} aria-label="Refresh Explorer" />
+              <IconButton icon="reset" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.refreshAll() }} aria-label="Refresh Explorer" />
               <IconButton icon="collapse" variant="ghost" size="small" class="size-6 text-text-weaker hover:text-text-strong" onClick={(e) => { e.stopPropagation(); file.tree.collapseAll() }} aria-label="Collapse All" />
             </div>
           </div>

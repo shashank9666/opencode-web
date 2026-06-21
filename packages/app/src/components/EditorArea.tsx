@@ -34,16 +34,41 @@ export function EditorArea(props: {
   onRejectDiff?: () => void;
   onCursorChange?: (line: number, column: number) => void;
 }) {
-  if (props.node.type === "split") {
-    return (
-      <SplitPane direction={props.node.direction} initialSizes={props.node.sizes}>
-        {props.node.children.map(child => (
-          <EditorArea {...props} node={child} />
-        ))}
-      </SplitPane>
-    );
-  }
+  return (
+    <Switch>
+      <Match when={props.node.type === "split" ? (props.node as Extract<EditorNode, { type: "split" }>) : null}>
+        {(splitNode) => (
+          <SplitPane direction={splitNode().direction} initialSizes={splitNode().sizes}>
+            <For each={splitNode().children}>
+              {(child) => <EditorArea {...props} node={child} />}
+            </For>
+          </SplitPane>
+        )}
+      </Match>
+      <Match when={props.node.type === "group"}>
+        <EditorAreaGroup {...props} />
+      </Match>
+    </Switch>
+  );
+}
 
+export function EditorAreaGroup(props: {
+  node: EditorNode;
+  activeGroupId: string;
+  workspace: ReturnType<typeof import("./editor-workspace").createEditorWorkspace>;
+  onSaveFile: (path: string, groupId: string) => Promise<void>;
+  diffMode: boolean;
+  onToggleDiff: () => void;
+  fontSize: number;
+  tabSize: number;
+  wordWrap: "off" | "on" | "wordWrapColumn" | "bounded";
+  formatTrigger: number;
+  onInlineAIAction: (payload: any, groupId: string) => void;
+  previewDiff?: { path: string; modified: string; original?: string };
+  onAcceptDiff?: () => void;
+  onRejectDiff?: () => void;
+  onCursorChange?: (line: number, column: number) => void;
+}) {
   const group = () => (props.node as Extract<EditorNode, { type: "group" }>).group;
   const activeFile = () => group().activeFile;
   const isActiveGroup = () => props.activeGroupId === group().id;

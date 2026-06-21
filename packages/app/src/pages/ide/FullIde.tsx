@@ -11,7 +11,6 @@ import {
   Switch,
 } from "solid-js"
 import { useFile } from "@/context/file"
-import FileTree from "@/components/file-tree"
 import { useSettings } from "@/context/settings"
 import IdeEditor, { IdeDiffEditor, createIdeEditor, type OpenFile } from "@/components/ide-editor"
 import { createProblemTracker } from "@/components/problem-tracker"
@@ -21,7 +20,6 @@ import { EditorArea } from "@/components/EditorArea"
 import { Terminal } from "@/components/terminal"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
-import { Tooltip } from "@opencode-ai/ui/tooltip"
 import { getFilename } from "@opencode-ai/core/util/path"
 import { useSDK } from "@/context/sdk"
 import { showToast } from "@/utils/toast"
@@ -905,9 +903,19 @@ export default function FullIde() {
     runWithoutDebugging: () => toggleLeftPanel("run-debug"),
     startDebugging: () => toggleLeftPanel("run-debug"),
 
-    // Terminal
     newTerminal: () => { terminal.new(); panelManager.showPanel("terminal-area") },
-    splitTerminal: () => { terminal.new(); panelManager.showPanel("terminal-area") },
+    splitTerminal: () => {
+      const activeId = terminal.active()
+      if (!activeId) return
+      if (terminalSplit()) {
+        setTerminalSplit(false)
+        setTerminalSplitId(null)
+        return
+      }
+      setTerminalSplitId(activeId)
+      setTerminalSplit("vertical")
+      panelManager.showPanel("terminal-area")
+    },
     runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") }
   }
 
