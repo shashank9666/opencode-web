@@ -193,8 +193,10 @@ export default function RemotePanel(props: {
   const [currentPath, setCurrentPath] = createSignal("/")
 
   const connectionInfo = () => {
-    if (!props.connection) return null
-    const parts = props.connection.split(": ")
+    const conn = props.connection
+    if (!conn) return null
+    const str = typeof conn === "string" ? conn : String(conn)
+    const parts = str.split(": ")
     const type = (parts[0] ?? "WSL") as "WSL" | "SSH" | "Container"
     const target = parts[1] ?? ""
     return { type, target }

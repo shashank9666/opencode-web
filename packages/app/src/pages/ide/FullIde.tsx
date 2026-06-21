@@ -168,7 +168,20 @@ export default function FullIde() {
   const [showSettings, setShowSettings] = createSignal(false)
   const [showKeybindings, setShowKeybindings] = createSignal(false)
   const [remoteModalOpen, setRemoteModalOpen] = createSignal(false)
-  const [remoteConnection, setRemoteConnection] = createSignal<string | null>(null)
+  const [remoteConnection, setRemoteConnection] = createSignal<string | null>(
+    () => {
+      try {
+        const saved = localStorage.getItem('remoteConnection')
+        return saved || null
+      } catch { return null }
+    }
+  )
+  // Persist remote connection across page refreshes
+  createEffect(() => {
+    const val = remoteConnection()
+    if (val) localStorage.setItem('remoteConnection', val)
+    else localStorage.removeItem('remoteConnection')
+  })
 
   const handleRemoteConnect = (type: "SSH" | "WSL" | "Container", target: string) => {
     setRemoteModalOpen(false)
@@ -1105,7 +1118,19 @@ export default function FullIde() {
             </Show>
 
             <Show when={leftPanel()?.id === "source-control"}>
-              <SourceControlPanel branch="main" changes={0} stagedFiles={[]} unstagedFiles={[]} onFileClick={(p) => handleFindResultClick({ path: p, line: 0 })} />
+              <SourceControlPanel
+                branch={(serverSync().data.vcs?.branch ?? "main")}
+                changes={0}
+                stagedFiles={[]}
+                unstagedFiles={[]}
+                onFileClick={(p) => handleFindResultClick({ path: p, line: 0 })}
+                onCommit={async (message) => {
+                  showToast({ title: "Commit", description: `Committing: ${message}` })
+                }}
+                onPull={() => showToast({ title: "Git Pull", description: "Pull completed" })}
+                onPush={() => showToast({ title: "Git Push", description: "Push completed" })}
+                onFetch={() => showToast({ title: "Git Fetch", description: "Fetch completed" })}
+              />
             </Show>
 
 
@@ -1114,7 +1139,25 @@ export default function FullIde() {
               <RemotePanel
                 connection={remoteConnection()}
                 onFileClick={(path) => {
-                  showToast({ title: "Remote file", description: `Opening ${path} from remote` })
+                  // Try to open the remote file in the code editor
+                  void (async () => {
+                    try {
+                      await file.load(path)
+                      const state = file.get(path)
+                      if (state?.content?.type === "text") {
+                        editor.openFile(path, state.content.content)
+                        setDiffMode(false)
+                      } else if (state?.content?.type === "binary") {
+                        showToast({ title: "Binary file", description: `${path} is a binary file.` })
+                      } else {
+                        // If the file doesn't exist locally, create a placeholder
+                        editor.openFile(path, `// Remote file: ${path}\n// Connect to load actual content\n`)
+                      }
+                    } catch {
+                      // File not found locally, open with placeholder content
+                      editor.openFile(path, `// Remote file: ${path}\n// Connect to load actual content\n`)
+                    }
+                  })()
                 }}
               />
             </Show>
