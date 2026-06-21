@@ -1,6 +1,4 @@
-import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { createSignal, For, Show } from "solid-js"
-import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
+import { For } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 
@@ -38,28 +36,11 @@ export default function ActivityBar(props: {
   }
   const activeBottom = (tab: BottomPanelTab) => props.bottomPanelOpen && props.bottomTab === tab
 
-  let outerRef!: HTMLDivElement
-  let topContainerRef!: HTMLDivElement
-  const [visibleCount, setVisibleCount] = createSignal(SIDEBAR_TABS.length)
-
-  createResizeObserver(() => outerRef, () => {
-    if (!topContainerRef) return
-    const containerHeight = outerRef.clientHeight
-    const bottomHeight = topContainerRef.nextElementSibling?.nextElementSibling?.clientHeight ?? 180
-    const availableHeight = containerHeight - bottomHeight - 8
-    const buttonHeight = 48
-    const maxButtons = Math.floor(availableHeight / buttonHeight)
-    setVisibleCount(Math.max(1, Math.min(maxButtons, SIDEBAR_TABS.length)))
-  })
-
-  const visibleTabs = () => SIDEBAR_TABS.slice(0, visibleCount())
-  const overflowTabs = () => SIDEBAR_TABS.slice(visibleCount())
-
   return (
-    <div class="w-12 shrink-0 flex flex-col items-center py-0 border-r border-border-base bg-surface-base select-none [app-region:no-drag] size-full" ref={outerRef}>
+    <div class="w-12 shrink-0 flex flex-col items-center py-0 border-r border-border-base bg-surface-base select-none [app-region:no-drag] size-full">
       {/* Top section - sidebar panels */}
-      <div class="flex flex-col items-center w-full" ref={topContainerRef}>
-        <For each={visibleTabs()}>
+      <div class="flex flex-col items-center w-full">
+        <For each={SIDEBAR_TABS}>
           {(item) => (
             <Tooltip value={`${item.label}${item.shortcut ? ` (${item.shortcut})` : ""}`} placement="right">
               <button
@@ -77,40 +58,6 @@ export default function ActivityBar(props: {
             </Tooltip>
           )}
         </For>
-
-        <Show when={overflowTabs().length > 0}>
-          <DropdownMenu>
-            <Tooltip value="More Actions..." placement="right">
-              <DropdownMenu.Trigger
-                as="button"
-                type="button"
-                class="w-full h-12 flex items-center justify-center transition-colors text-text-weak hover:text-text-strong relative"
-                aria-label="More Actions"
-              >
-                <span class="text-16-bold leading-none tracking-wider">...</span>
-              </DropdownMenu.Trigger>
-            </Tooltip>
-            <DropdownMenu.Portal>
-              <DropdownMenu.Content class="ml-1 min-w-40">
-                <For each={overflowTabs()}>
-                  {(item) => (
-                    <DropdownMenu.Item
-                      onSelect={() => props.onTabClick(item.tab)}
-                      classList={{
-                        "text-text-strong": active(item.tab),
-                      }}
-                    >
-                      <div class="flex items-center gap-2">
-                        <Icon name={item.activeIcon && active(item.tab) ? item.activeIcon : item.icon} size="small" />
-                        <span>{item.label}</span>
-                      </div>
-                    </DropdownMenu.Item>
-                  )}
-                </For>
-              </DropdownMenu.Content>
-            </DropdownMenu.Portal>
-          </DropdownMenu>
-        </Show>
       </div>
 
       {/* Spacer */}
