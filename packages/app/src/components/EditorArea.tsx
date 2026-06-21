@@ -36,8 +36,9 @@ export function EditorAreaGroup(props: {
   onRejectDiff?: () => void;
   onCursorChange?: (line: number, column: number) => void;
 }) {
-  const group = () => (props.node as Extract<EditorNode, { type: "group" }>).group;
-  const activeFile = () => group().activeFile;
+  const emptyGroup = { id: "", activeFile: undefined as string | undefined, files: [] as OpenFile[] };
+const group = () => ((props.node as any)?.group) ?? emptyGroup;
+  const activeFile = () => group()?.activeFile;
   const isActiveGroup = () => props.activeGroupId === group().id;
 
   const activeFileState = createMemo(() => {
@@ -161,7 +162,7 @@ export function EditorAreaGroup(props: {
   return (
     <div
       class="flex-1 flex flex-col min-w-0 min-h-0 bg-background-base overflow-hidden relative"
-      onClick={() => props.workspace.setActiveGroupId(group().id)}
+      onClick={() => { const g = group(); if (g.id) props.workspace.setActiveGroupId(g.id); }}
       onDragOver={(e) => { e.preventDefault() }}
       onDrop={async (e) => {
         e.preventDefault()
@@ -182,23 +183,30 @@ export function EditorAreaGroup(props: {
           }
           
           if (state && state.content && state.content.type === "text") {
-            props.workspace.openFile(path, state.content.content, group().id)
+            if (group().id) {
+                props.workspace.openFile(path, state.content.content, group().id)
+              } else {
+                props.workspace.openFile(path, state.content.content)
+              }
           }
           return
         }
 
         const dt = draggedTab
-        if (dt && dt.sourceGroupId !== group().id) {
-          const targetFiles = group().files
-          if (!targetFiles.find(f => f.path === dt.path)) {
-            const state = props.workspace.getFileState(dt.path, dt.sourceGroupId)
-            if (state) {
-              props.workspace.openFile(dt.path, state.content, group().id)
-              props.workspace.closeFile(dt.path, dt.sourceGroupId)
-            }
-          }
-          draggedTab = null
-        }
+if (dt) {
+  const g = group()
+  if (g.id && dt.sourceGroupId !== g.id) {
+    const targetFiles = g.files
+    if (!targetFiles.find(f => f.path === dt.path)) {
+      const state = props.workspace.getFileState(dt.path, dt.sourceGroupId)
+      if (state) {
+        props.workspace.openFile(dt.path, state.content, g.id)
+        props.workspace.closeFile(dt.path, dt.sourceGroupId)
+      }
+    }
+  }
+  draggedTab = null
+}
       }}
     >
       <Show when={group().files.length > 0}>
@@ -213,19 +221,23 @@ export function EditorAreaGroup(props: {
                     ? (isActiveGroup() ? "bg-background-base text-text-strong border-b-2 border-b-accent-base" : "bg-background-base text-text-strong opacity-80")
                     : "text-text-weak hover:bg-surface-raised-base-hover"
                     }`}
-                  onDragStart={() => { draggedTab = { path: openFile.path, sourceGroupId: group().id } }}
+                  onDragStart={() => { const g = group(); if (g.id) draggedTab = { path: openFile.path, sourceGroupId: g.id }; }}
                   onDragEnd={() => { draggedTab = null }}
                   onClick={(e: MouseEvent) => {
                     e.stopPropagation();
                     // Auto-save the current file when switching tabs
-                    const currentActiveFile = activeFile();
-                    if (settings.general.autoSave() && currentActiveFile && currentActiveFile !== openFile.path) {
-                      const current = group().files.find(f => f.path === currentActiveFile);
-                      if (current?.dirty) {
-                        void props.onSaveFile(currentActiveFile, group().id);
+                      const currentActiveFile = activeFile();
+                      if (settings.general.autoSave() && currentActiveFile && currentActiveFile !== openFile.path) {
+                        const g = group();
+                        const current = g.files.find(f => f.path === currentActiveFile);
+                        if (current?.dirty && g.id) {
+                          void props.onSaveFile(currentActiveFile, g.id);
+                        }
                       }
-                    }
-                    props.workspace.setActiveFile(openFile.path, group().id);
+                      const g = group();
+                      if (g.id) {
+                        props.workspace.setActiveFile(openFile.path, g.id);
+                      }
                   }}
                 >
                   <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
@@ -369,8 +381,8 @@ export function EditorAreaGroup(props: {
                 onClick={(e: MouseEvent) => { e.stopPropagation(); setShowPreview((p) => !p) }}
               />
             </Show>
-            <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded" title="Split Right" onClick={(e) => { e.stopPropagation(); props.workspace.splitGroup(group().id, "horizontal"); }} />
-            <IconButton icon="layout-bottom" variant="ghost" size="small" class="size-6 rounded" title="Split Down" onClick={(e) => { e.stopPropagation(); props.workspace.splitGroup(group().id, "vertical"); }} />
+            <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded" title="Split Right" onClick={(e) => { e.stopPropagation(); const g = group(); if (g) props.workspace.splitGroup(g.id, "horizontal"); }} />
+            <IconButton icon="layout-bottom" variant="ghost" size="small" class="size-6 rounded" title="Split Down" onClick={(e) => { e.stopPropagation(); const g = group(); if (g) props.workspace.splitGroup(g.id, "vertical"); }} />
           </div>
         </div>
       </Show>
