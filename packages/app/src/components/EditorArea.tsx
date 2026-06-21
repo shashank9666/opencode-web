@@ -589,6 +589,7 @@ Completion:`;
                 </>
               </Show>
             </div>
+            </Show>
             <Show when={showPreview() && isMarkdownFile()}>
               <MarkdownPreviewPanel content={state()?.content ?? ""} visible={true} />
             </Show>

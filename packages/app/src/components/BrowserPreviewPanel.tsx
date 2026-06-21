@@ -104,7 +104,7 @@ export function BrowserPreviewPanel() {
             {pointer().visible && (
               <div 
                 class="absolute z-50 pointer-events-none transition-all duration-300 ease-out flex items-center gap-2"
-                style={{ left: \`\${pointer().x}px\`, top: \`\${pointer().y}px\` }}
+                style={{ left: `${pointer().x}px`, top: `${pointer().y}px` }}
               >
                 <div class="w-4 h-4 bg-red-500 rounded-full opacity-50 animate-ping absolute"></div>
                 <Icon name="cursor" class="text-black drop-shadow-md relative z-10" />
