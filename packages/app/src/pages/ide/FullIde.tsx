@@ -1268,7 +1268,7 @@ export default function FullIde() {
                 if (!profileStr) return terminal.new();
                 let command;
                 let title = profileStr;
-                if (profileStr === "PowerShell") { command = "pwsh"; }
+                if (profileStr === "PowerShell") { command = "powershell.exe"; }
                 else if (profileStr === "Command Prompt") { command = "cmd"; }
                 else if (profileStr === "Git Bash") { command = "bash"; }
                 else if (profileStr === "WSL") { command = "wsl"; }

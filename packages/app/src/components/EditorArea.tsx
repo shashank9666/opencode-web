@@ -413,26 +413,26 @@ if (dt) {
         </div>
       </Show>
 
-      <Show when={activeFileState() || isBrowserPreview()} fallback={
-        <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
-          <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />
-          <div class="text-14-regular">Open a file from the Explorer</div>
-          <div class="text-12-regular text-text-weaker">or press <kbd class="px-1.5 py-0.5 bg-surface-base border border-border-base rounded text-11-medium">Ctrl+P</kbd> to search</div>
-        </div>
-      }>
-        {(state) => (
-          <div class="flex-1 relative min-h-0 flex" classList={{ "flex-row": showPreview() && isMarkdownFile(), "flex-col": !(showPreview() && isMarkdownFile()) }}>
-            <Show when={isBrowserPreview()}>
-              <BrowserPreviewPanel />
-            </Show>
-            <Show when={!isBrowserPreview() && state && state()}>
+      <Show when={isBrowserPreview()}>
+        <BrowserPreviewPanel />
+      </Show>
+      <Show when={!isBrowserPreview()}>
+        <Show when={activeFileState()} fallback={
+          <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
+            <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />
+            <div class="text-14-regular">Open a file from the Explorer</div>
+            <div class="text-12-regular text-text-weaker">or press <kbd class="px-1.5 py-0.5 bg-surface-base border border-border-base rounded text-11-medium">Ctrl+P</kbd> to search</div>
+          </div>
+        }>
+          {(state) => (
+            <div class="flex-1 relative min-h-0 flex" classList={{ "flex-row": showPreview() && isMarkdownFile(), "flex-col": !(showPreview() && isMarkdownFile()) }}>
               <div class="flex-1 flex flex-col min-h-0">
-                <Show when={/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state()?.path || '')}>
+                <Show when={/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state().path)}>
                   <div class="flex-1 flex items-center justify-center p-8 bg-surface-base overflow-auto">
                     <img src={state()?.content?.encoding === "base64" ? `data:${state()?.content?.mimeType || 'image/png'};base64,${state()?.content?.content}` : state()?.content?.content} alt={getFilename(state()?.path || '')} class="max-w-full max-h-full object-contain drop-shadow-md" />
                   </div>
                 </Show>
-                <Show when={!/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state()?.path || '') && !props.previewDiff && (!effectiveDiffMode() || !hasDiff())}>
+                <Show when={!/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state().path) && !props.previewDiff && (!effectiveDiffMode() || !hasDiff())}>
                 <>
                   <IdeEditor
                     path={state().path}
@@ -589,12 +589,12 @@ Completion:`;
                 </>
               </Show>
             </div>
-            </Show>
             <Show when={showPreview() && isMarkdownFile()}>
-              <MarkdownPreviewPanel content={state()?.content ?? ""} visible={true} />
+              <MarkdownPreviewPanel content={state().content ?? ""} visible={true} />
             </Show>
           </div>
         )}
+        </Show>
       </Show>
     </div>
   );
