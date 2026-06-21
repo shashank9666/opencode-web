@@ -1583,7 +1583,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       variant="ghost"
                       size="small"
                       class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => showToast({ title: "Prompt", description: "Coming soon" })}
+                      onClick={() => command.trigger("fileTree.toggle")}
                       aria-label="Prompt"
                     />
                   </Tooltip>
@@ -1593,7 +1593,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       variant="ghost"
                       size="small"
                       class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => showToast({ title: "Background Terminals", description: "Coming soon" })}
+                      onClick={() => command.trigger("terminal.toggle")}
                       aria-label="Background Terminals"
                     />
                   </Tooltip>
@@ -1604,7 +1604,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         variant="ghost"
                         size="small"
                         class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                        onClick={() => showToast({ title: "Artifacts", description: "Coming soon" })}
+                        onClick={() => command.trigger("fileTree.toggle")}
                         aria-label="Artifacts"
                       />
                       <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />
@@ -1616,7 +1616,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       variant="ghost"
                       size="small"
                       class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => window.dispatchEvent(new CustomEvent("open-playwright-preview"))}
+                      onClick={() => window.open("http://localhost:3000", "_blank")}
                       aria-label="Playwright Stream"
                     />
                   </Tooltip>
@@ -1626,7 +1626,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   variant="ghost"
                   size="small"
                   class="text-[13px] font-[440] leading-5 text-v2-text-text-faint hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base rounded px-2 gap-1.5"
-                  onClick={() => showToast({ title: "Review Changes", description: "Coming soon" })}
+                  onClick={() => command.trigger("review.toggle")}
                 >
                   <Icon name="review" size="small" class="text-v2-icon-icon-muted" />
                   Review Changes
