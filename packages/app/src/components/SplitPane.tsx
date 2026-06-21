@@ -90,28 +90,30 @@ export function SplitPane(props: SplitPaneProps) {
       ref={containerRef}
       class={`flex size-full overflow-hidden ${props.direction === "vertical" ? "flex-col" : "flex-row"} ${props.class ?? ""}`}
     >
-      {getChildren().map((child, index) => {
-        const size = sizes()[index] ?? (100 / getChildren().length);
-        const isLast = index === getChildren().length - 1;
-        
-        return (
-          <>
-            <div class="flex flex-col" style={{ flex: `0 0 ${size}%`, "min-width": 0, "min-height": 0, overflow: "hidden" }}>
-              {child}
-            </div>
-            {!isLast && (
-              <div
-                class={`flex items-center justify-center bg-border-base transition-colors hover:bg-accent-base z-10`}
-                classList={{
-                  "cursor-col-resize w-1 h-full": props.direction === "horizontal",
-                  "cursor-row-resize h-1 w-full": props.direction === "vertical",
-                }}
-                onMouseDown={(e) => handleResizeStart(index, e)}
-              />
-            )}
-          </>
-        );
-      })}
+      <Index each={getChildren()}>
+        {(child, index) => {
+          const isLast = () => index === getChildren().length - 1;
+          const size = () => sizes()[index] ?? (100 / getChildren().length);
+          
+          return (
+            <>
+              <div class="flex flex-col relative" style={{ "flex-basis": `${size()}%`, "flex-grow": 1, "flex-shrink": 1, "min-width": 0, "min-height": 0, overflow: "hidden" }}>
+                {child()}
+              </div>
+              <Show when={!isLast()}>
+                <div
+                  class={`flex items-center justify-center bg-border-base transition-colors hover:bg-accent-base z-10`}
+                  classList={{
+                    "cursor-col-resize w-1 h-full -mx-[2px] relative": props.direction === "horizontal",
+                    "cursor-row-resize h-1 w-full -my-[2px] relative": props.direction === "vertical",
+                  }}
+                  onMouseDown={(e) => handleResizeStart(index, e)}
+                />
+              </Show>
+            </>
+          );
+        }}
+      </Index>
     </div>
   );
 }

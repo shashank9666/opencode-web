@@ -196,8 +196,27 @@ export function EditorAreaGroup(props: {
       class="flex-1 flex flex-col min-w-0 min-h-0 bg-background-base overflow-hidden relative"
       onClick={() => props.workspace.setActiveGroupId(group().id)}
       onDragOver={(e) => { e.preventDefault() }}
-      onDrop={(e) => {
+      onDrop={async (e) => {
         e.preventDefault()
+        
+        // Handle dropping files from the file explorer
+        const textData = e.dataTransfer?.getData("text/plain")
+        if (textData && textData.startsWith("file:")) {
+          const path = textData.substring("file:".length)
+          const state = file.get(path)
+          if (state && state.content && state.content.type === "text") {
+            props.workspace.openFile(path, state.content.content, group().id)
+          } else {
+            try {
+              const content = await file.read(path)
+              props.workspace.openFile(path, content, group().id)
+            } catch (err) {
+              console.error("Failed to read dropped file:", err)
+            }
+          }
+          return
+        }
+
         const dt = draggedTab
         if (dt && dt.sourceGroupId !== group().id) {
           const targetFiles = group().files
