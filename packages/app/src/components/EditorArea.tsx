@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onCleanup, For, Match, Switch, Show } from "solid-js";
+import { createSignal, createMemo, createEffect, onCleanup, For, Match, Switch, Show, on } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { IconButton } from "@opencode-ai/ui/icon-button";
 import { ContextMenu } from "@opencode-ai/ui/context-menu";
