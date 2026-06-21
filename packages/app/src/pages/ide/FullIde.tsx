@@ -1195,18 +1195,22 @@ export default function FullIde() {
                           <div class="flex-1 min-w-0 min-h-0 relative">
                             <For each={terminal.all()}>
                               {(pty) => (
-                                <div class="absolute inset-0" style={{ display: terminalSplitId() === pty.id ? "block" : "none" }}>
-                                  <Terminal pty={pty} class="size-full" onCleanup={(p) => terminal.update(p)} />
-                                </div>
+                                <Show when={terminalSplitId() !== pty.id}>
+                                  <div class="absolute inset-0" style={{ display: terminal.active() === pty.id ? "block" : "none" }}>
+                                    <Terminal pty={pty} class="size-full" onCleanup={(p) => terminal.update(p)} />
+                                  </div>
+                                </Show>
                               )}
                             </For>
                           </div>
                           <div class="flex-1 min-w-0 min-h-0 relative">
                             <For each={terminal.all()}>
                               {(pty) => (
-                                <div class="absolute inset-0" style={{ display: terminalSplitId() !== pty.id && terminal.active() === pty.id ? "block" : "none" }}>
-                                  <Terminal pty={pty} class="size-full" onCleanup={(p) => terminal.update(p)} />
-                                </div>
+                                <Show when={terminalSplitId() === pty.id}>
+                                  <div class="absolute inset-0" style={{ display: "block" }}>
+                                    <Terminal pty={pty} class="size-full" onCleanup={(p) => terminal.update(p)} />
+                                  </div>
+                                </Show>
                               )}
                             </For>
                           </div>
