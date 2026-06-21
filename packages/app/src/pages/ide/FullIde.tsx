@@ -65,6 +65,7 @@ import KeybindingsPanel from "./KeybindingsPanel"
 import RemotePanel from "./RemotePanel"
 import DatabasePanel from "./DatabasePanel"
 import RemoteConnectionModal from "./RemoteConnectionModal"
+import DefaultShellModal from "./DefaultShellModal"
 
 const MERGED_DEFAULT: PanelState[] = [
   { id: "explorer", label: "Explorer", icon: "file-tree", position: "left", visible: true, width: 280, order: 0 },
@@ -167,6 +168,8 @@ export default function FullIde() {
   const [headerCompact, setHeaderCompact] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
   const [showKeybindings, setShowKeybindings] = createSignal(false)
+  const [sshConnectionModalOpen, setSshConnectionModalOpen] = createSignal(false)
+  const [defaultShellModalOpen, setDefaultShellModalOpen] = createSignal(false)
   const [remoteModalOpen, setRemoteModalOpen] = createSignal(false)
   const [remoteConnection, setRemoteConnection] = createSignal<string | null>(
     (() => {
@@ -420,7 +423,7 @@ export default function FullIde() {
     bottomResizeStartH = bottomPanelHeight()
     const onMove = (ev: MouseEvent) => {
       if (!bottomResizing) return
-      const delta = bottomResizeStartY - ev.clientY
+      const delta = bottomResizeStartY - e.clientY
       setBottomPanelHeight(Math.max(80, Math.min(500, bottomResizeStartH + delta)))
     }
     const onUp = () => { bottomResizing = false; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
@@ -894,7 +897,7 @@ export default function FullIde() {
     if (isMod && e.key === "b") { e.preventDefault(); toggleLeftPanel("explorer") }
     if (isMod && e.shiftKey && e.key === "F") { e.preventDefault(); toggleLeftPanel("search") }
     if (isMod && e.shiftKey && e.key === "G") { e.preventDefault(); toggleLeftPanel("source-control") }
-    if (isMod && e.shiftKey && e.key === "X") { e.preventDefault(); toggleLeftPanel("extensions") }
+
     if (isMod && e.shiftKey && e.key === "I") { e.preventDefault(); toggleRightPanel(rightTab() === "ai-chat" ? "ai-workspace" : "ai-chat") }
     if (isMod && e.shiftKey && e.key === "D") { e.preventDefault(); toggleRightPanel("debug") }
     if (isMod && e.shiftKey && e.key === "T") { e.preventDefault(); toggleRightPanel("testing") }
@@ -916,7 +919,7 @@ export default function FullIde() {
     { id: "view.explorer", title: "Toggle Explorer", description: "Show/hide file explorer", category: "view", keybind: "Ctrl+B", icon: "file-tree", onSelect: () => toggleLeftPanel("explorer") },
     { id: "view.search", title: "Toggle Search", description: "Show/hide search panel", category: "view", keybind: "Ctrl+Shift+F", icon: "magnifying-glass", onSelect: () => toggleLeftPanel("search") },
     { id: "view.sourceControl", title: "Toggle Source Control", description: "Show/hide git panel", category: "view", keybind: "Ctrl+Shift+G", icon: "branch", onSelect: () => toggleLeftPanel("source-control") },
-    { id: "view.extensions", title: "Toggle Extensions", description: "Show/hide extensions", category: "view", keybind: "Ctrl+Shift+X", icon: "models", onSelect: () => toggleLeftPanel("extensions") },
+
     { id: "view.aiChat", title: "Toggle AI Chat", description: "Show/hide AI chat panel", category: "view", icon: "comment", onSelect: () => toggleRightPanel("ai-chat") },
     { id: "view.debug", title: "Toggle Debug", description: "Show/hide debug panel", category: "view", keybind: "Ctrl+Shift+D", icon: "bug", onSelect: () => toggleRightPanel("debug") },
     { id: "view.testing", title: "Toggle Testing", description: "Show/hide testing panel", category: "view", keybind: "Ctrl+Shift+T", icon: "beaker", onSelect: () => toggleRightPanel("testing") },
@@ -1051,7 +1054,8 @@ export default function FullIde() {
       }, 800)
       panelManager.showPanel("terminal-area")
     },
-    runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") }
+    runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") },
+    selectDefaultShell: () => setDefaultShellModalOpen(true)
   }
 
   return (
@@ -1115,7 +1119,7 @@ export default function FullIde() {
 
             <Show when={leftPanel()?.id === "source-control"}>
               <SourceControlPanel
-                branch={(serverSync().data.vcs?.branch ?? "main")}
+                branch={"main"}
                 changes={0}
                 stagedFiles={[]}
                 unstagedFiles={[]}
@@ -1669,6 +1673,21 @@ export default function FullIde() {
       </Show>
 
       {/* ── Remote Connection Modal ── */}
+      <RemoteConnectionModal
+        open={sshConnectionModalOpen()}
+        onClose={() => setSshConnectionModalOpen(false)}
+        onConnect={(type, target) => {
+          setSshConnectionModalOpen(false)
+          // Implement actual connection logic here when ready
+          showToast({ title: "Remote Connection", description: `Connecting to ${type}: ${target}` })
+        }}
+      />
+
+      <DefaultShellModal
+        open={defaultShellModalOpen()}
+        onClose={() => setDefaultShellModalOpen(false)}
+      />
+
       <RemoteConnectionModal
         open={remoteModalOpen()}
         onClose={() => setRemoteModalOpen(false)}

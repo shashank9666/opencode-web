@@ -21,7 +21,6 @@ export interface SoundSettings {
 export interface Settings {
   general: {
     autoSave: boolean
-    inlineCodeSuggestions: boolean
     releaseNotes: boolean
     followup: "queue" | "steer"
     showFileTree: boolean
@@ -52,6 +51,9 @@ export interface Settings {
   }
   notifications: NotificationSettings
   sounds: SoundSettings
+  terminal: {
+    defaultShell: string
+  }
 }
 
 export const monoDefault = "System Mono"
@@ -111,7 +113,6 @@ export function terminalFontFamily(font: string | undefined) {
 const defaultSettings: Settings = {
   general: {
     autoSave: true,
-    inlineCodeSuggestions: true,
     releaseNotes: true,
     followup: "steer",
     showFileTree: false,
@@ -148,9 +149,12 @@ const defaultSettings: Settings = {
     agentEnabled: true,
     agent: "staplebops-01",
     permissionsEnabled: true,
-    permissions: "staplebops-02",
-    errorsEnabled: true,
-    errors: "nope-03",
+    permissions: "staplebops-01",
+    errorsEnabled: false,
+    errors: "staplebops-01",
+  },
+  terminal: {
+    defaultShell: "",
   },
 }
 
@@ -234,10 +238,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         autoSave: withFallback(() => store.general?.autoSave, defaultSettings.general.autoSave),
         setAutoSave(value: boolean) {
           setStore("general", "autoSave", value)
-        },
-        inlineCodeSuggestions: withFallback(() => store.general?.inlineCodeSuggestions, defaultSettings.general.inlineCodeSuggestions),
-        setInlineCodeSuggestions(value: boolean) {
-          setStore("general", "inlineCodeSuggestions", value)
         },
         releaseNotes: withFallback(() => store.general?.releaseNotes, defaultSettings.general.releaseNotes),
         setReleaseNotes(value: boolean) {
@@ -406,6 +406,12 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         errors: withFallback(() => store.sounds?.errors, defaultSettings.sounds.errors),
         setErrors(value: string) {
           setStore("sounds", "errors", value)
+        },
+      },
+      terminal: {
+        defaultShell: withFallback(() => store.terminal?.defaultShell, defaultSettings.terminal.defaultShell),
+        setDefaultShell(value: string) {
+          setStore("terminal", "defaultShell", value)
         },
       },
     }

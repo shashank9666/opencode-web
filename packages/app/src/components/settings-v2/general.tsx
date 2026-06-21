@@ -271,17 +271,7 @@ export const SettingsGeneralV2: Component = () => {
           </div>
         </SettingsRowV2>
 
-        <SettingsRowV2
-          title="Inline Code Suggestions"
-          description="Show inline code suggestions from AI as you type."
-        >
-          <div data-action="settings-inline-code-suggestions">
-            <Switch
-              checked={settings.general.inlineCodeSuggestions()}
-              onChange={(checked) => settings.general.setInlineCodeSuggestions(checked)}
-            />
-          </div>
-        </SettingsRowV2>
+
 
         <SettingsRowV2
           title={language.t("settings.general.row.shell.title")}
