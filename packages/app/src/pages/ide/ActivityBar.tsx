@@ -13,6 +13,7 @@ const SIDEBAR_TABS = [
   { tab: "search" as const, icon: "magnifying-glass" as const, label: "Search", shortcut: "Ctrl+Shift+F" },
   { tab: "source-control" as const, icon: "branch" as const, label: "Source Control", shortcut: "Ctrl+Shift+G" },
   { tab: "run-debug" as const, icon: "window-cursor" as const, label: "Run & Debug", shortcut: "Ctrl+Shift+D" },
+  { tab: "extensions" as const, icon: "sliders" as const, label: "Extensions", shortcut: "Ctrl+Shift+X" },
   { tab: "ai-chat" as const, icon: "brain" as const, label: "AI Assistant", shortcut: "Ctrl+Shift+I" },
   { tab: "remote" as const, icon: "arrow-right" as const, label: "Remote Explorer", shortcut: "" },
   { tab: "testing" as const, icon: "check" as const, label: "Testing", shortcut: "" },

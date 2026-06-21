@@ -233,12 +233,12 @@ export default function SettingsPanel(props: {
             <div class="flex items-center gap-2">
               <input 
                 type="checkbox" 
-                id="snapshots" 
-                checked={config().snapshots ?? false} 
-                onChange={(e) => serverSync().updateConfig({ snapshots: e.currentTarget.checked })} 
+                id="snapshot" 
+                checked={config().snapshot ?? false} 
+                onChange={(e) => serverSync().updateConfig({ snapshot: e.currentTarget.checked })} 
                 class="accent-accent-base" 
               />
-              <label for="snapshots" class="text-13-regular text-text-strong">Enable Snapshots (Undo/Revert)</label>
+              <label for="snapshot" class="text-13-regular text-text-strong">Enable Snapshots (Undo/Revert)</label>
             </div>
 
             <div class="flex items-center gap-2">

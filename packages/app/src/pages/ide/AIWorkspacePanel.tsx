@@ -155,13 +155,13 @@ export default function AIWorkspacePanel(props: {
                 </span>
               </div>
               <Show when={props.onCompact}>
-                <IconButton icon="shrink" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onCompact} disabled={!props.canCompact} title="Compact Session" aria-label="Compact Session" />
+                <IconButton icon="collapse" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onCompact} disabled={!props.canCompact} title="Compact Session" aria-label="Compact Session" />
               </Show>
               <Show when={props.onUndo}>
-                <IconButton icon="undo" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onUndo} disabled={!props.canUndo} title="Undo" aria-label="Undo" />
+                <IconButton icon="arrow-undo-down" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onUndo} disabled={!props.canUndo} title="Undo" aria-label="Undo" />
               </Show>
               <Show when={props.onRedo}>
-                <IconButton icon="redo" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onRedo} disabled={!props.canRedo} title="Redo" aria-label="Redo" />
+                <IconButton icon="reset" variant="ghost" size="small" class="size-5 rounded shrink-0" onClick={props.onRedo} disabled={!props.canRedo} title="Redo" aria-label="Redo" />
               </Show>
               <Show when={props.onClose}>
                 <IconButton

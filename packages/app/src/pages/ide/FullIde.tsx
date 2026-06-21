@@ -74,6 +74,7 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "search", label: "Search", icon: "magnifying-glass", position: "left", visible: false, width: 280, order: 1 },
   { id: "source-control", label: "Source Control", icon: "branch", position: "left", visible: false, width: 300, order: 2 },
   { id: "run-debug", label: "Run & Debug", icon: "bug", position: "left", visible: false, width: 300, order: 3 },
+  { id: "extensions", label: "Extensions", icon: "sliders", position: "left", visible: false, width: 300, order: 4 },
 
   { id: "ai-chat", label: "AI Assistant", icon: "brain", position: "right", visible: true, width: 320, order: 5 },
   { id: "database", label: "Database", icon: "database", position: "left", visible: false, width: 320, order: 6 },
@@ -985,6 +986,13 @@ export default function FullIde() {
 
             <Show when={leftPanel()?.id === "testing"}>
               <TestingPanel onClose={() => panelManager.hidePanel("testing")} />
+            </Show>
+
+            <Show when={leftPanel()?.id === "extensions"}>
+              <div class="size-full flex flex-col items-center justify-center py-6 text-13-regular text-text-weaker bg-surface-base">
+                <span class="text-12-medium text-text-weaker uppercase tracking-wider mb-4">Extensions</span>
+                <span>Coming soon</span>
+              </div>
             </Show>
 
             <Show when={leftPanel()?.id === "database"}>

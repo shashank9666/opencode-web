@@ -1222,6 +1222,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       return
     }
 
+    // Context insert shortcut (Alt+Ctrl+K or Cmd+Option+K)
+    if ((event.altKey && event.ctrlKey && event.key.toLowerCase() === "k") || 
+        (event.metaKey && event.altKey && event.key.toLowerCase() === "k")) {
+      event.preventDefault()
+      addPart({ type: "text", content: "@", start: 0, end: 0 })
+      return
+    }
+
     if (event.key === "Backspace") {
       const selection = window.getSelection()
       if (selection && selection.isCollapsed) {
@@ -1354,6 +1362,48 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         event.preventDefault()
       }
       return
+    }
+
+    // Emacs-style keybindings
+    if (ctrl && !event.shiftKey) {
+      const key = event.key.toLowerCase()
+      const selection = window.getSelection()
+      if (selection && editorRef.contains(selection.anchorNode)) {
+        if (key === "a") {
+          event.preventDefault()
+          selection.modify("move", "backward", "lineboundary")
+          return
+        }
+        if (key === "e") {
+          event.preventDefault()
+          selection.modify("move", "forward", "lineboundary")
+          return
+        }
+        // Avoid overriding standard Ctrl+W (close tab) if possible, but handle if captured
+        if (key === "w" || (event.altKey && event.key === "Backspace")) {
+          event.preventDefault()
+          selection.modify("extend", "backward", "word")
+          selection.getRangeAt(0).deleteContents()
+          handleInput()
+          return
+        }
+        if (event.altKey && key === "d") {
+          event.preventDefault()
+          selection.modify("extend", "forward", "word")
+          selection.getRangeAt(0).deleteContents()
+          handleInput()
+          return
+        }
+        // Ctrl+K (kill to end of line). Note: Mac Cmd+K is different, we check 'ctrl'
+        if (key === "k") {
+          event.preventDefault()
+          selection.modify("extend", "forward", "lineboundary")
+          selection.getRangeAt(0).deleteContents()
+          handleInput()
+          return
+        }
+        // Ctrl+U (handled by file attach above, but if we wanted kill line we'd need to re-map file attach)
+      }
     }
 
     // Note: Shift+Enter is handled earlier, before IME check
