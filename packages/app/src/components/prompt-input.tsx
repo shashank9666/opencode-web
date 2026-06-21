@@ -1575,6 +1575,63 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 [props.class ?? ""]: !!props.class,
               }}
             >
+              <div class="flex items-center w-full px-2 pt-2 pb-1 border-b border-v2-border-border-muted/30">
+                <div class="flex items-center gap-0.5">
+                  <Tooltip placement="top" gutter={4} value="Prompt">
+                    <IconButton
+                      icon="prompt"
+                      variant="ghost"
+                      size="small"
+                      class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                      onClick={() => showToast({ title: "Prompt", description: "Coming soon" })}
+                      aria-label="Prompt"
+                    />
+                  </Tooltip>
+                  <Tooltip placement="top" gutter={4} value="Background Terminals">
+                    <IconButton
+                      icon="terminal"
+                      variant="ghost"
+                      size="small"
+                      class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                      onClick={() => showToast({ title: "Background Terminals", description: "Coming soon" })}
+                      aria-label="Background Terminals"
+                    />
+                  </Tooltip>
+                  <Tooltip placement="top" gutter={4} value="Artifacts">
+                    <div class="relative">
+                      <IconButton
+                        icon="archive"
+                        variant="ghost"
+                        size="small"
+                        class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                        onClick={() => showToast({ title: "Artifacts", description: "Coming soon" })}
+                        aria-label="Artifacts"
+                      />
+                      <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />
+                    </div>
+                  </Tooltip>
+                  <Tooltip placement="top" gutter={4} value="Playwright Stream">
+                    <IconButton
+                      icon="browser"
+                      variant="ghost"
+                      size="small"
+                      class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                      onClick={() => window.dispatchEvent(new CustomEvent("open-playwright-preview"))}
+                      aria-label="Playwright Stream"
+                    />
+                  </Tooltip>
+                </div>
+                <div class="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="small"
+                  class="text-[13px] font-[440] leading-5 text-v2-text-text-faint hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base rounded px-2 gap-1.5"
+                  onClick={() => showToast({ title: "Review Changes", description: "Coming soon" })}
+                >
+                  <Icon name="review" size="small" class="text-v2-icon-icon-muted" />
+                  Review Changes
+                </Button>
+              </div>
               <PromptDragOverlay
                 type={store.draggingType}
                 label={language.t(
@@ -1977,16 +2034,16 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </div>
                     </Show>
 
-                    {/* Chatbot Options & Plan Mode */}
+                    {/* Chatbot Options */}
                     <div class="flex items-center gap-1 ml-2 border-l border-border-base pl-2" style={control()}>
-                      <Tooltip placement="top" gutter={4} value="Changes Overview">
+                      <Tooltip placement="top" gutter={4} value="Prompt">
                         <IconButton
-                          icon="git-merge"
+                          icon="prompt"
                           variant="ghost"
                           size="small"
                           class="size-6 rounded"
-                          onClick={() => showToast({ title: "Changes Overview", description: "Coming soon" })}
-                          aria-label="Changes Overview"
+                          onClick={() => showToast({ title: "Prompt", description: "Coming soon" })}
+                          aria-label="Prompt"
                         />
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Background Terminals">
@@ -2000,24 +2057,17 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         />
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Artifacts">
-                        <IconButton
-                          icon="archive"
-                          variant="ghost"
-                          size="small"
-                          class="size-6 rounded"
-                          onClick={() => showToast({ title: "Artifacts", description: "Coming soon" })}
-                          aria-label="Artifacts"
-                        />
-                      </Tooltip>
-                      <Tooltip placement="top" gutter={4} value="Toggle Plan Mode">
-                        <IconButton
-                          icon="list-check"
-                          variant="ghost"
-                          size="small"
-                          class="size-6 rounded"
-                          onClick={() => showToast({ title: "Plan Mode", description: "Toggled plan mode" })}
-                          aria-label="Toggle Plan Mode"
-                        />
+                        <div class="relative">
+                          <IconButton
+                            icon="archive"
+                            variant="ghost"
+                            size="small"
+                            class="size-6 rounded"
+                            onClick={() => showToast({ title: "Artifacts", description: "Coming soon" })}
+                            aria-label="Artifacts"
+                          />
+                          <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] border border-surface-base pointer-events-none" />
+                        </div>
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Playwright Stream">
                         <IconButton
@@ -2030,6 +2080,19 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         />
                       </Tooltip>
                     </div>
+
+                    <div class="flex-1" />
+
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      class="text-[13px] font-[440] leading-5 text-v2-text-text-faint hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base rounded px-2 gap-1.5"
+                      style={control()}
+                      onClick={() => showToast({ title: "Review Changes", description: "Coming soon" })}
+                    >
+                      <Icon name="review" size="small" class="text-v2-icon-icon-muted" />
+                      Review Changes
+                    </Button>
 
                     <Show when={!providersLoading()}>
                       <Show when={store.mode !== "shell"}>
