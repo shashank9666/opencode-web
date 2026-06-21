@@ -14,7 +14,7 @@ import { useSettings } from "@/context/settings"
 import { createProblemTracker } from "@/components/problem-tracker"
 import { type InlineAIActionPayload } from "@/components/inline-ai-toolbar"
 import { createEditorWorkspace } from "@/components/editor-workspace"
-import { EditorArea } from "@/components/EditorArea"
+import { EditorAreaGroup as EditorArea } from "@/components/EditorArea"
 import { SplitPane } from "@/components/SplitPane"
 import { Terminal } from "@/components/terminal"
 import { Icon } from "@opencode-ai/ui/icon"
@@ -686,8 +686,52 @@ export default function FullIde() {
     const target = deleteTarget()
     if (!target) return
     try {
-      await sdk().client.v2.fs.delete({ path: target.path })
-      if (!target.isDir && editor.activeFile() === target.path) editor.closeFile(target.path)
+      if (target.isDir) {
+        // Recursively list and delete all files in the directory first
+        const listAll = async (dirPath: string): Promise<string[]> => {
+          try {
+            const result = await sdk().client.v2.fs.list({ path: dirPath })
+            const entries = (result as any).data ?? []
+            const files: string[] = []
+            for (const entry of entries) {
+              const fullPath = `${dirPath}/${entry.name}`
+              if (entry.type === "directory") {
+                const sub = await listAll(fullPath)
+                files.push(...sub)
+              } else {
+                files.push(fullPath)
+              }
+            }
+            return files
+          } catch {
+            return []
+          }
+        }
+        // Try direct folder delete first (some servers support it)
+        try {
+          await sdk().client.v2.fs.delete({ path: target.path })
+        } catch {
+          // Fallback: delete all files then the directory
+          const allFiles = await listAll(target.path)
+          for (const f of allFiles) {
+            try { await sdk().client.v2.fs.delete({ path: f }) } catch { }
+          }
+          // Delete the .gitkeep we may have created, then try the dir again
+          try { await sdk().client.v2.fs.delete({ path: `${target.path}/.gitkeep` }) } catch { }
+          try { await sdk().client.v2.fs.delete({ path: target.path }) } catch { }
+        }
+        // Close any open files from deleted directory
+        const group = workspace.getActiveGroup()
+        if (group) {
+          group.files
+            .filter(f => f.path.startsWith(target.path + "/"))
+            .forEach(f => workspace.closeFile(f.path, group.id))
+        }
+      } else {
+        await sdk().client.v2.fs.delete({ path: target.path })
+        if (editor.activeFile() === target.path) editor.closeFile(target.path)
+      }
+      showToast({ variant: "success", title: "Deleted", description: `"${getFilename(target.path)}" was deleted` })
     } catch (e) { showToast({ variant: "error", title: "Delete failed", description: String(e) }) }
     setDeleteTarget(null)
     void file.tree.refresh("")
