@@ -575,3 +575,6 @@ Completion:`;
     </div>
   );
 }
+
+// Alias for backward compatibility - FullIde imports { EditorArea }
+export { EditorAreaGroup as EditorArea }

@@ -119,7 +119,7 @@ export default function SearchPanel(props: {
     if (!q) return
     setSearching(true)
     setCollapsedAll(false)
-    setCollapsedFiles(new Set())
+    setCollapsedFiles(new Set<string>())
     try {
       const result = await props.onSearch(q)
       setResults(result ?? [])
