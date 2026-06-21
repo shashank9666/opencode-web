@@ -197,6 +197,12 @@ export default function FullIde() {
   const [wordWrapCol, setWordWrapCol] = createSignal(80)
   const [terminalSplit, setTerminalSplit] = createSignal<false | "horizontal" | "vertical">(false)
   const [terminalSplitId, setTerminalSplitId] = createSignal<string | null>(null)
+  createEffect(() => {
+    if (terminal.all().length <= 1 && terminalSplit()) {
+      setTerminalSplit(false)
+      setTerminalSplitId(null)
+    }
+  })
   const [terminalLoading, setTerminalLoading] = createSignal<string | null>(null)
   let terminalSplitCounter = 0
 
@@ -259,6 +265,44 @@ export default function FullIde() {
   const dir = createMemo(() => decode64(params.dir) ?? "")
   const [dirStore] = createMemo(() => serverSync().child(dir(), { bootstrap: true }))()
   const recentSessions = createMemo(() => sortedRootSessions(dirStore, Date.now()).slice(0, 10))
+
+  let loadedWorkspaceDir = "";
+  createEffect(() => {
+    const currentDir = dir();
+    if (!currentDir || currentDir === loadedWorkspaceDir) return;
+    loadedWorkspaceDir = currentDir;
+    try {
+      const raw = localStorage.getItem(`workspace_${currentDir}`);
+      if (raw) {
+        const snapshot = JSON.parse(raw);
+        workspace.loadSnapshot(snapshot);
+        const loadNode = (node: any) => {
+          if (node.type === "group") {
+            node.files?.forEach((path: string) => {
+              file.load(path).then(() => {
+                const state = file.get(path);
+                if (state?.content?.type === "text") {
+                  workspace.setContent(path, state.content.content, node.id);
+                }
+              }).catch(() => {});
+            });
+          } else if (node.children) {
+            node.children.forEach(loadNode);
+          }
+        };
+        loadNode(snapshot);
+      }
+    } catch (e) {
+      console.error("Failed to load workspace snapshot", e);
+    }
+  });
+
+  createEffect(() => {
+    const currentDir = dir();
+    if (!currentDir) return;
+    const snapshot = workspace.getSnapshot();
+    localStorage.setItem(`workspace_${currentDir}`, JSON.stringify(snapshot));
+  });
 
   let lastDir: string | undefined
   createEffect(() => {
@@ -1088,19 +1132,20 @@ export default function FullIde() {
               onTabChange={(tab) => toggleBottomPanel(tab)}
               onClose={() => { if (bottomPanel()) panelManager.hidePanel(bottomPanel()!.id) }}
               onNewTerminal={(profile) => {
-                if (!profile) return terminal.new();
+                const profileStr = typeof profile === "string" ? profile : undefined;
+                if (!profileStr) return terminal.new();
                 let command;
-                let title = profile;
-                if (profile === "PowerShell") { command = "pwsh"; }
-                else if (profile === "Command Prompt") { command = "cmd"; }
-                else if (profile === "Git Bash") { command = "bash"; }
-                else if (profile === "WSL") { command = "wsl"; }
-                else if (profile === "JavaScript Debug Terminal") {
+                let title = profileStr;
+                if (profileStr === "PowerShell") { command = "pwsh"; }
+                else if (profileStr === "Command Prompt") { command = "cmd"; }
+                else if (profileStr === "Git Bash") { command = "bash"; }
+                else if (profileStr === "WSL") { command = "wsl"; }
+                else if (profileStr === "JavaScript Debug Terminal") {
                   command = "node";
                   title = "JavaScript Debug Terminal";
                 }
 
-                setTerminalLoading(profile ?? "terminal")
+                setTerminalLoading(profileStr)
                 const prevCount = terminal.all().length
                 if (command) {
                   terminal.newShell({ command, title });

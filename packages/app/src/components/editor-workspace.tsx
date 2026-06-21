@@ -217,6 +217,37 @@ export function createEditorWorkspace() {
     return result;
   };
 
+  const getSnapshot = () => {
+    const serialize = (node: EditorNode): any => {
+      if (node.type === "group") return { type: "group", id: node.group.id, files: node.group.files.map(f => f.path), activeFile: node.group.activeFile };
+      return { type: "split", direction: node.direction, sizes: node.sizes, children: node.children.map(serialize) };
+    }
+    return serialize(rootNode());
+  };
+
+  const loadSnapshot = (snapshot: any) => {
+    if (!snapshot) return;
+    const deserialize = (node: any): EditorNode => {
+      if (node.type === "group") return { type: "group", group: { id: node.id, files: node.files.map((path: string) => ({ path, content: "Loading...", savedContent: "", dirty: false })), activeFile: node.activeFile } };
+      return { type: "split", direction: node.direction, sizes: node.sizes, children: node.children.map(deserialize) };
+    }
+    try {
+      setRootNode(deserialize(snapshot));
+      // update nextGroupId to avoid conflicts
+      const updateNextId = (node: EditorNode) => {
+        if (node.type === "group") {
+          const match = node.group.id.match(/^group-(\d+)$/);
+          if (match) nextGroupId = Math.max(nextGroupId, parseInt(match[1]) + 1);
+        } else {
+          node.children.forEach(updateNextId);
+        }
+      }
+      updateNextId(rootNode());
+    } catch (e) {
+      console.error("Failed to load workspace snapshot", e);
+    }
+  };
+
   return {
     rootNode,
     activeGroupId,
@@ -236,6 +267,8 @@ export function createEditorWorkspace() {
     swapSplitChildren,
     getFileState,
     getActiveGroup,
-    getDirtyFiles
+    getDirtyFiles,
+    getSnapshot,
+    loadSnapshot
   };
 }
