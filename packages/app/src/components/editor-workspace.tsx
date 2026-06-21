@@ -196,7 +196,19 @@ export function createEditorWorkspace() {
     setRootNode(prev => splitNodeRec(prev));
   };
 
-  const getActiveGroup = () => findGroup(rootNode(), activeGroupId()) || findGroup(rootNode(), "group-1");
+  const getActiveGroup = () => {
+    const active = findGroup(rootNode(), activeGroupId());
+    if (active) return active;
+    const findFirst = (n: EditorNode): EditorGroup | null => {
+      if (n.type === "group") return n.group;
+      for (const c of n.children) {
+        const found = findFirst(c);
+        if (found) return found;
+      }
+      return null;
+    };
+    return findFirst(rootNode());
+  };
 
   const getFileState = (path: string, groupId?: string) => {
     const targetGroup = groupId ? findGroup(rootNode(), groupId) : getActiveGroup();
@@ -235,6 +247,10 @@ export function createEditorWorkspace() {
     }
     try {
       setRootNode(deserialize(snapshot));
+      // Set active group to the first available group
+      const firstGrp = getActiveGroup();
+      if (firstGrp) setActiveGroupId(firstGrp.id);
+      
       // update nextGroupId to avoid conflicts
       const updateNextId = (node: EditorNode) => {
         if (node.type === "group") {

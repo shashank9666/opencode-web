@@ -37,7 +37,7 @@ export function EditorAreaGroup(props: {
   onRejectDiff?: () => void;
   onCursorChange?: (line: number, column: number) => void;
 }) {
-  const emptyGroup = { id: "", activeFile: undefined as string | undefined, files: [] as OpenFile[] };
+  const emptyGroup = { id: "", activeFile: null as string | null, files: [] as OpenFile[] };
   const group = createMemo(() => {
     const node = props.node as EditorNode;
     const g = node.type === "group" ? node.group : emptyGroup;
@@ -434,12 +434,18 @@ if (dt) {
                 <Show when={/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state().path)}>
                   <div class="flex-1 flex items-center justify-center p-8 bg-surface-base overflow-auto">
                     <img src={(() => {
+                      const isSvg = state().path.toLowerCase().endsWith(".svg");
+                      if (isSvg) {
+                        return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(state().content || "")}`;
+                      }
                       const c = file.get(state().path)?.content;
-                      if (!c) return "";
-                      if (c.type === "binary" && c.content) return `data:${(c as any).mimeType || 'image/png'};base64,${c.content}`;
-                      if (c.type === "text" && c.content) {
-                        const isSvg = state().path.toLowerCase().endsWith(".svg");
-                        if (isSvg) return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(c.content)}`;
+                      if (c && c.type === "binary" && c.content) {
+                        return `data:${(c as any).mimeType || 'image/png'};base64,${c.content}`;
+                      }
+                      if (!isSvg && state().content) {
+                        const ext = state().path.toLowerCase().split('.').pop() || 'png';
+                        const mime = ext === 'jpg' ? 'jpeg' : ext;
+                        return `data:image/${mime};base64,${state().content}`;
                       }
                       return "";
                     })()} alt={getFilename(state().path)} class="max-w-full max-h-full object-contain drop-shadow-md" />
