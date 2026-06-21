@@ -52,3 +52,5 @@
 - [x] 21. Support for image view, SVG view (dialog preview).
 - [x] 21. PPT preview (binary file — opens in editor or prompts download).
 - [x] 21. On-click file actions (right-click context menu with Open, Open to Side, Preview, Rename, Delete, Copy Path, New File/Folder).
+- []  22. const MAX_UNDO_STACK_SIZE = 50;
+          const MAX_REDO_STACK_SIZE = 50; add them to stack and they should for undo/redo actions 

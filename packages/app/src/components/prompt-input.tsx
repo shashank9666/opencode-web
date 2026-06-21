@@ -17,8 +17,10 @@ import {
   type JSX,
 } from "solid-js"
 import { Popover as KobaltePopover } from "@kobalte/core/popover"
+import { Popover } from "@opencode-ai/ui/popover"
 import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import type { useLocal } from "@/context/local"
+import { useTerminal } from "@/context/terminal"
 import { selectionFromLines, type SelectedLineRange, useFile } from "@/context/file"
 import {
   ContentPart,
@@ -217,7 +219,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const comments = useComments()
   const dialog = useDialog()
   const command = useCommand()
+  const [suggestHover, setSuggestHover] = createSignal(false)
   const [browserPanelOpen, setBrowserPanelOpen] = createSignal(false)
+  const [artifactsOpen, setArtifactsOpen] = createSignal(false)
+
+  const terminal = useTerminal()
 
   const permission = usePermission()
   const language = useLanguage()
@@ -1579,38 +1585,61 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
             >
               <div class="flex items-center w-full px-2 pt-2 pb-1 border-b border-v2-border-border-muted/30">
                 <div class="flex items-center gap-0.5">
-                  <Tooltip placement="top" gutter={4} value="Prompt">
-                    <IconButton
-                      icon="prompt"
-                      variant="ghost"
-                      size="small"
-                      class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => command.trigger("fileTree.toggle")}
-                      aria-label="Prompt"
-                    />
-                  </Tooltip>
                   <Tooltip placement="top" gutter={4} value="Background Terminals">
-                    <IconButton
-                      icon="terminal"
-                      variant="ghost"
-                      size="small"
-                      class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => command.trigger("terminal.toggle")}
-                      aria-label="Background Terminals"
-                    />
-                  </Tooltip>
-                  <Tooltip placement="top" gutter={4} value="Artifacts">
                     <div class="relative">
                       <IconButton
-                        icon="archive"
+                        icon="terminal"
                         variant="ghost"
                         size="small"
                         class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                        onClick={() => command.trigger("fileTree.toggle")}
-                        aria-label="Artifacts"
+                        onClick={() => command.trigger("terminal.toggle")}
+                        aria-label="Background Terminals"
                       />
-                      <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />
+                      <Show when={terminal.all().length > 0}>
+                        <div class="absolute right-[1px] bottom-[1px] size-[12px] rounded-full bg-v2-background-bg-base flex items-center justify-center">
+                          <div class="size-[10px] rounded-full bg-[#007AFF] text-[8px] flex items-center justify-center text-white">{terminal.all().length}</div>
+                        </div>
+                      </Show>
                     </div>
+                  </Tooltip>
+                  <Tooltip placement="top" gutter={4} value="Artifacts">
+                    <Popover 
+                      open={artifactsOpen()} 
+                      onOpenChange={setArtifactsOpen}
+                      trigger={
+                        <div class="relative block">
+                          <IconButton
+                            icon="archive"
+                            variant="ghost"
+                            size="small"
+                            class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                            onClick={() => {}}
+                            aria-label="Artifacts"
+                          />
+                          <Show when={prompt.current().filter(p => p.type === "image").length > 0}>
+                            <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />
+                          </Show>
+                        </div>
+                      }
+                      class="bg-v2-background-bg-base border border-v2-border-border-muted rounded-md shadow-lg p-2 min-w-[200px]"
+                    >
+                      <div class="text-12-medium text-v2-text-text-base mb-2">Context Images</div>
+                      <Show 
+                        when={prompt.current().filter(p => p.type === "image").length > 0}
+                        fallback={<div class="text-11-regular text-v2-text-text-muted">No images uploaded for context.</div>}
+                      >
+                        <PromptImageAttachments
+                          attachments={prompt.current().filter((p): p is ImageAttachmentPart => p.type === "image")}
+                          onRemove={(index) => {
+                            const images = prompt.current().filter((p): p is ImageAttachmentPart => p.type === "image")
+                            const removedId = images[index]?.id
+                            if (removedId) {
+                              prompt.set(prompt.current().filter(p => p.id !== removedId))
+                            }
+                          }}
+                        />
+                      </Show>
+                    </Popover>
                   </Tooltip>
                   <Tooltip placement="top" gutter={4} value="Playwright Stream">
                     <IconButton
@@ -1653,8 +1682,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       variant="primary" 
                       size="small" 
                       onClick={() => {
-                        window.dispatchEvent(new CustomEvent("open-playwright-preview"))
-                        // Or open current origin if "without port" meant something else, but this invokes the IDE's built-in preview tab.
+                        window.open("http://localhost:3000", "_blank")
                       }}
                     >
                       Launch

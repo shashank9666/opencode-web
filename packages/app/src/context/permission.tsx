@@ -190,30 +190,24 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
     }
 
     function shouldAutoRespond(permission: PermissionRequest, directory?: string) {
-      const session = directory ? serverSync().child(directory, { bootstrap: false })[0].session : []
-      if (autoRespondsPermission(store.autoAccept, session, permission, directory)) return true
-
       const settings = store.autoApproveSettings
       const action = permission.permission
 
+      let isAllowedByGranular = false
+
       if (action === "read" || action === "read_file" || action === "list_dir" || action === "grep_search" || action === "read_url") {
-        return settings.readAllFiles || settings.readProjectFiles
+        isAllowedByGranular = settings.readAllFiles || settings.readProjectFiles
+      } else if (action === "edit" || action === "write" || action === "replace_file_content" || action === "write_to_file" || action === "multi_replace_file_content") {
+        isAllowedByGranular = settings.editAllFiles || settings.editProjectFiles
+      } else if (action === "execute" || action === "bash" || action === "run_command") {
+        isAllowedByGranular = settings.executeAllCommands || settings.executeSafeCommands
+      } else if (action === "browser") {
+        isAllowedByGranular = settings.useBrowser
+      } else if (action === "mcp") {
+        isAllowedByGranular = settings.useMcpServers
       }
 
-      if (action === "edit" || action === "write" || action === "replace_file_content" || action === "write_to_file" || action === "multi_replace_file_content") {
-        return settings.editAllFiles || settings.editProjectFiles
-      }
-
-      if (action === "execute" || action === "bash" || action === "run_command") {
-        // Safe commands logic can be refined later; for now we approve if either is set, 
-        // or we only approve if executeAllCommands is true. Let's approve if safe is checked.
-        return settings.executeAllCommands || settings.executeSafeCommands
-      }
-
-      if (action === "browser" && settings.useBrowser) return true
-      if (action === "mcp" && settings.useMcpServers) return true
-
-      return false
+      return isAllowedByGranular
     }
 
     function bumpEnableVersion(sessionID: string, directory?: string) {

@@ -16,11 +16,6 @@ export const SettingsAutoApproveV2: Component = () => {
 
   return (
     <div class="settings-v2-container">
-      <div class="settings-v2-header">
-        <h1>Auto-Approve Permissions</h1>
-        <p class="settings-v2-description">Control which actions the AI can perform without asking for explicit approval.</p>
-      </div>
-
       <SettingsListV2>
         <SettingsRowV2
           title="Read project files"
