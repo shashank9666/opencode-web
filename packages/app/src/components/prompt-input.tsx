@@ -1644,14 +1644,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   />
                   <div
                     data-component={newSession() ? "session-new-design-text" : "session-composer-text"}
-                    class="absolute top-0 inset-x-0 px-4 pt-4 pointer-events-none whitespace-nowrap truncate leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]"
+                    class="absolute top-0 inset-x-0 px-4 pt-4 pointer-events-none whitespace-pre-wrap leading-5 text-[13px] font-[440] text-v2-text-text-faint [font-family:Inter,var(--font-family-sans)]"
                     classList={{ "font-mono!": store.mode === "shell", hidden: prompt.dirty() }}
                   >
                     {designPlaceholder()}
                   </div>
                 </div>
               </div>
-              <div class="flex h-11 items-center px-2">
+              <div class="flex h-11 items-center px-2 pr-10">
                 <div class="flex min-w-0 flex-1 items-center gap-0">
                   {fileAttachmentInput()}
                   <AddContextMenu
@@ -1715,6 +1715,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                     </div>
                   </Show>
                 </div>
+              </div>
+              <div class="absolute right-2 bottom-2">
                 <Tooltip placement="top" inactive={!working() && blank()} value={tip()}>
                   <IconButton
                     data-action="prompt-submit"
