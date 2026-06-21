@@ -5,16 +5,14 @@ import {
   createMemo,
   For,
   Match,
-  on,
   onCleanup,
   Show,
   Switch,
 } from "solid-js"
 import { useFile } from "@/context/file"
 import { useSettings } from "@/context/settings"
-import IdeEditor, { IdeDiffEditor, createIdeEditor, type OpenFile } from "@/components/ide-editor"
 import { createProblemTracker } from "@/components/problem-tracker"
-import InlineAIToolbar, { type InlineAIActionPayload } from "@/components/inline-ai-toolbar"
+import { type InlineAIActionPayload } from "@/components/inline-ai-toolbar"
 import { createEditorWorkspace } from "@/components/editor-workspace"
 import { EditorArea } from "@/components/EditorArea"
 import { Terminal } from "@/components/terminal"
@@ -41,7 +39,7 @@ import { useLocal } from "@/context/local"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { findLast } from "@opencode-ai/core/util/array"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
-import { MarkdownPreview, PdfPreview } from "@/components/previews"
+import { PdfPreview } from "@/components/previews"
 
 // Reuse existing panels + extend
 import HeaderBar from "./HeaderBar"
@@ -55,8 +53,8 @@ import SearchPanel from "./SearchPanel"
 import SourceControlPanel from "./SourceControlPanel"
 
 import AIWorkspacePanel from "./AIWorkspacePanel"
-import { createPanelManager, FloatingPanel, type PanelState, type PanelPosition } from "./DockablePanel"
-import MenuBar, { type IdeActions } from "./MenuBar"
+import { createPanelManager, FloatingPanel, type PanelState } from "./DockablePanel"
+import { type IdeActions } from "./MenuBar"
 
 // ── Extra panels (new) ──
 import DebugPanel from "./DebugPanel"
@@ -164,8 +162,8 @@ export default function FullIde() {
   const [sidebarWidth, setSidebarWidth] = createSignal(280)
   const [rightPanelWidth, setRightPanelWidth] = createSignal(320)
   const [bottomPanelHeight, setBottomPanelHeight] = createSignal(220)
-  const [headerCompact, setHeaderCompact] = createSignal(false)
   const [commandPaletteOpen, setCommandPaletteOpen] = createSignal(false)
+  const [headerCompact, setHeaderCompact] = createSignal(false)
   const [showSettings, setShowSettings] = createSignal(false)
   const [showKeybindings, setShowKeybindings] = createSignal(false)
   const [remoteModalOpen, setRemoteModalOpen] = createSignal(false)
@@ -198,6 +196,7 @@ export default function FullIde() {
   const [wordWrapCol, setWordWrapCol] = createSignal(80)
   const [terminalSplit, setTerminalSplit] = createSignal<false | "horizontal" | "vertical">(false)
   const [terminalSplitId, setTerminalSplitId] = createSignal<string | null>(null)
+  const [terminalLoading, setTerminalLoading] = createSignal<string | null>(null)
   let terminalSplitCounter = 0
 
   const [keybindings, setKeybindings] = createSignal<{ id: string; key: string; command: string }[]>([
@@ -912,8 +911,22 @@ export default function FullIde() {
         setTerminalSplitId(null)
         return
       }
-      setTerminalSplitId(activeId)
-      setTerminalSplit("vertical")
+      // Create a new terminal first, then set up the split view
+      const prevCount = terminal.all().length
+      setTerminalLoading("splitting terminal")
+      terminal.new()
+      // After a short delay, set up the split so the new terminal appears in the other pane
+      setTimeout(() => {
+        if (terminal.all().length > prevCount) {
+          const all = terminal.all()
+          const newId = all.find(t => t.id !== activeId)?.id
+          if (newId) {
+            setTerminalSplitId(newId)
+            setTerminalSplit("vertical")
+          }
+        }
+        setTerminalLoading(null)
+      }, 800)
       panelManager.showPanel("terminal-area")
     },
     runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") }
@@ -1076,13 +1089,32 @@ export default function FullIde() {
               onNewTerminal={(profile) => {
                 if (!profile) return terminal.new();
                 let command;
-                if (profile === "PowerShell") command = "pwsh";
-                else if (profile === "Command Prompt") command = "cmd";
-                else if (profile === "Git Bash") command = "bash";
-                else if (profile === "WSL") command = "wsl";
+                let title = profile;
+                if (profile === "PowerShell") { command = "pwsh"; }
+                else if (profile === "Command Prompt") { command = "cmd"; }
+                else if (profile === "Git Bash") { command = "bash"; }
+                else if (profile === "WSL") { command = "wsl"; }
+                else if (profile === "JavaScript Debug Terminal") {
+                  command = "node";
+                  title = "JavaScript Debug Terminal";
+                }
 
-                if (command) terminal.newShell({ command, title: profile });
-                else terminal.new();
+                setTerminalLoading(profile ?? "terminal")
+                const prevCount = terminal.all().length
+                if (command) {
+                  terminal.newShell({ command, title });
+                } else {
+                  terminal.new();
+                }
+                // Watch for the new terminal to appear, then clear loading
+                const unwatch = setInterval(() => {
+                  if (terminal.all().length > prevCount || terminal.all().length === 0) {
+                    setTerminalLoading(null)
+                    clearInterval(unwatch)
+                  }
+                }, 200)
+                // Safety timeout
+                setTimeout(() => { setTerminalLoading(null); clearInterval(unwatch) }, 8000)
               }}
               onSplitTerminal={() => {
                 const activeId = terminal.active()
@@ -1092,9 +1124,25 @@ export default function FullIde() {
                   setTerminalSplitId(null)
                   return
                 }
-                const id = `${activeId}-split-${++terminalSplitCounter}`
-                setTerminalSplitId(activeId)
-                setTerminalSplit("vertical")
+                // Create a new terminal for the split pane
+                const prevCount = terminal.all().length
+                setTerminalLoading("splitting terminal")
+                terminal.new()
+                // Watch for the new terminal to appear, then set up split view
+                const unwatch = setInterval(() => {
+                  if (terminal.all().length > prevCount) {
+                    const all = terminal.all()
+                    const newId = all.find(t => t.id !== activeId)?.id
+                    if (newId) {
+                      setTerminalSplitId(newId)
+                      setTerminalSplit("vertical")
+                    }
+                    setTerminalLoading(null)
+                    clearInterval(unwatch)
+                  }
+                }, 200)
+                // Safety timeout
+                setTimeout(() => { setTerminalLoading(null); clearInterval(unwatch) }, 8000)
               }}
               onKillTerminal={() => {
                 const activeId = terminal.active()
@@ -1119,12 +1167,22 @@ export default function FullIde() {
                           </For>
                           <Show when={terminal.all().length === 0}>
                             <div class="size-full flex items-center justify-center text-text-weak text-13-regular">
-                              <div class="flex flex-col items-center gap-3">
-                                <Icon name="terminal" size="large" class="text-icon-weaker opacity-40" />
-                                <button class="flex items-center gap-2 px-4 py-2 rounded-md border border-border-base hover:bg-surface-raised-base-hover transition-colors text-13-regular" onClick={() => terminal.new()}>
-                                  <Icon name="plus" size="small" /> New Terminal
-                                </button>
-                              </div>
+                              <Show when={terminalLoading() !== null} fallback={
+                                <div class="flex flex-col items-center gap-3">
+                                  <Icon name="terminal" size="large" class="text-icon-weaker opacity-40" />
+                                  <button class="flex items-center gap-2 px-4 py-2 rounded-md border border-border-base hover:bg-surface-raised-base-hover transition-colors text-13-regular" onClick={() => terminal.new()}>
+                                    <Icon name="plus" size="small" /> New Terminal
+                                  </button>
+                                </div>
+                              }>
+                                <div class="flex flex-col items-center gap-3">
+                                  <Icon name="terminal" size="large" class="text-icon-weaker opacity-40 animate-pulse" />
+                                  <div class="flex items-center gap-2">
+                                    <div class="size-2 rounded-full bg-accent-base animate-pulse" />
+                                    <span class="text-13-regular">Starting {terminalLoading()}...</span>
+                                  </div>
+                                </div>
+                              </Show>
                             </div>
                           </Show>
                         </div>
@@ -1270,36 +1328,36 @@ export default function FullIde() {
         <div class="fixed z-50 bg-surface-raised-base border border-border-base rounded-xl shadow-xl py-1 min-w-52 animate-in fade-in zoom-in-95 duration-100" style={{ left: `${contextMenu()!.x}px`, top: `${contextMenu()!.y}px` }} onClick={(e) => e.stopPropagation()}>
           <Show when={!contextMenu()!.isDir}>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { handleFileClick({ path: contextMenu()!.path, type: "file" }); closeContextMenu() }}>Open</button>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}><span class="text-12">↔️</span> Open to the Side</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}><Icon name="layout-right-partial" class="size-4" /> Open to the Side</button>
             <Show when={isPreviewablePath(contextMenu()!.path)}>
-              <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { openPreview(contextMenu()!.path); closeContextMenu() }}><span class="text-12">👁️</span> Preview</button>
+              <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { openPreview(contextMenu()!.path); closeContextMenu() }}><Icon name="eye" class="size-4" /> Preview</button>
             </Show>
             <div class="h-px bg-border-base my-1" />
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(contextMenu()!.path); }}>Copy Path<span class="text-11-regular ml-6 opacity-70">Shift+Alt+C</span></button>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(getFilename(contextMenu()!.path)); }}>Copy Relative Path<span class="text-11-regular ml-6 opacity-70">Ctrl+K C</span></button>
             <div class="h-px bg-border-base my-1" />
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { const state = workspace.getFileState(contextMenu()!.path); if (state?.dirty && state.originalContent) { setDiffMode(true); } else { showToast({ title: "No Changes", description: "File has no uncommitted changes" }); } })() }}><span class="text-12">🔄</span> Open Changes</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { const state = workspace.getFileState(contextMenu()!.path); if (state?.dirty && state.originalContent) { setDiffMode(true); } else { showToast({ title: "No Changes", description: "File has no uncommitted changes" }); } })() }}><Icon name="reset" class="size-4" /> Open Changes</button>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "File History view coming soon" }); }}>File History<span class="text-11-regular ml-6 opacity-70">Ctrl+G H</span></button>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "Open Timeline view coming soon" }); }}>Open Timeline</button>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "Open on Remote (Web) coming soon" }); }}><span class="text-12">🌐</span> Open on Remote (Web)</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); showToast({ title: "Coming soon", description: "Open on Remote (Web) coming soon" }); }}><Icon name="server" class="size-4" /> Open on Remote (Web)</button>
             <div class="h-px bg-border-base my-1" />
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startRename(contextMenu()!.path); }}><span class="text-12">✏️</span> Rename...</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startRename(contextMenu()!.path); }}><Icon name="edit-small-2" class="size-4" /> Rename...</button>
             <div class="h-px bg-border-base my-1" />
           </Show>
           <Show when={contextMenu()!.isDir}>
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}>Open</button>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("file", contextMenu()!.path); }}><span class="text-12">📄</span> New File</button>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("directory", contextMenu()!.path); }}><span class="text-12">📁</span> New Folder</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("file", contextMenu()!.path); }}><Icon name="open-file" class="size-4" /> New File</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); startCreate("directory", contextMenu()!.path); }}><Icon name="folder" class="size-4" /> New Folder</button>
             <div class="h-px bg-border-base my-1" />
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(contextMenu()!.path); }}>Copy Path<span class="text-11-regular ml-6 opacity-70">Shift+Alt+C</span></button>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(getFilename(contextMenu()!.path)); }}>Copy Relative Path<span class="text-11-regular ml-6 opacity-70">Ctrl+K C</span></button>
             <div class="h-px bg-border-base my-1" />
           </Show>
           <Show when={!contextMenu()!.isDir}>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><span class="text-12">🗑️</span> Delete</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><Icon name="trash" class="size-4" /> Delete</button>
           </Show>
           <Show when={contextMenu()!.isDir}>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><span class="text-12">🗑️</span> Delete Folder</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-danger-base hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); promptDelete(contextMenu()!.path, contextMenu()!.isDir); }}><Icon name="trash" class="size-4" /> Delete Folder</button>
           </Show>
         </div>
         <div class="fixed inset-0 z-40" onClick={closeContextMenu} />

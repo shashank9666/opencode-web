@@ -34,15 +34,32 @@ export function EditorArea(props: {
   onRejectDiff?: () => void;
   onCursorChange?: (line: number, column: number) => void;
 }) {
+  const isSplit = () => props.node.type === "split"
+
   return (
     <Switch>
-      <Match when={props.node.type === "split" ? (props.node as Extract<EditorNode, { type: "split" }>) : null}>
+      <Match when={isSplit() ? (props.node as Extract<EditorNode, { type: "split" }>) : null}>
         {(splitNode) => (
-          <SplitPane direction={splitNode().direction} initialSizes={splitNode().sizes}>
-            <For each={splitNode().children}>
-              {(child) => <EditorArea {...props} node={child} />}
-            </For>
-          </SplitPane>
+          <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-background-base overflow-hidden">
+            <div class="flex items-center justify-end px-2 py-0.5 border-b border-border-base bg-surface-base shrink-0 gap-1">
+              <span class="text-12-regular text-text-weak mr-auto">
+                Editor Groups ({splitNode().children.length})
+              </span>
+              <IconButton
+                icon="close"
+                variant="ghost"
+                size="small"
+                class="size-5 rounded"
+                title="Unsplit (Merge All Panels)"
+                onClick={() => props.workspace.mergeAllPanels()}
+              />
+            </div>
+            <SplitPane class="flex-1 min-h-0 min-w-0" direction={splitNode().direction} initialSizes={splitNode().sizes}>
+              <For each={splitNode().children}>
+                {(child) => <EditorArea {...props} node={child} />}
+              </For>
+            </SplitPane>
+          </div>
         )}
       </Match>
       <Match when={props.node.type === "group"}>
