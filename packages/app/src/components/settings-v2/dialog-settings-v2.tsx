@@ -14,6 +14,7 @@ import { SettingsMcpV2 } from "./mcp"
 import { SettingsPluginsV2 } from "./plugins"
 import { SettingsToolsV2 } from "./tools"
 import { SettingsSkillsV2 } from "./skills"
+import { SettingsAutoApproveV2 } from "./auto-approve"
 
 export const DialogSettings: Component = () => {
   const language = useLanguage()
@@ -36,6 +37,10 @@ export const DialogSettings: Component = () => {
                     <TabsV2.Trigger value="shortcuts">
                       <Icon name="keyboard" />
                       {language.t("settings.tab.shortcuts")}
+                    </TabsV2.Trigger>
+                    <TabsV2.Trigger value="auto-approve">
+                      <Icon name="code" />
+                      Auto-Approve
                     </TabsV2.Trigger>
                   </div>
                 </div>
@@ -86,6 +91,9 @@ export const DialogSettings: Component = () => {
         </TabsV2.Content>
         <TabsV2.Content value="shortcuts" class="settings-v2-panel">
           <SettingsKeybinds v2 />
+        </TabsV2.Content>
+        <TabsV2.Content value="auto-approve" class="settings-v2-panel">
+          <SettingsAutoApproveV2 />
         </TabsV2.Content>
         <TabsV2.Content value="servers" class="settings-v2-panel">
           <SettingsServersV2 />

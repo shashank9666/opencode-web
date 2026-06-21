@@ -217,6 +217,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const comments = useComments()
   const dialog = useDialog()
   const command = useCommand()
+  const [browserPanelOpen, setBrowserPanelOpen] = createSignal(false)
+
   const permission = usePermission()
   const language = useLanguage()
   const platform = usePlatform()
@@ -1616,7 +1618,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       variant="ghost"
                       size="small"
                       class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                      onClick={() => window.open("http://localhost:3000", "_blank")}
+                      onClick={() => setBrowserPanelOpen(!browserPanelOpen())}
                       aria-label="Playwright Stream"
                     />
                   </Tooltip>
@@ -1632,6 +1634,34 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   Review Changes
                 </Button>
               </div>
+              <Show when={browserPanelOpen()}>
+                <div class="flex items-center justify-between w-full px-3 py-2 bg-surface-raised-base border-b border-v2-border-border-muted/30">
+                  <div class="flex items-center gap-2 text-text-weak text-12-regular">
+                    <span class="flex items-center gap-1">
+                      <Icon name="browser" size="small" />
+                      Browser
+                    </span>
+                    <div class="w-px h-3 bg-border-base" />
+                    <span>0 pages</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Button variant="ghost" size="small" class="text-text-weak hover:text-text-base">
+                      <Icon name="reset" size="small" />
+                      Refresh
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      size="small" 
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent("open-playwright-preview"))
+                        // Or open current origin if "without port" meant something else, but this invokes the IDE's built-in preview tab.
+                      }}
+                    >
+                      Launch
+                    </Button>
+                  </div>
+                </div>
+              </Show>
               <PromptDragOverlay
                 type={store.draggingType}
                 label={language.t(

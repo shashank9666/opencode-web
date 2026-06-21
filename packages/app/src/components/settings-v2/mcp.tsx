@@ -88,6 +88,8 @@ export const SettingsMcpV2: Component = () => {
         <h2 class="settings-v2-tab-title">MCP Servers</h2>
         <p class="settings-v2-tab-description">
           Manage your Model Context Protocol (MCP) servers. MCP servers extend the capabilities of the agent.
+          <br /><br />
+          <strong>Note:</strong> Playwright will be enabled by default and is recommended. Without it, browser-based testing won't work.
         </p>
       </div>
 

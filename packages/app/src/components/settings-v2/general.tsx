@@ -427,18 +427,6 @@ export const SettingsGeneralV2: Component = () => {
             />
           </div>
         </SettingsRowV2>
-
-        <SettingsRowV2
-          title={language.t("settings.general.row.inlineCodeSuggestions.title")}
-          description={language.t("settings.general.row.inlineCodeSuggestions.description")}
-        >
-          <div data-action="settings-inline-code-suggestions">
-            <Switch
-              checked={settings.general.inlineCodeSuggestions()}
-              onChange={(checked) => settings.general.setInlineCodeSuggestions(checked)}
-            />
-          </div>
-        </SettingsRowV2>
       </SettingsListV2>
     </div>
   )

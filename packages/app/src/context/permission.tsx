@@ -44,6 +44,17 @@ function hasPermissionPromptRules(permission: unknown) {
   return Object.values(config).some(isNonAllowRule)
 }
 
+export interface GranularPermissions {
+  readProjectFiles: boolean
+  readAllFiles: boolean
+  editProjectFiles: boolean
+  editAllFiles: boolean
+  executeSafeCommands: boolean
+  executeAllCommands: boolean
+  useBrowser: boolean
+  useMcpServers: boolean
+}
+
 export const { use: usePermission, provider: PermissionProvider } = createSimpleContext({
   name: "Permission",
   gate: false,
@@ -61,15 +72,33 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
 
     const [store, setStore, _, ready] = persisted(
       {
-        ...Persist.serverGlobal(serverSDK().scope, "permission", ["permission.v3"]),
+        ...Persist.serverGlobal(serverSDK().scope, "permission", ["permission.v4"]),
         migrate(value) {
           if (!value || typeof value !== "object" || Array.isArray(value)) return value
 
           const data = value as Record<string, unknown>
-          if (data.autoAccept) return value
+          
+          let autoApproveSettings = data.autoApproveSettings as GranularPermissions | undefined
+          if (!autoApproveSettings) {
+            autoApproveSettings = {
+              readProjectFiles: true,
+              readAllFiles: false,
+              editProjectFiles: false,
+              editAllFiles: false,
+              executeSafeCommands: true,
+              executeAllCommands: false,
+              useBrowser: false,
+              useMcpServers: false,
+            }
+          }
+
+          if (data.autoAccept) {
+            return { ...data, autoApproveSettings }
+          }
 
           return {
             ...data,
+            autoApproveSettings,
             autoAccept:
               typeof data.autoAcceptEdits === "object" && data.autoAcceptEdits && !Array.isArray(data.autoAcceptEdits)
                 ? data.autoAcceptEdits
@@ -79,6 +108,16 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
       },
       createStore({
         autoAccept: {} as Record<string, boolean>,
+        autoApproveSettings: {
+          readProjectFiles: true,
+          readAllFiles: false,
+          editProjectFiles: false,
+          editAllFiles: false,
+          executeSafeCommands: true,
+          executeAllCommands: false,
+          useBrowser: false,
+          useMcpServers: false,
+        } as GranularPermissions,
       }),
     )
 
@@ -152,7 +191,29 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
 
     function shouldAutoRespond(permission: PermissionRequest, directory?: string) {
       const session = directory ? serverSync().child(directory, { bootstrap: false })[0].session : []
-      return autoRespondsPermission(store.autoAccept, session, permission, directory)
+      if (autoRespondsPermission(store.autoAccept, session, permission, directory)) return true
+
+      const settings = store.autoApproveSettings
+      const action = permission.permission
+
+      if (action === "read" || action === "read_file" || action === "list_dir" || action === "grep_search" || action === "read_url") {
+        return settings.readAllFiles || settings.readProjectFiles
+      }
+
+      if (action === "edit" || action === "write" || action === "replace_file_content" || action === "write_to_file" || action === "multi_replace_file_content") {
+        return settings.editAllFiles || settings.editProjectFiles
+      }
+
+      if (action === "execute" || action === "bash" || action === "run_command") {
+        // Safe commands logic can be refined later; for now we approve if either is set, 
+        // or we only approve if executeAllCommands is true. Let's approve if safe is checked.
+        return settings.executeAllCommands || settings.executeSafeCommands
+      }
+
+      if (action === "browser" && settings.useBrowser) return true
+      if (action === "mcp" && settings.useMcpServers) return true
+
+      return false
     }
 
     function bumpEnableVersion(sessionID: string, directory?: string) {
@@ -244,6 +305,14 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
       respond,
       autoResponds(permission: PermissionRequest, directory?: string) {
         return shouldAutoRespond(permission, directory)
+      },
+      autoApproveSettings: () => store.autoApproveSettings,
+      setAutoApproveSettings: (settings: Partial<GranularPermissions>) => {
+        setStore(
+          produce((draft) => {
+            draft.autoApproveSettings = { ...draft.autoApproveSettings, ...settings }
+          }),
+        )
       },
       isAutoAccepting,
       isAutoAcceptingDirectory,
