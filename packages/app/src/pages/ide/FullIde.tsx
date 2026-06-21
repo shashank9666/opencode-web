@@ -483,8 +483,13 @@ export default function FullIde() {
         await file.load(path)
         const state = file.get(path)
         if (state?.content?.type === "text") {
-          editor.openFile(path, state.content.content)
-          showToast({ title: "Markdown", description: `Opened ${getFilename(path)} — click Preview (eye icon) in tab bar` })
+          const current = editor.activeFile()
+          if (current) editor.closeFile(current)
+          workspace.openFile(path, state.content.content)
+          setDiffMode(false)
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent("open-markdown-preview", { detail: { path } }))
+          }, 50)
         }
       })()
     } else if (isPdfPath(path)) {
@@ -601,8 +606,15 @@ export default function FullIde() {
   // ── Context menu / create / delete ──
   const handleContextMenu = (e: MouseEvent) => {
     const target = e.target as HTMLElement
+    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") {
+      return
+    }
+
     const item = target.closest('[data-component="filetree"] [data-path]')
-    if (!item) return
+    if (!item) {
+      e.preventDefault()
+      return
+    }
     const path = item.getAttribute("data-path") ?? ""
     const isDir = item.getAttribute("data-type") === "directory"
     e.preventDefault()
@@ -1145,22 +1157,11 @@ export default function FullIde() {
                   title = "JavaScript Debug Terminal";
                 }
 
-                setTerminalLoading(profileStr)
-                const prevCount = terminal.all().length
                 if (command) {
                   terminal.newShell({ command, title });
                 } else {
                   terminal.new();
                 }
-                // Watch for the new terminal to appear, then clear loading
-                const unwatch = setInterval(() => {
-                  if (terminal.all().length > prevCount || terminal.all().length === 0) {
-                    setTerminalLoading(null)
-                    clearInterval(unwatch)
-                  }
-                }, 200)
-                // Safety timeout
-                setTimeout(() => { setTerminalLoading(null); clearInterval(unwatch) }, 8000)
               }}
               onSplitTerminal={() => {
                 const activeId = terminal.active()
@@ -1379,7 +1380,7 @@ export default function FullIde() {
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { handleFileClick({ path: contextMenu()!.path, type: "file" }); closeContextMenu() }}>Open</button>
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void (async () => { await file.load(contextMenu()!.path); const state = file.get(contextMenu()!.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(contextMenu()!.path, state.content.content); setDiffMode(false); } })() }}><Icon name="layout-right-partial" class="size-4" /> Open to the Side</button>
             <Show when={isPreviewablePath(contextMenu()!.path)}>
-              <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { openPreview(contextMenu()!.path); closeContextMenu() }}><Icon name="eye" class="size-4" /> Preview</button>
+              <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { openPreview(contextMenu()!.path); closeContextMenu() }}><Icon name="eye" class="size-4" /> Open Preview</button>
             </Show>
             <div class="h-px bg-border-base my-1" />
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { closeContextMenu(); void navigator.clipboard.writeText(contextMenu()!.path); }}>Copy Path<span class="text-11-regular ml-6 opacity-70">Shift+Alt+C</span></button>

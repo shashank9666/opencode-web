@@ -153,6 +153,23 @@ export function EditorAreaGroup(props: {
     ]).get(ext) ?? "Plain Text";
   });
 
+  createEffect(() => {
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<{ path: string }>
+      if (customEvent.detail.path === activeFile()) {
+        setShowPreview(true)
+      }
+    }
+    window.addEventListener("open-markdown-preview", handler)
+    onCleanup(() => window.removeEventListener("open-markdown-preview", handler))
+  })
+
+  // Reset preview when switching files unless both are markdown
+  createEffect(on(activeFile, (next, prev) => {
+    if (prev && next && prev.endsWith(".md") && next.endsWith(".md")) return
+    setShowPreview(false)
+  }))
+
   const hasDiff = createMemo(() => {
     const state = activeFileState();
     return state ? state.originalContent !== undefined : false;
