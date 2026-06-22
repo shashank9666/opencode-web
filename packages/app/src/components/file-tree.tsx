@@ -152,7 +152,7 @@ const FileTreeNode = (
         [local.class ?? ""]: !!local.class,
         [local.nodeClass ?? ""]: !!local.nodeClass,
       }}
-      style={`padding-left: ${Math.max(0, local.level * 12 + 4)}px`}
+      style={`padding-left: ${Math.max(0, local.level * 12 + 4)}px; cursor: pointer;`}
       draggable={local.draggable}
       onDragStart={(event: DragEvent) => {
         if (!local.draggable) return
