@@ -17,7 +17,6 @@
   // By setting these to "ask", the backend will pause and let the 
   // IDE's dynamic Auto-Approve settings decide whether to allow or block.
   "permission": {
-    "*": "allow",
     "read": "ask",
     "edit": "ask",
     "bash": "ask",
