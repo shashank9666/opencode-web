@@ -1,22 +1,30 @@
-import { createSignal } from "solid-js";
+import { createSignal, createMemo } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { IconButton } from "@opencode-ai/ui/icon-button";
 
 export function BrowserPreviewPanel() {
-  const [url, setUrl] = createSignal("http://localhost:8080");
+  const [url, setUrl] = createSignal("");
+
+  const iframeSrc = createMemo(() => {
+    const raw = url().trim();
+    if (!raw) return "";
+    if (raw.match(/^\d+$/)) return `http://localhost:${raw}`;
+    if (!raw.startsWith("http://") && !raw.startsWith("https://")) return `http://${raw}`;
+    return raw;
+  });
 
   return (
     <div class="flex-1 flex flex-col min-h-0 min-w-0 bg-surface-base">
       <div class="flex items-center gap-2 px-3 py-2 border-b border-border-base bg-surface-raised-base shrink-0">
         <Icon name="browser" class="text-icon-base" />
         <span class="text-13-medium text-text-strong">Playwright UI</span>
-        
+
         <div class="w-px h-4 bg-border-base mx-2" />
-        
-        <IconButton 
-          icon="rotate-cw" 
-          variant="ghost" 
-          size="small" 
+
+        <IconButton
+          icon="reset"
+          variant="ghost"
+          size="small"
           onClick={() => {
             const current = url();
             setUrl("");
@@ -24,26 +32,26 @@ export function BrowserPreviewPanel() {
           }}
           title="Reload"
         />
-        
+
         <div class="flex-1" />
-        
+
         <div class="flex items-center gap-2 bg-surface-base border border-border-base rounded px-2 py-1 text-12-regular text-text-weak focus-within:border-border-strong transition-colors">
           <Icon name="link" size="small" />
-          <input 
-            type="text" 
-            value={url()} 
+          <input
+            type="text"
+            value={url()}
             onInput={(e) => setUrl(e.currentTarget.value)}
-            class="bg-transparent border-none outline-none w-80 text-text-strong" 
+            class="bg-transparent border-none outline-none w-80 text-text-strong"
             placeholder="http://localhost:8080"
           />
         </div>
       </div>
-      
+
       <div class="flex-1 relative overflow-hidden bg-background-stronger flex items-center justify-center">
         {url() ? (
           <div class="relative w-full h-full bg-white border-t border-border-base overflow-hidden">
-            <iframe 
-              src={url()} 
+            <iframe
+              src={iframeSrc()}
               class="w-full h-full border-none bg-white"
               title="Browser Preview"
             />
