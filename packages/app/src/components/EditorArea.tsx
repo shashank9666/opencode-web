@@ -121,10 +121,9 @@ export function EditorAreaGroup(props: {
     onCleanup(() => window.removeEventListener("open-markdown-preview", handler))
   })
 
-  // Reset preview when switching files unless both are markdown
-  createEffect(on(activeFile, (next, prev) => {
-    if (prev && next && prev.endsWith(".md") && next.endsWith(".md")) return
-    setShowPreview(false)
+  // Auto-show preview for markdown files, hide for others
+  createEffect(on(activeFile, (next) => {
+    setShowPreview(next !== undefined && next.toLowerCase().endsWith(".md"))
   }))
 
   const hasDiff = createMemo(() => {

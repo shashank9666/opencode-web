@@ -18,7 +18,193 @@
 
 <body class="antialiased overscroll-none text-12-regular overflow-hidden">
   <noscript>You need to enable JavaScript to run this app.</noscript>
-  <div id="root" class="flex flex-col h-dvh p-px"></div>
+  <div id="root" class="flex flex-col h-dvh p-px">
+    <div id="welcome-loader" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#181818;z-index:9999;transition:opacity 0.6s ease, visibility 0.6s ease;">
+      <style>
+        @keyframes wl-type { from { width: 0; } to { width: var(--tw); } }
+        @keyframes wl-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes wl-fade { 0% { opacity: 0; transform: translateY(6px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes wl-dot-pulse { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+        @keyframes wl-success-pop { 0% { opacity: 0; transform: scale(0.6); } 60% { transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes wl-cursor-glow {
+          0%, 100% { box-shadow: 0 0 8px #6ee7b7; }
+          50% { box-shadow: 0 0 20px #6ee7b7, 0 0 40px #34d399; }
+        }
+        @keyframes wl-scan {
+          0% { width: 0; opacity: 0.6; }
+          100% { width: 100%; opacity: 0; }
+        }
+        .wl-container {
+          font-family: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", monospace;
+          min-width: 580px;
+        }
+        .wl-header {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          margin-bottom: 32px;
+          opacity: 0;
+          animation: wl-fade 0.5s ease-out 0.1s forwards;
+        }
+        .wl-logo {
+          width: 64px;
+          height: 64px;
+          border-radius: 14px;
+          border: 1px solid #2a2a2a;
+        }
+        .wl-brand {
+          font-size: 48px;
+          font-weight: 700;
+          color: #e8e8e8;
+          letter-spacing: -0.03em;
+        }
+        .wl-terminal {
+          border: 1px solid #2a2a2a;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #141414;
+        }
+        .wl-titlebar {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-bottom: 1px solid #2a2a2a;
+          background: #1a1a1a;
+        }
+        .wl-titlebar-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+        }
+        .wl-titlebar-label {
+          font-size: 12px;
+          color: #555;
+          margin-left: 8px;
+        }
+        .wl-body {
+          padding: 18px 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .wl-cmd-line {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+          font-size: 20px;
+          font-weight: 600;
+          letter-spacing: -0.01em;
+          margin-bottom: 8px;
+        }
+        .wl-prompt-symbol { color: #6ee7b7; }
+        .wl-cmd {
+          overflow: hidden;
+          white-space: nowrap;
+          border-right: 3px solid #6ee7b7;
+          width: 0;
+          color: #e8e8e8;
+          --tw: 9ch;
+          animation:
+            wl-type 1.2s steps(9) 0.6s forwards,
+            wl-blink 0.7s step-end 1.9s 6,
+            wl-cursor-glow 1.6s ease-in-out 1.9s 3;
+        }
+        .wl-output {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          font-size: 14px;
+        }
+        .wl-line {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          opacity: 0;
+          animation: wl-fade 0.3s ease-out forwards;
+          animation-delay: var(--d);
+        }
+        .wl-line-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        .wl-line .wl-check {
+          color: #6ee7b7;
+          font-size: 13px;
+        }
+        .wl-line-msg { color: #555; letter-spacing: 0.03em; }
+        .wl-line-msg strong { color: #888; font-weight: 500; }
+        .wl-cursor-end {
+          display: inline;
+          color: #6ee7b7;
+          animation: wl-blink 0.7s step-end infinite;
+          margin-left: 2px;
+        }
+        .wl-divider {
+          height: 1px;
+          background: #2a2a2a;
+          margin: 14px 0;
+          opacity: 0;
+          animation: wl-fade 0.3s ease-out 2.8s forwards;
+        }
+        .wl-ready {
+          opacity: 0;
+          animation: wl-fade 0.4s ease-out 3.0s forwards;
+          font-size: 16px;
+          font-weight: 500;
+        }
+        .wl-ready span { color: #6ee7b7; }
+        .wl-scan-line {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, #6ee7b7, transparent);
+          opacity: 0;
+          animation: wl-scan 1.5s ease-out 2.2s forwards;
+          margin-top: 16px;
+        }
+      </style>
+      <div class="wl-container">
+        <div class="wl-header">
+          <img class="wl-logo" src="/favicon-96x96-v3.png" alt="" />
+          <span class="wl-brand">opencode</span>
+        </div>
+        <div class="wl-terminal">
+          <div class="wl-titlebar">
+            <span class="wl-titlebar-dot" style="background:#ff5f57;"></span>
+            <span class="wl-titlebar-dot" style="background:#febc2e;"></span>
+            <span class="wl-titlebar-dot" style="background:#28c840;"></span>
+            <span class="wl-titlebar-label">opencode</span>
+          </div>
+          <div class="wl-body">
+            <div class="wl-cmd-line">
+              <span class="wl-prompt-symbol">~ $</span>
+              <span class="wl-cmd">opencode</span>
+            </div>
+            <div class="wl-output">
+              <div class="wl-line" style="--d:2.0s;">
+                <span class="wl-line-dot" style="background:#6ee7b7;animation:wl-dot-pulse 1s ease-in-out 2.0s infinite;"></span>
+                <span class="wl-line-msg">connecting to server</span>
+                <span class="wl-line-dot" style="background:#6ee7b7;width:4px;height:4px;animation:wl-dot-pulse 1s ease-in-out 2.0s infinite;"></span>
+              </div>
+              <div class="wl-line" style="--d:2.4s;">
+                <span class="wl-line-dot" style="background:#6ee7b7;animation:wl-dot-pulse 1s ease-in-out 2.4s infinite;"></span>
+                <span class="wl-line-msg">loading workspace</span>
+                <span class="wl-line-dot" style="background:#6ee7b7;width:4px;height:4px;animation:wl-dot-pulse 1s ease-in-out 2.4s infinite;"></span>
+              </div>
+              <div class="wl-line" style="--d:2.8s;">
+                <span class="wl-check">&#10003;</span>
+                <span class="wl-line-msg"><strong>ready</strong></span>
+              </div>
+            </div>
+            <div class="wl-divider"></div>
+            <div class="wl-ready"><span>></span> starting ide<span class="wl-cursor-end">_</span></div>
+            <div class="wl-scan-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <script src="/src/entry.tsx" type="module"></script>
 </body>
 

@@ -50,11 +50,7 @@ export default function HeaderBar(props: {
       <div class="flex items-center h-full [app-region:no-drag]">
         {/* Logo */}
         <div class="flex items-center justify-center px-3 h-full cursor-pointer hover:bg-surface-raised-base-hover transition-colors">
-          <svg width="18" height="18" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect width="512" height="512" fill="#131010"></rect>
-            <path d="M320 224V352H192V224H320Z" fill="#5A5858"></path>
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M384 416H128V96H384V416ZM320 160H192V352H320V160Z" fill="currentColor"></path>
-          </svg>
+          <img src="/favicon-96x96-v3.png" alt="OpenCode" width="18" height="18" class="block rounded-[2px]" />
         </div>
 
         {/* Menus */}

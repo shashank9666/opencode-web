@@ -241,4 +241,12 @@ if (root instanceof HTMLElement) {
     ),
     root,
   )
+
+  // Smoothly fade out the welcome loader
+  const loader = document.getElementById("welcome-loader")
+  if (loader) {
+    loader.style.opacity = "0"
+    loader.style.visibility = "hidden"
+    setTimeout(() => loader.remove(), 600)
+  }
 }
