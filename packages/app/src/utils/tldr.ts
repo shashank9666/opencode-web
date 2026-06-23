@@ -11,6 +11,7 @@ export interface TldrEntry {
   platform?: string
 }
 
+// Cache for fetched pages
 const cache = new Map<string, TldrEntry>()
 
 const TLDR_RAW_BASE = "https://raw.githubusercontent.com/tldr-pages/tldr/main/pages"
@@ -32,39 +33,52 @@ function parseTldrContent(content: string, command: string): TldrEntry {
     examples: [],
   }
 
-  let pendingDesc = ""
-
   for (const line of lines) {
     const trimmed = line.trim()
 
     // Skip empty lines and comments
     if (!trimmed || trimmed.startsWith("#")) continue
 
-    // Description line (> prefix)
+    // Description line (first non-empty, non-comment line)
+    if (
+      !entry.description &&
+      !trimmed.startsWith(">") &&
+      !trimmed.startsWith("-") &&
+      !trimmed.startsWith("`")
+    ) {
+      entry.description = trimmed.replace(/> .*/g, "").trim()
+      continue
+    }
+
+    // Example block: starts with > and contains the description
     if (trimmed.startsWith("> ")) {
-      pendingDesc = trimmed
-        .slice(2)
-        .replace(/\{\{(.*?)\}\}/g, (_, match) => `⟨${match}⟩`)
-        .replace(/> .*/g, "")
-        .trim()
+      // The next line should be the command
       continue
     }
 
     // Command line: starts with backtick
     if (trimmed.startsWith("`")) {
-      const cmd = trimmed
-        .replace(/`/g, "")
-        .replace(/\{\{(.*?)\}\}/g, (_, match) => `<${match}>`)
-      if (!entry.description && pendingDesc) {
-        entry.description = pendingDesc
-      }
-      entry.examples.push({ command: cmd, description: pendingDesc })
-      pendingDesc = ""
-    }
-  }
+      const cmd = trimmed.replace(/`/g, "").replace(/\{\{(.*?)\}\}/g, (_, match: string) => {
+        // Highlight placeholders
+        return match
+      })
 
-  if (!entry.description && entry.examples.length > 0) {
-    entry.description = `Usage examples for ${command}`
+      // Look back for the description (the > line above)
+      const lastIdx = lines.indexOf(line)
+      let desc = ""
+      for (let i = lastIdx - 1; i >= 0; i--) {
+        if (lines[i].trim().startsWith("> ")) {
+          desc = lines[i]
+            .trim()
+            .slice(2)
+            .replace(/\{\{(.*?)\}\}/g, (_, m: string) => m)
+          break
+        }
+        if (lines[i].trim() === "") break
+      }
+
+      entry.examples.push({ command: cmd, description: desc })
+    }
   }
 
   return entry
@@ -74,10 +88,12 @@ export async function fetchTldr(command: string): Promise<TldrEntry | null> {
   const normalized = command.toLowerCase().trim()
   if (!normalized) return null
 
+  // Check cache
   if (cache.has(normalized)) return cache.get(normalized)!
 
   const platform = getPlatform()
 
+  // Try platform-specific first, then fall back to common
   const paths = [
     `${TLDR_RAW_BASE}/${platform}/${normalized}.md`,
     `${TLDR_RAW_BASE}/common/${normalized}.md`,
@@ -108,6 +124,9 @@ export function formatTldrForTerminal(entry: TldrEntry): string {
   lines.push("Examples:")
   for (const example of entry.examples) {
     lines.push(`  \x1b[36m${example.command}\x1b[0m`)
+    if (example.description) {
+      lines.push(`    ${example.description}`)
+    }
   }
   return lines.join("\n")
 }
@@ -122,6 +141,9 @@ export function formatTldrForChat(entry: TldrEntry): string {
   lines.push("")
   for (const example of entry.examples) {
     lines.push(`- \`${example.command}\``)
+    if (example.description) {
+      lines.push(`  ${example.description}`)
+    }
   }
   return lines.join("\n")
 }

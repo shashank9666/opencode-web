@@ -78,11 +78,11 @@
 | 13 | AI Chat enhancements | ✅ | Already implemented (todo dock, review tab, terminal panel) |
 | 13 | Plan mode | ✅ | Already implemented (SessionTodoDock with progress tracking) |
 | 13 | Browser Preview | ✅ | URL bar, quick connect, history, status indicators, error handling |
+| 9 | Git Blame | ✅ | Server API: GET /api/git/blame, GitHandler, wired into Api + handlers |
 
 ### Not implemented (requires backend APIs):
 | # | Feature | Reason |
 |---|---------|--------|
-| 9 | Git Blame | No `git blame` API in server |
 | 7 | Remote Explorer (real) | No SSH/WSL/Container connection APIs |
 | 22 | Third-party Extension Host | Requires VS Code extension host architecture |
 | 24 | TLDR support | No TLDR integration |

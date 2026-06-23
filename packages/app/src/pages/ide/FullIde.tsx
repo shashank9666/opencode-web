@@ -1219,6 +1219,10 @@ export default function FullIde() {
               <RemotePanel
                 connection={remoteConnection()}
                 onDisconnect={() => setRemoteConnection(null)}
+                onOpenTerminal={(command, title) => {
+                  terminal.newShell({ command, title })
+                  panelManager.showPanel("terminal-area")
+                }}
                 onFileClick={(path) => {
                   // Try to open the remote file in the code editor
                   void (async () => {
