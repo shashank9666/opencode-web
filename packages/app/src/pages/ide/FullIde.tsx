@@ -991,7 +991,7 @@ export default function FullIde() {
     // Note: Ctrl+F, Ctrl+H, Ctrl+/, Shift+Alt+F are handled natively by Monaco when focus is in the editor.
 
     // Toggle word wrap — Alt+Z only when not in editor (Monaco handles its own)
-    if (e.altKey && !isMod && e.key === "z") {
+    if (e.altKey && !isMod && e.key === "z" && !isInput) {
       e.preventDefault()
       setWordWrap(w => w === "off" ? "on" : "off")
     }
@@ -1104,8 +1104,8 @@ export default function FullIde() {
     closeWindow: () => window.close(),
 
     // Edit
-    undo: () => document.execCommand("undo"),
-    redo: () => document.execCommand("redo"),
+    undo: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "undo" } })) },
+    redo: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "redo" } })) },
     cut: () => document.execCommand("cut"),
     copy: () => document.execCommand("copy"),
     paste: () => document.execCommand("paste"),

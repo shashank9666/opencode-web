@@ -128,9 +128,11 @@ export default function SearchPanel(props: {
     setSelectedResultIndex(-1)
     try {
       if (searchMode() === "symbols" && props.onSymbolSearch) {
+        setResults([])
         const syms = await props.onSymbolSearch(q)
         setSymbolResults(syms ?? [])
       } else {
+        setSymbolResults([])
         const result = await props.onSearch(q)
         setResults(result ?? [])
       }
