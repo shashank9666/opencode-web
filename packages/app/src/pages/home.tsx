@@ -1406,4 +1406,3 @@ function HomeTerminalWelcome() {
     </div>
   )
 }
-}

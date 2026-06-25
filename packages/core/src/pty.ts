@@ -210,7 +210,14 @@ export const layer = Layer.effect(
       }
       yield* Effect.logInfo("creating session", { id, cmd: command, args, cwd })
       const { spawn } = yield* Effect.promise(() => pty())
-      const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env }))
+      let proc: Proc
+      try {
+        proc = spawn(command, args, { name: "xterm-256color", cwd, env })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        yield* Effect.logError("PTY spawn failed", { error: message })
+        return yield* Effect.die(new Error(`Failed to create terminal: ${message}`, { cause: error }))
+      }
       const info: Info = {
         id,
         title: input.title || `Terminal ${id.slice(-4)}`,

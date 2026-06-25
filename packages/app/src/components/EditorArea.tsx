@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onCleanup, For, Match, Switch, Show, on } from "solid-js";
+import { createSignal, createMemo, createEffect, onCleanup, For, Show } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { IconButton } from "@opencode-ai/ui/icon-button";
 import { ContextMenu } from "@opencode-ai/ui/context-menu";
@@ -13,7 +13,6 @@ import { useSettings } from "@/context/settings";
 import { useSDK } from "@/context/sdk";
 
 import { Button } from "@opencode-ai/ui/button";
-import { MarkdownPreviewPanel } from "./MarkdownPreviewPanel";
 import { BrowserPreviewPanel } from "./BrowserPreviewPanel";
 
 let draggedTab: { path: string; sourceGroupId: string } | null = null
@@ -55,11 +54,6 @@ export function EditorAreaGroup(props: {
   const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [editorLine, setEditorLine] = createSignal(1);
   const [editorColumn, setEditorColumn] = createSignal(1);
-  const [showPreview, setShowPreview] = createSignal(false)
-  const isMarkdownFile = () => {
-    const f = activeFile()
-    return f ? f.toLowerCase().endsWith(".md") : false
-  }
   const isBrowserPreview = () => activeFile() === "browser://playwright";
 
   const file = useFile();
@@ -109,22 +103,6 @@ export function EditorAreaGroup(props: {
       [".rs", "Rust"], [".py", "Python"], [".go", "Go"],
     ]).get(ext) ?? "Plain Text";
   });
-
-  createEffect(() => {
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<{ path: string }>
-      if (customEvent.detail.path === activeFile()) {
-        setShowPreview(true)
-      }
-    }
-    window.addEventListener("open-markdown-preview", handler)
-    onCleanup(() => window.removeEventListener("open-markdown-preview", handler))
-  })
-
-  // Auto-show preview for markdown files, hide for others
-  createEffect(on(activeFile, (next) => {
-    setShowPreview(next !== undefined && next.toLowerCase().endsWith(".md"))
-  }))
 
   const hasDiff = createMemo(() => {
     const state = activeFileState();
@@ -375,17 +353,6 @@ if (dt) {
             )}
           </For>
           <div class="flex-1 flex justify-end gap-1 px-1">
-            <Show when={isMarkdownFile()}>
-              <IconButton
-                icon={showPreview() ? "code" : "eye"}
-                variant="ghost"
-                size="small"
-                class="size-6 rounded"
-                title={showPreview() ? "Hide Preview" : "Open Preview"}
-                classList={{ "text-accent-base": showPreview() }}
-                onClick={(e: MouseEvent) => { e.stopPropagation(); setShowPreview((p) => !p) }}
-              />
-            </Show>
             <IconButton icon="layout-right" variant="ghost" size="small" class="size-6 rounded" title="Split Right" onClick={(e) => { e.stopPropagation(); const g = group(); if (g) props.workspace.splitGroup(g.id, "horizontal"); }} />
             <IconButton icon="layout-bottom" variant="ghost" size="small" class="size-6 rounded" title="Split Down" onClick={(e) => { e.stopPropagation(); const g = group(); if (g) props.workspace.splitGroup(g.id, "vertical"); }} />
           </div>
@@ -428,7 +395,7 @@ if (dt) {
           </div>
         }>
           {(state) => (
-            <div class="flex-1 relative min-h-0 flex" classList={{ "flex-row": showPreview() && isMarkdownFile(), "flex-col": !(showPreview() && isMarkdownFile()) }}>
+            <div class="flex-1 relative min-h-0 flex flex-col">
               <div class="flex-1 flex flex-col min-h-0">
                 <Show when={/\.(png|jpe?g|gif|svg|webp|ico)$/i.test(state().path)}>
                   <div class="flex-1 flex items-center justify-center p-8 bg-surface-base overflow-auto">
@@ -607,11 +574,7 @@ Completion:`;
                 </>
               </Show>
             </div>
-            <Show when={showPreview() && isMarkdownFile()}>
-              <MarkdownPreviewPanel content={state().content ?? ""} visible={true} />
-            </Show>
-          </div>
-        )}
+          )}
         </Show>
       </Show>
     </div>
