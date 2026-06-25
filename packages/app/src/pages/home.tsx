@@ -406,7 +406,6 @@ function HomeDesign() {
           class="min-h-0 min-w-0 flex-1 flex flex-col pt-12"
           aria-label={language.t("sidebar.project.recentSessions")}
         >
-          <HomeTerminalWelcome />
           <HomeSessionSearch
             value={state.search}
             placeholder={language.t("home.sessions.search.placeholder")}
@@ -1311,98 +1310,3 @@ function LegacyHome() {
   )
 }
 
-function HomeTerminalWelcome() {
-  return (
-    <div
-      class="ml-4 mr-2 mb-6 w-[calc(100%_-_24px)] overflow-hidden rounded-[10px] border border-v2-border-border-muted bg-v2-background-bg-layer-01"
-      style={{ "font-family": '"SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", "Consolas", monospace' }}
-    >
-      <style>{`
-        @keyframes htw-type { from { width: 0; } to { width: var(--tw); } }
-        @keyframes htw-blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes htw-fade { 0% { opacity: 0; transform: translateY(4px); } 100% { opacity: 1; transform: translateY(0); } }
-        @keyframes htw-dot-pulse { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
-        @keyframes htw-check { 0% { opacity: 0; transform: scale(0.5); } 60% { transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
-        .htw-line {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          opacity: 0;
-          animation: htw-fade 0.3s ease-out forwards;
-          animation-delay: var(--d);
-        }
-        .htw-line .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          flex-shrink: 0;
-          animation: htw-dot-pulse 1.2s ease-in-out infinite;
-          animation-delay: var(--d);
-        }
-        .htw-line .dot.done {
-          animation: none;
-          background: #6ee7b7 !important;
-        }
-        .htw-line .check {
-          color: #6ee7b7;
-          font-size: 11px;
-          opacity: 0;
-          animation: htw-check 0.3s ease-out forwards;
-          animation-delay: var(--d);
-        }
-        .htw-cursor {
-          color: #6ee7b7;
-          animation: htw-blink 0.7s step-end infinite;
-          margin-left: 1px;
-        }
-      `}</style>
-      {/* Title bar */}
-      <div class="flex items-center gap-2 px-3 py-1.5 border-b border-v2-border-border-muted">
-        <div class="flex gap-1.5">
-          <span class="w-[10px] h-[10px] rounded-full bg-[#ff5f57]" />
-          <span class="w-[10px] h-[10px] rounded-full bg-[#febc2e]" />
-          <span class="w-[10px] h-[10px] rounded-full bg-[#28c840]" />
-        </div>
-        <span class="text-[11px] text-v2-text-text-muted ml-1">terminal</span>
-      </div>
-      {/* Terminal body */}
-      <div class="px-4 py-3 flex flex-col gap-1 text-[13px] leading-5">
-        <div class="flex items-baseline gap-2 text-v2-text-text-muted">
-          <span class="text-[#6ee7b7] font-semibold">~ $</span>
-          <span class="text-v2-text-text-base font-medium">opencode</span>
-        </div>
-        <div
-          class="htw-line"
-          style={{ "--d": "0.4s", "--tw": "24ch" }}
-        >
-          <span class="dot" style={{ background: "#6ee7b7" }} />
-          <span class="text-v2-text-text-muted">connecting to server</span>
-          <span class="dot" style={{ background: "#6ee7b7", width: "4px", height: "4px" }} />
-        </div>
-        <div
-          class="htw-line"
-          style={{ "--d": "1.2s", "--tw": "24ch" }}
-        >
-          <span class="dot" style={{ background: "#6ee7b7" }} />
-          <span class="text-v2-text-text-muted">loading workspace</span>
-          <span class="dot" style={{ background: "#6ee7b7", width: "4px", height: "4px" }} />
-        </div>
-        <div
-          class="htw-line"
-          style={{ "--d": "2.0s" }}
-        >
-          <span class="check">&#10003;</span>
-          <span class="text-v2-text-text-base font-medium">ready</span>
-        </div>
-        <div
-          class="htw-line"
-          style={{ "--d": "2.4s" }}
-        >
-          <span class="text-[#6ee7b7] font-semibold">&gt;</span>
-          <span class="text-v2-text-text-muted">starting ide</span>
-          <span class="htw-cursor">_</span>
-        </div>
-      </div>
-    </div>
-  )
-}

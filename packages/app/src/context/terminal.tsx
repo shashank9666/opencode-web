@@ -437,7 +437,11 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       return entry.value
     }
 
-    const workspace = createMemo(() => loadWorkspace(params.dir!, params.id, scope))
+    const workspace = createMemo(() => {
+      const dir = params.dir
+      if (!dir) return undefined as unknown as ReturnType<typeof createWorkspaceTerminalSession>
+      return loadWorkspace(dir, params.id, scope)
+    })
 
     createEffect(
       on(
