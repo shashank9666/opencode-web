@@ -984,7 +984,25 @@ export default function FullIde() {
     if (isMod && e.shiftKey && e.key === "D") { e.preventDefault(); toggleRightPanel("debug") }
     if (isMod && e.shiftKey && e.key === "T") { e.preventDefault(); toggleRightPanel("testing") }
     if (isMod && e.key === ",") { e.preventDefault(); toggleSettings() }
-    
+
+    // Go to Line — only when focus is NOT in an editor (Monaco handles Ctrl+G natively)
+    if (isMod && !e.shiftKey && e.key === "g" && !isInput) { e.preventDefault(); setCommandPaletteOpen(true) }
+
+    // Note: Ctrl+F, Ctrl+H, Ctrl+/, Shift+Alt+F are handled natively by Monaco when focus is in the editor.
+
+    // Toggle word wrap — Alt+Z only when not in editor (Monaco handles its own)
+    if (e.altKey && !isMod && e.key === "z") {
+      e.preventDefault()
+      setWordWrap(w => w === "off" ? "on" : "off")
+    }
+
+    // Fullscreen — F11
+    if (e.key === "F11") {
+      e.preventDefault()
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => { })
+      else document.exitFullscreen().catch(() => { })
+    }
+
     if (isMod && !e.shiftKey && e.key === "z" && !isInput) { e.preventDefault(); void undoFileAction(sdk()) }
     if (isMod && (e.key === "y" || (e.shiftKey && e.key === "Z")) && !isInput) { e.preventDefault(); void redoFileAction(sdk()) }
 
@@ -1047,7 +1065,24 @@ export default function FullIde() {
       }
     },
     saveAs: () => { showToast({ title: "Save As", description: "Save As dialog coming soon" }) },
-    saveAll: () => { showToast({ title: "Save All", description: "Save All functionality coming soon" }) },
+    saveAll: async () => {
+      const group = workspace.getActiveGroup()
+      if (!group) return
+      let saved = 0
+      for (const fileEntry of group.files) {
+        if (!fileEntry.dirty) continue
+        try {
+          await sdk().client.v2.fs.write({ path: fileEntry.path, content: fileEntry.content })
+          workspace.markClean(fileEntry.path, group.id)
+          saved++
+        } catch (e) {
+          showToast({ variant: "error", title: "Save failed", description: getFilename(fileEntry.path) })
+        }
+      }
+      if (saved > 0) {
+        showToast({ variant: "success", title: "Files saved", description: `${saved} file${saved !== 1 ? "s" : ""} saved` })
+      }
+    },
     closeEditor: () => {
       const activeFile = editor.activeFile()
       if (activeFile) {
@@ -1074,12 +1109,13 @@ export default function FullIde() {
     cut: () => document.execCommand("cut"),
     copy: () => document.execCommand("copy"),
     paste: () => document.execCommand("paste"),
-    find: () => { setCommandPaletteOpen(false); /* find logic */ },
-    replace: () => { /* replace logic */ },
+    find: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "actions.find" } })) },
+    replace: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.startReplace" } })) },
     findInFiles: () => toggleLeftPanel("search"),
-    toggleLineComment: () => { /* trigger editor format */ },
-    toggleBlockComment: () => { /* trigger editor format */ },
+    toggleLineComment: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.commentLine" } })) },
+    toggleBlockComment: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.blockComment" } })) },
     formatDocument: () => setFormatTrigger(f => f + 1),
+    formatSelection: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.formatSelection" } })) },
 
     // Selection
     expandSelection: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.smartSelect.expand" } })) },
@@ -1088,7 +1124,7 @@ export default function FullIde() {
     addCursorAbove: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.insertCursorAbove" } })) },
     addCursorBelow: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.insertCursorBelow" } })) },
     selectLine: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.expandLineSelection" } })) },
-    selectWord: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.wordHighlight.trigger" } })) },
+    selectWord: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.smartSelect.expand" } })) },
 
     // View
     toggleExplorer: () => toggleLeftPanel("explorer"),
@@ -1112,16 +1148,17 @@ export default function FullIde() {
     goToSymbolWorkspace: () => setCommandPaletteOpen(true),
     goToSymbolEditor: () => setCommandPaletteOpen(true),
     goToLine: () => setCommandPaletteOpen(true),
-    goToDefinition: () => { showToast({ title: "Go to Definition", description: "Coming soon" }) },
-    goToDeclaration: () => { showToast({ title: "Go to Declaration", description: "Coming soon" }) },
-    goToTypeDefinition: () => { showToast({ title: "Go to Type Definition", description: "Coming soon" }) },
-    goToImplementation: () => { showToast({ title: "Go to Implementation", description: "Coming soon" }) },
+    goToDefinition: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.revealDefinition" } })) },
+    goToDeclaration: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.revealDeclaration" } })) },
+    goToTypeDefinition: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.goToTypeDefinition" } })) },
+    goToImplementation: () => { window.dispatchEvent(new CustomEvent("editor-action", { detail: { action: "editor.action.goToImplementation" } })) },
     goBack: () => history.back(),
     goForward: () => history.forward(),
 
     // Run
     runWithoutDebugging: () => toggleLeftPanel("run-debug"),
     startDebugging: () => toggleLeftPanel("run-debug"),
+    stopDebugging: () => { showToast({ title: "Stop Debugging", description: "No active debugging session" }) },
 
     newTerminal: () => { terminal.new(); panelManager.showPanel("terminal-area") },
     splitTerminal: () => {

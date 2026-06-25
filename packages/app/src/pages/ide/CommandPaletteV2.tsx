@@ -66,7 +66,6 @@ export default function CommandPaletteV2(props: {
   const [searching, setSearching] = createSignal(false)
   const [pinned, setPinned] = createSignal<Set<string>>(new Set())
   const [recentIds, setRecentIds] = createSignal<string[]>(loadRecent())
-  const [showRecent, setShowRecent] = createSignal(false)
   let inputRef: HTMLInputElement | undefined
   let listRef: HTMLDivElement | undefined
   let searchTimer: ReturnType<typeof setTimeout> | undefined
@@ -127,11 +126,10 @@ export default function CommandPaletteV2(props: {
     })
 
     // When no query, show recent commands first
-    if (!q && !showRecent()) {
+    if (!q) {
       const recentSet = new Set(recentIds())
       const recentCmds = baseCmds.filter(cmd => recentSet.has(cmd.id)).slice(0, 5)
       if (recentCmds.length > 0) {
-        // Add "Show All" option at the end
         return [...recentCmds, ...cmds.filter(cmd => !recentSet.has(cmd.id))]
       }
     }

@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, For, Show, onMount, type Component } from "solid-js"
+import { createSignal, For, Show } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 
 export type MenuItem = {
@@ -129,7 +129,7 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
   const SELECTION_MENU: MenuItem = {
     label: "Selection",
     submenu: [
-      { label: "Select All", shortcut: "Ctrl+A", action: actions.undo },
+      { label: "Select All", shortcut: "Ctrl+A" },
       { label: "Expand Selection", shortcut: "Shift+Alt+→", action: actions.expandSelection },
       { label: "Shrink Selection", shortcut: "Shift+Alt+←", action: actions.shrinkSelection },
       { separator: true },

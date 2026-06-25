@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, onCleanup, Show, For } from "solid-js"
+import { createSignal, createMemo, createEffect, Show, For } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -198,16 +198,17 @@ export function BrowserPreviewPanel() {
   const launchPlaywright = (targetUrl?: string) => {
     const launchUrl = targetUrl || url() || "http://localhost:3000"
     const newId = `browser-${Date.now()}`
-    const newBrowser: BrowserInstance = {
-      id: newId,
-      url: launchUrl,
-      title: `Browser ${browserInstances().length + 1}`,
-      status: "loading",
-      createdAt: Date.now(),
-      loadTime: null,
-    }
+    const nextNumber = browserInstances().length + 1
 
     setBrowserInstances(prev => {
+      const newBrowser: BrowserInstance = {
+        id: newId,
+        url: launchUrl,
+        title: `Browser ${nextNumber}`,
+        status: "loading",
+        createdAt: Date.now(),
+        loadTime: null,
+      }
       const updated = [...prev, newBrowser]
       saveBrowserInstances(updated)
       return updated

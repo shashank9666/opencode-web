@@ -1,4 +1,4 @@
-import { createSignal, For, Show, createMemo, onMount, onCleanup } from "solid-js"
+import { createSignal, For, Show, createMemo } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -153,24 +153,32 @@ export default function SearchPanel(props: {
     setSelectedResultIndex(-1)
   }
 
-  // Keyboard navigation in results
+  // Keyboard navigation in results — only when not typing in input
   const handleKeyDown = (e: KeyboardEvent) => {
+    const target = e.target as HTMLElement
+    const isInput = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA"
+
+    // In the search input, Enter performs search (handled by input's own onKeyDown).
+    // Arrow keys in input should work normally (cursor movement).
+    if (isInput) return
+
     if (e.key === "ArrowDown") {
       e.preventDefault()
-      setSelectedResultIndex(prev => prev + 1)
+      setSelectedResultIndex(prev => Math.min(prev + 1, totalResultCount() - 1))
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
       setSelectedResultIndex(prev => Math.max(0, prev - 1))
     } else if (e.key === "Enter") {
       e.preventDefault()
       const idx = selectedResultIndex()
+      if (idx < 0) return
       if (searchMode() === "symbols") {
         const sym = symbolResults()[idx]
         if (sym) props.onResultClick({ path: sym.path, line: sym.line })
       } else {
         const grouped = groupedResults()
         let count = 0
-        for (const [path, fileResults] of grouped) {
+        for (const [, fileResults] of grouped) {
           for (const r of fileResults) {
             if (count === idx) {
               props.onResultClick({ path: r.path.text, line: r.line_number, column: r.submatches?.[0]?.start ?? 0 })
@@ -181,6 +189,12 @@ export default function SearchPanel(props: {
         }
       }
     }
+  }
+
+  // Total number of results for keyboard navigation bounds
+  const totalResultCount = () => {
+    if (searchMode() === "symbols") return symbolResults().length
+    return results().length
   }
 
   // Symbol kind icon mapping
@@ -470,6 +484,7 @@ export default function SearchPanel(props: {
               {symbolResults().length} symbol{symbolResults().length !== 1 ? "s" : ""}
             </span>
           </Show>
+          <Show when={(searchMode() === "files" && results().length > 0) || (searchMode() === "symbols" && symbolResults().length > 0)}>
             <button
               type="button"
               class="text-11-medium px-1.5 py-0.5 rounded text-text-weaker hover:text-text-weak hover:bg-surface-raised-base-hover transition-colors"

@@ -2,7 +2,7 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import FileTree from "@/components/file-tree"
 import { useFile } from "@/context/file"
-import { createSignal, createEffect, onCleanup, Show } from "solid-js"
+import { createSignal, createEffect, Show } from "solid-js"
 
 export interface ExplorerPanelProps {
   dirName: string
