@@ -17,7 +17,7 @@ export const SettingsNetworkV2: Component = () => {
   const hostname = createMemo(() => serverConfig()?.hostname ?? "")
   const port = createMemo(() => serverConfig()?.port ?? "")
   const mdns = createMemo(() => serverConfig()?.mdns ?? true)
-  const corsOrigins = createMemo(() => serverConfig()?.cors?.origin ?? [])
+  const corsOrigins = createMemo(() => serverConfig()?.cors ?? [])
 
   const setServerConfig = async (patch: Record<string, unknown>) => {
     const current = serverConfig() ?? {}
@@ -29,8 +29,7 @@ export const SettingsNetworkV2: Component = () => {
       .split(/[\s,]+/)
       .map((s) => s.trim())
       .filter(Boolean)
-    const current = serverConfig() ?? {}
-    await serverSync().updateConfig({ server: { ...current, cors: { origin: origins } } })
+    await setServerConfig({ cors: origins })
   }
 
   return (

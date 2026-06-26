@@ -11,6 +11,8 @@ import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
 import "./settings-v2.css"
 
+type LspConfigValue = { disabled: true } | { command: string[]; extensions?: string[]; disabled?: boolean }
+
 export const SettingsLspV2: Component = () => {
   const language = useLanguage()
   const serverSync = useServerSync()
@@ -22,8 +24,8 @@ export const SettingsLspV2: Component = () => {
 
   const lspMap = createMemo(() => {
     const v = serverSync().data.config.lsp
-    if (typeof v === "object" && v !== null) return v as Record<string, { disabled?: boolean; command?: string[]; extensions?: string[] }>
-    return {} as Record<string, { disabled?: boolean; command?: string[]; extensions?: string[] }>
+    if (typeof v === "object" && v !== null) return v as Record<string, LspConfigValue>
+    return {} as Record<string, LspConfigValue>
   })
 
   const [newLsp, setNewLsp] = createStore({ name: "", command: "", extensions: "" })
@@ -41,35 +43,39 @@ export const SettingsLspV2: Component = () => {
 
   const addLsp = async () => {
     if (!newLsp.name.trim()) return
-    const map = lspMap()
     const commandArr = newLsp.command.trim() ? newLsp.command.trim().split(/\s+/) : undefined
     const extensionsArr = newLsp.extensions.trim() ? newLsp.extensions.trim().split(/,\s*/) : undefined
-
+    const map = lspMap()
     map[newLsp.name.trim()] = {
-      command: commandArr ?? [],
+      command: commandArr ?? ["true"],
       extensions: extensionsArr,
-    }
-
-    await serverSync().updateConfig({ lsp: { ...map } })
+    } as LspConfigValue
+    await serverSync().updateConfig({ lsp: { ...map } as any })
     setNewLsp({ name: "", command: "", extensions: "" })
   }
 
   const removeLsp = async (name: string) => {
     const map = { ...lspMap() }
     delete map[name]
-    const remaining = Object.keys(map)
-    await serverSync().updateConfig({ lsp: remaining.length > 0 ? { ...map } : true })
+    await serverSync().updateConfig({ lsp: Object.keys(map).length > 0 ? ({ ...map } as any) : true })
   }
 
   const toggleLsp = async (name: string, disabled: boolean) => {
     const map = { ...lspMap() }
-    if (name in map) {
-      map[name] = { ...map[name], disabled }
+    const existing = map[name]
+    if (existing && "disabled" in existing && existing.disabled === true) {
+      map[name] = { command: ["true"], disabled: false } as LspConfigValue
+    } else if (existing && "command" in existing) {
+      map[name] = { ...existing, disabled }
     } else {
-      map[name] = { disabled } as any
+      map[name] = { disabled: true } as LspConfigValue
     }
-    await serverSync().updateConfig({ lsp: { ...map } })
+    await serverSync().updateConfig({ lsp: { ...map } as any })
   }
+
+  const isDisabled = (cfg: LspConfigValue) => "disabled" in cfg && cfg.disabled === true
+  const getCommand = (cfg: LspConfigValue) => "command" in cfg ? cfg.command : undefined
+  const getExtensions = (cfg: LspConfigValue) => "extensions" in cfg ? cfg.extensions : undefined
 
   return (
     <>
@@ -144,16 +150,16 @@ export const SettingsLspV2: Component = () => {
                         <div class="flex items-center gap-2">
                           <span class="text-13-medium text-text-base">{name}</span>
                         </div>
-                        <Show when={cfg.command}>
-                          <span class="text-11-regular text-text-muted font-mono truncate">{cfg.command?.join(" ")}</span>
+                        <Show when={getCommand(cfg)}>
+                          <span class="text-11-regular text-text-muted font-mono truncate">{getCommand(cfg)?.join(" ")}</span>
                         </Show>
-                        <Show when={cfg.extensions}>
-                          <span class="text-11-regular text-text-muted">{cfg.extensions?.join(", ")}</span>
+                        <Show when={getExtensions(cfg)}>
+                          <span class="text-11-regular text-text-muted">{getExtensions(cfg)?.join(", ")}</span>
                         </Show>
                       </div>
                       <div class="flex items-center gap-2">
                         <Switch
-                          checked={!cfg.disabled}
+                          checked={!isDisabled(cfg)}
                           onChange={(v) => toggleLsp(name, !v)}
                         />
                         <IconButtonV2

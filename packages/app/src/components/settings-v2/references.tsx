@@ -1,6 +1,7 @@
 import { Component, For, Show, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
+import { Switch } from "@opencode-ai/ui/v2/switch-v2"
 import { TextInputV2 } from "@opencode-ai/ui/v2/text-input-v2"
 import { Icon as IconV2 } from "@opencode-ai/ui/v2/icon"
 import { IconButtonV2 } from "@opencode-ai/ui/v2/icon-button-v2"
@@ -10,9 +11,10 @@ import { useServerSync } from "@/context/server-sync"
 import { SettingsListV2 } from "./parts/list"
 import "./settings-v2.css"
 
-type ReferenceType = "local" | "git" | "url"
+type RefValue = string | { repository: string; branch?: string; description?: string; hidden?: boolean } | { path: string; description?: string; hidden?: boolean }
+type RefType = "url" | "git" | "local"
 
-const REFERENCE_TYPE_OPTIONS: { value: ReferenceType; label: string }[] = [
+const REF_TYPE_OPTIONS: { value: RefType; label: string }[] = [
   { value: "local", label: "Local directory" },
   { value: "git", label: "Git repository" },
   { value: "url", label: "URL" },
@@ -24,35 +26,54 @@ export const SettingsReferencesV2: Component = () => {
 
   const references = createMemo(() => {
     const refs = serverSync().data.config.references ?? serverSync().data.config.reference ?? {}
-    return Object.entries(refs).map(([name, cfg]) => ({
-      name,
-      config: typeof cfg === "string" ? cfg : cfg,
-      type: (typeof cfg === "string" ? "url" : "git" in (cfg ?? {}) ? "git" : "local") as ReferenceType,
-    }))
+    return Object.entries(refs).map(([name, cfg]) => {
+      let type: RefType
+      if (typeof cfg === "string") {
+        type = "url"
+      } else if ("repository" in cfg) {
+        type = "git"
+      } else {
+        type = "local"
+      }
+      return { name, cfg, type }
+    })
   })
 
-  const [newRef, setNewRef] = createStore({ name: "", type: "url" as ReferenceType, value: "" })
+  const [newRef, setNewRef] = createStore({ name: "", type: "url" as RefType, value: "" })
+  const [newRefOpts, setNewRefOpts] = createStore({ branch: "", description: "", hidden: false })
 
   const addReference = async () => {
     if (!newRef.name.trim() || !newRef.value.trim()) return
     const refs = { ...(serverSync().data.config.references ?? {}) }
 
     if (newRef.type === "git") {
-      refs[newRef.name.trim()] = { git: newRef.value.trim() }
+      const entry: { repository: string; branch?: string; description?: string } = { repository: newRef.value.trim() }
+      if (newRefOpts.branch.trim()) entry.branch = newRefOpts.branch.trim()
+      if (newRefOpts.description.trim()) entry.description = newRefOpts.description.trim()
+      refs[newRef.name.trim()] = entry
     } else if (newRef.type === "local") {
-      refs[newRef.name.trim()] = { local: newRef.value.trim() }
+      const entry: { path: string; description?: string } = { path: newRef.value.trim() }
+      if (newRefOpts.description.trim()) entry.description = newRefOpts.description.trim()
+      refs[newRef.name.trim()] = entry
     } else {
       refs[newRef.name.trim()] = newRef.value.trim()
     }
 
     await serverSync().updateConfig({ references: refs })
     setNewRef({ name: "", type: "url", value: "" })
+    setNewRefOpts({ branch: "", description: "", hidden: false })
   }
 
   const removeReference = async (name: string) => {
     const refs = { ...(serverSync().data.config.references ?? {}) }
     delete refs[name]
     await serverSync().updateConfig({ references: refs })
+  }
+
+  const displayValue = (cfg: RefValue) => {
+    if (typeof cfg === "string") return cfg
+    if ("repository" in cfg) return cfg.repository
+    return cfg.path
   }
 
   return (
@@ -77,11 +98,16 @@ export const SettingsReferencesV2: Component = () => {
             />
             <SelectV2
               appearance="inline"
-              options={REFERENCE_TYPE_OPTIONS}
-              current={REFERENCE_TYPE_OPTIONS.find((o) => o.value === newRef.type)}
-              value={(o) => o.value}
-              label={(o) => o.label}
-              onSelect={(option) => option && setNewRef("type", option.value as ReferenceType)}
+              options={REF_TYPE_OPTIONS}
+              current={REF_TYPE_OPTIONS.find((o) => o.value === newRef.type)}
+              value={(o: { value: string }) => o.value}
+              label={(o: { value: string; label: string }) => o.label}
+              onSelect={(option) => {
+                if (option) {
+                  setNewRef("type", option.value as RefType)
+                  setNewRefOpts({ branch: "", description: "", hidden: false })
+                }
+              }}
             />
             <TextInputV2
               type="text"
@@ -95,6 +121,22 @@ export const SettingsReferencesV2: Component = () => {
                     ? "./path/to/directory"
                     : "https://example.com/docs"
               }
+            />
+            <Show when={newRef.type === "git"}>
+              <TextInputV2
+                type="text"
+                appearance="base"
+                value={newRefOpts.branch}
+                onInput={(e) => setNewRefOpts("branch", e.currentTarget.value)}
+                placeholder="Branch (optional)"
+              />
+            </Show>
+            <TextInputV2
+              type="text"
+              appearance="base"
+              value={newRefOpts.description}
+              onInput={(e) => setNewRefOpts("description", e.currentTarget.value)}
+              placeholder="Description (optional)"
             />
             <div>
               <ButtonV2 variant="ghost-muted" icon="plus" onClick={addReference}>
@@ -123,13 +165,7 @@ export const SettingsReferencesV2: Component = () => {
                         <span class="text-13-medium text-text-base">{ref.name}</span>
                         <span class="text-11-regular text-text-weaker capitalize">{ref.type}</span>
                       </div>
-                      <span class="text-11-regular text-text-muted truncate">
-                        {typeof ref.config === "string"
-                          ? ref.config
-                          : "git" in ref.config
-                            ? (ref.config as { git: string }).git
-                            : (ref.config as { local: string }).local}
-                      </span>
+                      <span class="text-11-regular text-text-muted truncate font-mono">{displayValue(ref.cfg)}</span>
                     </div>
                     <IconButtonV2
                       icon={<IconV2 name="close" size="small" />}
