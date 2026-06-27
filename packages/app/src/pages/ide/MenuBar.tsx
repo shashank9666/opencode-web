@@ -458,7 +458,7 @@ export function buildMenus(actions: Partial<IdeActions>, workspaceName?: string)
     ],
   }
 
-  return [FILE_MENU, EDIT_MENU, SELECTION_MENU, VIEW_MENU, GO_MENU, RUN_MENU, OPENCODE_WEB_MENU, PSF_MENU, EXPLORER_MENU, TERMINAL_MENU, HELP_MENU]
+  return [FILE_MENU, EDIT_MENU, SELECTION_MENU, VIEW_MENU, GO_MENU, RUN_MENU, TERMINAL_MENU, HELP_MENU]
 }
 
 // Keep a backward compatible default MENUS array if needed elsewhere
