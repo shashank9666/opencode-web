@@ -2374,14 +2374,21 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         </Popover>
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Background Terminals">
-                        <IconButton
-                          icon="terminal"
-                          variant="ghost"
-                          size="small"
-                          class="size-6 rounded"
-                          onClick={() => showToast({ title: "Background Terminals", description: "Coming soon" })}
-                          aria-label="Background Terminals"
-                        />
+                        <div class="relative">
+                          <IconButton
+                            icon="terminal"
+                            variant="ghost"
+                            size="small"
+                            class="size-6 rounded"
+                            onClick={() => command.trigger("terminal.toggle")}
+                            aria-label="Background Terminals"
+                          />
+                          <Show when={terminal.all().length > 0}>
+                            <div class="absolute right-[1px] bottom-[1px] size-[12px] rounded-full bg-surface-base flex items-center justify-center">
+                              <div class="size-[10px] rounded-full bg-[#007AFF] text-[8px] flex items-center justify-center text-white">{terminal.all().length}</div>
+                            </div>
+                          </Show>
+                        </div>
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Artifacts">
                         <Popover

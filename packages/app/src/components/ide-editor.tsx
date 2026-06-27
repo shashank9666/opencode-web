@@ -525,25 +525,31 @@ export function IdeDiffEditor(props: {
         const maxLine = Math.max(...changes.map(c => c.modifiedEndLineNumber || c.modifiedStartLineNumber))
         
         const widgetNode = document.createElement("div")
-        widgetNode.className = "flex items-center z-50 overflow-hidden rounded-md shadow-lg border border-border-base bg-surface-raised-base px-3 py-1.5 gap-3"
+        widgetNode.className = "flex items-center z-50 overflow-hidden rounded-md shadow-2xl border border-[#3c3c3c] bg-[#1e1e1e]"
         
         render(() => (
           <>
             {props.onAccept && (
-              <button class="flex items-center gap-1.5 text-12-medium text-text-strong hover:text-accent-base transition-colors" onClick={props.onAccept}>
-                Accept Changes <span class="opacity-60 text-11-regular">Ctrl+Enter</span>
+              <button 
+                class="flex items-center gap-2 px-3 py-1.5 text-12-medium text-white bg-[#0e639c] hover:bg-[#1177bb] transition-colors"
+                onClick={props.onAccept}
+              >
+                Accept Changes <span class="opacity-70 text-11-regular font-normal">Ctrl+↵</span>
               </button>
             )}
             {props.onReject && (
-              <button class="flex items-center gap-1.5 text-12-medium text-text-weak hover:text-text-base transition-colors" onClick={props.onReject}>
-                Reject <span class="opacity-60 text-11-regular">Ctrl+⌫</span>
+              <button 
+                class="flex items-center gap-2 px-3 py-1.5 text-12-medium text-[#cccccc] bg-transparent hover:bg-[#333333] transition-colors"
+                onClick={props.onReject}
+              >
+                Reject <span class="opacity-70 text-11-regular font-normal">Ctrl+⌫</span>
               </button>
             )}
-            <div class="w-px h-3 bg-border-base mx-1" />
-            <div class="flex items-center gap-1 text-text-weak text-11-regular">
-              <Icon name="arrow-up" class="size-3 cursor-pointer hover:text-text-base" onClick={prevDiff} />
-              <Icon name="arrow-down" class="size-3 cursor-pointer hover:text-text-base" onClick={nextDiff} />
-              <span class="opacity-60 ml-1">Alt+J</span>
+            <div class="w-[1px] self-stretch bg-[#3c3c3c]" />
+            <div class="flex items-center gap-1.5 px-3 py-1.5 text-[#cccccc] text-12-regular">
+              <Icon name="arrow-up" class="size-3.5 cursor-pointer hover:text-white" onClick={prevDiff} />
+              <Icon name="arrow-down" class="size-3.5 cursor-pointer hover:text-white" onClick={nextDiff} />
+              <span class="opacity-70 ml-1 font-normal">Alt+J</span>
             </div>
           </>
         ), widgetNode)

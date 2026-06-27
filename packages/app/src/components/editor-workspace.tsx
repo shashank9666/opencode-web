@@ -203,6 +203,44 @@ export function createEditorWorkspace() {
     setRootNode(prev => splitNodeRec(prev));
   };
 
+  const closeGroup = (groupId: string) => {
+    const removeGroupRec = (node: EditorNode): EditorNode | null => {
+      if (node.type === "group") {
+        if (node.group.id === groupId) return null;
+        return node;
+      }
+      if (node.type === "split") {
+        const newChildren = node.children
+          .map(removeGroupRec)
+          .filter((c): c is EditorNode => c !== null);
+          
+        if (newChildren.length === 0) return null;
+        if (newChildren.length === 1) return newChildren[0];
+        
+        if (newChildren.length !== node.children.length) {
+          const newSizes = newChildren.map(() => 100 / newChildren.length);
+          return { ...node, children: newChildren, sizes: newSizes };
+        }
+        return { ...node, children: newChildren };
+      }
+      return node;
+    };
+    
+    setRootNode(prev => {
+      const result = removeGroupRec(prev);
+      if (!result) return prev; // Cannot close last pane
+      
+      if (activeGroupId() === groupId) {
+        const pickFirst = (n: EditorNode): string => {
+          if (n.type === "group") return n.group.id;
+          return pickFirst(n.children[0]);
+        };
+        setActiveGroupId(pickFirst(result));
+      }
+      return result;
+    });
+  };
+
   const getActiveGroup = () => {
     const active = findGroup(rootNode(), activeGroupId());
     if (active) return active;
@@ -233,6 +271,16 @@ export function createEditorWorkspace() {
       } else {
         for (const child of node.children) collect(child);
       }
+    };
+    collect(rootNode());
+    return result;
+  };
+
+  const getGroups = (): EditorGroup[] => {
+    const result: EditorGroup[] = [];
+    const collect = (node: EditorNode) => {
+      if (node.type === "group") result.push(node.group);
+      else for (const child of node.children) collect(child);
     };
     collect(rootNode());
     return result;
@@ -288,11 +336,13 @@ export function createEditorWorkspace() {
     markClean,
     setActiveFile,
     splitGroup,
+    closeGroup,
     mergeAllPanels,
     swapSplitChildren,
     getFileState,
     getActiveGroup,
     getDirtyFiles,
+    getGroups,
     getSnapshot,
     loadSnapshot
   };

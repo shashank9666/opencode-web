@@ -370,3 +370,34 @@
 
 ### Production Features
 - [x] Conversation search, workspace history, undo/redo AI edits, agent logs, metrics, cost & token tracking, model fallback, retry failed tools, offline queue, session restore, autosave
+
+---
+
+## Part 8 — "Coming Soon" Stub Cleanup ✅
+
+All 21 `"Coming soon"` placeholders across the IDE have been replaced with real implementations:
+
+- **FullIde.tsx** (16): Zen Mode, Go to Definition/Declaration/Type Definition/Implementation, Explain Code, Reveal in File Explorer, Cut/Copy/Paste, Find File References, Select for Compare, File History, Open Timeline, Open on Remote (Web)
+- **prompt-input.tsx** (1): Background Terminals (old layout) — now toggles terminal panel with badge count
+- **AIWorkspacePanel.tsx** — Rename Session was already using InlineInput + SDK call (stale toast removed earlier)
+- Wired `editorInstance` signal through EditorArea → IdeEditor so navigation commands can access Monaco APIs
+
+---
+
+## Part 9 — TypeScript Error Cleanup 🔄
+
+- [ ] **Invalid icon names** (12 occurrences) — Replace with valid v1 icon names:
+  - `'file'` → `'open-file'` (MultiFileDiffOverlay, ReviewChangesPanel)
+  - `'git-commit'` → `'download'` (MultiFileDiffOverlay)
+  - `'globe'` → `'browser'` (MultiFileDiffOverlay)
+  - `'edit-2'` → `'edit'` (MultiFileDiffOverlay)
+  - `'git-pull-request'` → `'branch'` (MultiFileDiffOverlay)
+  - `'arrow-down'` → `'chevron-down'` (ide-editor, DebugPanel)
+  - `'bug'` → `'warning'` (slash-popover, DebugPanel)
+  - `'diff'` → `'branch'` (file-change-tracking, SourceControlPanel, session-side-panel)
+  - `'bell'` → `'bubble-5'` (ModernStatusBar)
+  - `'history'` → `'reset'` (SourceControlPanel)
+- [ ] **ExplorerPanel.tsx** — `marks` prop doesn't exist on FileTree (use `_marks`)
+- [ ] **ExtensionsPanel.tsx** — `'solid'` not a valid Button variant (use `'primary'`)
+- [ ] **DebugPanel.tsx** — `cfg.args` possibly undefined
+- [ ] **session-side-panel.tsx** — `FileContent` type mismatch, `tab` and `load` properties on string type

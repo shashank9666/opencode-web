@@ -133,6 +133,7 @@ export function EditorAreaGroup(props: {
   onAcceptDiff?: () => void;
   onRejectDiff?: () => void;
   onCursorChange?: (line: number, column: number) => void;
+  onEditorReady?: (editor: monaco.editor.IStandaloneCodeEditor) => void;
 }) {
   const emptyGroup = { id: "", activeFile: null as string | null, files: [] as OpenFile[] };
   const group = createMemo(() => {
@@ -494,10 +495,29 @@ if (dt) {
       </Show>
       <Show when={!isBrowserPreview() && !activeFile()?.startsWith("preview://") && activeFile() !== "review://changes"}>
         <Show when={activeFileState()} fallback={
-          <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
+          <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none relative group">
+            <Show when={props.workspace.getGroups().length > 1}>
+              <button 
+                class="absolute top-4 right-4 p-2 text-text-weaker hover:text-text-base hover:bg-surface-raised-base rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                onClick={() => props.workspace.closeGroup(props.activeGroupId)}
+                title="Close Split Pane"
+              >
+                <Icon name="close" class="size-5" />
+              </button>
+            </Show>
             <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />
             <div class="text-14-regular">Open a file from the Explorer</div>
             <div class="text-12-regular text-text-weaker">or press <kbd class="px-1.5 py-0.5 bg-surface-base border border-border-base rounded text-11-medium">Ctrl+P</kbd> to search</div>
+            
+            <Show when={props.workspace.getGroups().length > 1}>
+              <Button 
+                variant="secondary" 
+                class="mt-4"
+                onClick={() => props.workspace.closeGroup(props.activeGroupId)}
+              >
+                Close Split Pane
+              </Button>
+            </Show>
           </div>
         }>
           {(state) => (
@@ -541,6 +561,7 @@ if (dt) {
                     }}
                     onEditorReady={(e) => {
                       setEditorInstance(e)
+                      props.onEditorReady?.(e)
                       // Listen for navigate-to-line events dispatched from SearchPanel result clicks
                       const handler = (ev: Event) => {
                         const detail = (ev as CustomEvent<{ path: string; line: number; column: number }>).detail
@@ -668,7 +689,7 @@ Completion:`;
 
 export function EditorArea(props: any) {
   return (
-    <Show when={props.node.type === "split"} fallback={<EditorAreaGroup {...props} />}>
+    <Show when={props.node.type === "split"} fallback={<EditorAreaGroup {...props} onEditorReady={props.onEditorReady} />}>
       <SplitPane
         direction={props.node.direction!}
         initialSizes={props.node.sizes}
