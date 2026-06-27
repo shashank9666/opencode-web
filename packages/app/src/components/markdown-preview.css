@@ -1,0 +1,94 @@
+[data-component="markdown-preview"] [data-component="markdown"] h1,
+[data-component="markdown-preview"] [data-component="markdown"] h2,
+[data-component="markdown-preview"] [data-component="markdown"] h3,
+[data-component="markdown-preview"] [data-component="markdown"] h4,
+[data-component="markdown-preview"] [data-component="markdown"] h5,
+[data-component="markdown-preview"] [data-component="markdown"] h6 {
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] h1 {
+  font-size: 2em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-weaker-base);
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] h2 {
+  font-size: 1.5em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-weaker-base);
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] h3 {
+  font-size: 1.25em;
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] p {
+  margin-top: 0;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] ul,
+[data-component="markdown-preview"] [data-component="markdown"] ol {
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-left: 2em;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] blockquote {
+  margin: 0 0 16px 0;
+  padding: 0 1em;
+  color: var(--text-weak);
+  border-left: 0.25em solid var(--border-interactive-base);
+  background: transparent;
+  border-radius: 0;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] :not(pre) > code {
+  font-size: 85%;
+  background-color: var(--surface-raised-base);
+  border: none;
+  padding: 0.2em 0.4em;
+  margin: 0;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] pre {
+  margin-bottom: 16px;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] table {
+  width: max-content;
+  max-width: 100%;
+  margin-top: 0;
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 0;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] th {
+  font-weight: 600;
+  padding: 6px 13px;
+  border: 1px solid var(--border-base);
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] td {
+  padding: 6px 13px;
+  border: 1px solid var(--border-base);
+  background: transparent;
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] tbody tr:nth-child(even) td {
+  background-color: var(--surface-raised-base);
+}
+
+[data-component="markdown-preview"] [data-component="markdown"] thead {
+  background: transparent;
+}

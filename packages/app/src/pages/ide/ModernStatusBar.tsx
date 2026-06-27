@@ -114,14 +114,6 @@ export default function ModernStatusBar(props: {
 
       {/* Right section */}
       <div class="flex items-center gap-0 h-full">
-        {/* Notifications */}
-        <button
-          type="button"
-          class="notifications-btn flex items-center gap-1 px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
-          aria-label="Notifications"
-        >
-          <Icon name="bubble-5" size="small" class="size-3" />
-        </button>
 
         {/* Context Usage */}
         <IdeContextUsage activeSessionId={props.activeSessionId ?? null} />

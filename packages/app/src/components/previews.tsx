@@ -1,4 +1,5 @@
 import { createEffect, createSignal, createMemo, For, onCleanup, Show, onMount } from "solid-js"
+import "./markdown-preview.css"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -34,7 +35,7 @@ function extractToc(html: string): { id: string; text: string; level: number }[]
   return headings
 }
 
-const proseClass = "prose prose-sm max-w-none text-text-strong"
+const proseClass = "max-w-none text-text-strong"
 
 export function MarkdownPreviewToolbar(props: {
   filename: string
@@ -370,19 +371,21 @@ export function MarkdownPreview(props: { content: string; filename: string; onCl
   }
 
   return (
-    <Dialog transition class="!max-w-4xl !max-h-[85vh]">
+    <Dialog transition class="!max-w-4xl !max-h-[85vh] !overflow-hidden flex flex-col">
       <div data-component="markdown-toolbar">
         <span class="text-12-medium text-text-weak ml-1">{props.filename}</span>
         <div class="flex-1" />
         <div class="flex items-center gap-0.5">
           <span class="text-10-regular text-text-weaker tabular-nums mr-1">{scrollProgress()}%</span>
-          <button
-            data-active={wordWrap() ? "true" : "false"}
-            title="Toggle word wrap"
-            onClick={() => setWordWrap((p) => !p)}
-          >
-            <Icon name="wrap" size="small" />
-          </button>
+          <Show when={showSource()}>
+            <button
+              data-active={wordWrap() ? "true" : "false"}
+              title="Toggle word wrap"
+              onClick={() => setWordWrap((p) => !p)}
+            >
+              <Icon name="wrap" size="small" />
+            </button>
+          </Show>
           <button
             data-active={showSource() ? "true" : "false"}
             title="Toggle source view"
@@ -397,45 +400,48 @@ export function MarkdownPreview(props: { content: string; filename: string; onCl
           <IconButton icon="close" variant="ghost" size="small" class="size-6 rounded" onClick={props.onClose} />
         </div>
       </div>
-      <Show
-        when={!showSource()}
-        fallback={
-          <div class="flex-1 overflow-auto" ref={scrollContainerRef} onScroll={handleScroll}>
-            <pre
-              class="p-6 text-12-regular font-mono text-text-strong m-0"
-              style={{ "white-space": wordWrap() ? "pre-wrap" : "pre", "overflow-x": "auto" }}
-            >
-              {props.content}
-            </pre>
-          </div>
-        }
-      >
-        <div data-component="markdown-preview" class="flex-1 overflow-y-auto p-8" ref={scrollContainerRef} onScroll={handleScroll}>
-          <Show when={!loading()} fallback={
-            <div class="flex items-center justify-center py-10 text-text-weak">
-              <div class="flex items-center gap-2">
-                <Icon name="cursor" size="small" class="animate-pulse" />
-                <span>Rendering...</span>
-              </div>
+      <div class="flex-1 flex flex-col min-h-0 overflow-hidden w-full">
+        <Show
+          when={!showSource()}
+          fallback={
+            <div class="flex-1 overflow-auto" ref={scrollContainerRef} onScroll={handleScroll}>
+              <pre
+                class="p-6 text-12-regular font-mono text-text-strong m-0"
+                style={{ "white-space": wordWrap() ? "pre-wrap" : "pre", "overflow-x": "auto" }}
+              >
+                {props.content}
+              </pre>
             </div>
-          }>
-            <Show when={!error()} fallback={
-              <div class="flex flex-col items-center gap-3 py-10">
-                <Icon name="circle-ban-sign" size="large" class="text-icon-danger-active" />
-                <p class="text-text-weak text-13-regular">Failed to render markdown</p>
-                <p class="text-text-weaker text-11-regular">{error()}</p>
+          }
+        >
+          <div data-component="markdown-preview" class="flex-1 overflow-y-auto p-8" ref={scrollContainerRef} onScroll={handleScroll}>
+            <Show when={!loading()} fallback={
+              <div class="flex items-center justify-center py-10 text-text-weak">
+                <div class="flex items-center gap-2">
+                  <Icon name="cursor" size="small" class="animate-pulse" />
+                  <span>Rendering...</span>
+                </div>
               </div>
             }>
-              <div class={proseClass} innerHTML={html()} />
+              <Show when={!error()} fallback={
+                <div class="flex flex-col items-center gap-3 py-10">
+                  <Icon name="circle-ban-sign" size="large" class="text-icon-danger-active" />
+                  <p class="text-text-weak text-13-regular">Failed to render markdown</p>
+                  <p class="text-text-weaker text-11-regular">{error()}</p>
+                </div>
+              }>
+                <div data-component="markdown" class={typeof proseClass !== "undefined" ? proseClass : ""} innerHTML={html()} />
+              </Show>
             </Show>
-          </Show>
-        </div>
-      </Show>
+          </div>
+        </Show>
+      </div>
     </Dialog>
   )
 }
 
 export function PdfPreview(props: { src: string; filename: string; onClose: () => void }) {
+
   return (
     <Dialog transition class="!max-w-5xl !max-h-[90vh]">
       <div class="flex items-center justify-between px-4 py-2 border-b border-border-base shrink-0">
