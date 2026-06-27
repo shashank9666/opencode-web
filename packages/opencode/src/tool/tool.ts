@@ -52,6 +52,12 @@ export interface ExecuteResult<M extends Metadata = Metadata> {
   attachments?: Omit<SessionV1.FilePart, "id" | "sessionID" | "messageID">[]
 }
 
+export interface PermissionDeclaration<T> {
+  id: string
+  patterns(args: T): string[]
+  always?(args: T): string[]
+}
+
 export interface Def<
   Parameters extends Schema.Decoder<unknown> = Schema.Decoder<unknown>,
   M extends Metadata = Metadata,
@@ -62,6 +68,7 @@ export interface Def<
   jsonSchema?: JSONSchema7
   execute(args: Schema.Schema.Type<Parameters>, ctx: Context): Effect.Effect<ExecuteResult<M>>
   formatValidationError?(error: unknown): string
+  permission?: PermissionDeclaration<Schema.Schema.Type<Parameters>>
 }
 export type DefWithoutID<
   Parameters extends Schema.Decoder<unknown> = Schema.Decoder<unknown>,
@@ -127,6 +134,14 @@ function wrap<Parameters extends Schema.Decoder<unknown>, Result extends Metadat
                 }),
             ),
           )
+          if (toolInfo.permission) {
+            yield* ctx.ask({
+              permission: toolInfo.permission.id,
+              patterns: toolInfo.permission.patterns(decoded as Schema.Schema.Type<Parameters>),
+              always: toolInfo.permission.always?.(decoded as Schema.Schema.Type<Parameters>) ?? ["*"],
+              metadata: { args: decoded },
+            })
+          }
           const result = yield* execute(decoded as Schema.Schema.Type<Parameters>, ctx)
           if (result.metadata.truncated !== undefined) {
             return result

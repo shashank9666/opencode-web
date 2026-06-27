@@ -21,11 +21,16 @@ export default function HeaderBar(props: {
   const [searchQuery, setSearchQuery] = createSignal("")
   let searchInputRef: HTMLInputElement | undefined
   let menuBarRef: HTMLDivElement | undefined
+  let menuCloseTimeout: number | undefined
   const dialog = useDialog()
 
   const menus = () => buildMenus(props.actions || {}, props.workspaceName)
 
   const handleMenuClick = (menuLabel: string, index: number) => {
+    if (menuCloseTimeout !== undefined) {
+      window.clearTimeout(menuCloseTimeout)
+      menuCloseTimeout = undefined
+    }
     if (activeMenu() === menuLabel) {
       setActiveMenu(null)
       return
@@ -34,7 +39,14 @@ export default function HeaderBar(props: {
     updateMenuPosition(index)
   }
 
-  const handleMouseLeave = () => setActiveMenu(null)
+  const handleMouseLeave = () => {
+    if (menuCloseTimeout !== undefined) window.clearTimeout(menuCloseTimeout)
+    menuCloseTimeout = window.setTimeout(() => {
+      setActiveMenu(null)
+      setSubmenuActive(null)
+      menuCloseTimeout = undefined
+    }, 160)
+  }
 
   const updateMenuPosition = (index: number) => {
     if (!menuBarRef) return
@@ -83,6 +95,10 @@ export default function HeaderBar(props: {
       <div
         class="relative"
         onMouseEnter={(e) => {
+          if (menuCloseTimeout !== undefined) {
+            window.clearTimeout(menuCloseTimeout)
+            menuCloseTimeout = undefined
+          }
           if (hasSubmenu) {
             const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
             const menuWidth = 224
@@ -95,9 +111,7 @@ export default function HeaderBar(props: {
             setSubmenuActive(path)
           }
         }}
-        onMouseLeave={() => {
-          setSubmenuActive(null)
-        }}
+        onMouseLeave={handleMouseLeave}
       >
         <Show when={item.separator}>
           <div class="h-px my-1 bg-border-base" />
@@ -108,7 +122,7 @@ export default function HeaderBar(props: {
             class="w-full flex items-center justify-between px-6 py-1.5 text-13-regular text-text-weak hover:bg-accent-base hover:text-white transition-colors cursor-default"
             disabled={item.disabled}
             classList={{ "opacity-50 cursor-not-allowed": item.disabled }}
-            onClick={() => { if (item.action) item.action(); setActiveMenu(null) }}
+            onClick={() => { if (item.action) item.action(); setActiveMenu(null); setSubmenuActive(null) }}
           >
             <span>{item.label}</span>
             <Show when={item.shortcut}>
@@ -134,8 +148,14 @@ export default function HeaderBar(props: {
                 top: `${submenuPos().top}px`,
                 "max-height": `400px`,
               }}
-              onMouseEnter={() => setSubmenuActive(path)}
-              onMouseLeave={() => setSubmenuActive(null)}
+              onMouseEnter={() => {
+                if (menuCloseTimeout !== undefined) {
+                  window.clearTimeout(menuCloseTimeout)
+                  menuCloseTimeout = undefined
+                }
+                setSubmenuActive(path)
+              }}
+              onMouseLeave={handleMouseLeave}
             >
               <For each={item.submenu}>{ (sub) => MenuItemRow(sub, path) }</For>
             </div>
@@ -148,6 +168,7 @@ export default function HeaderBar(props: {
   onCleanup(() => {
     setActiveMenu(null)
     setSubmenuActive(null)
+    if (menuCloseTimeout !== undefined) window.clearTimeout(menuCloseTimeout)
   })
 
   return (
@@ -166,7 +187,7 @@ export default function HeaderBar(props: {
         {/* Menus */}
         <div class="flex items-center h-full" ref={menuBarRef}>
           <For each={menus()}>{(menu, index) => (
-            <div class="relative h-full" onMouseEnter={() => { if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}>
+            <div class="relative h-full" onMouseEnter={() => { if (menuCloseTimeout !== undefined) { window.clearTimeout(menuCloseTimeout); menuCloseTimeout = undefined } if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}>
               <button
                 type="button"
                 data-menu-trigger
@@ -185,7 +206,14 @@ export default function HeaderBar(props: {
                     top: `${menuPosition().top}px`,
                     "max-height": `${menuPosition().maxHeight}px`,
                   }}
-                  onMouseEnter={() => setSubmenuActive(null)}
+                  onMouseEnter={() => {
+                    if (menuCloseTimeout !== undefined) {
+                      window.clearTimeout(menuCloseTimeout)
+                      menuCloseTimeout = undefined
+                    }
+                    setSubmenuActive(null)
+                  }}
+                  onMouseLeave={handleMouseLeave}
                 >
                   <For each={menu.submenu}>{ (item) => MenuItemRow(item, menu.label) }</For>
                 </div>

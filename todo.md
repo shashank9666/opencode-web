@@ -218,6 +218,18 @@
 
 ## Part 5 — Remote Explorer (Full Redesign)
 
+- [x] **Recent connections list** — Show saved remote targets and reconnect from the panel
+- [x] **Sectioned remote tree** — Show SSH, WSL, and Dev Container groups with clickable entries
+- [x] **Per-host context menu** — Add connect, open folder, copy host, delete, and open terminal actions
+- [x] **Connect in new window** — Make the tree submenu open a new connection path instead of doing nothing
+- [x] **Status indicators** — Show connected, connecting, offline, and auth-failed states in the remote tree
+- [x] **Remote command strip** — Add reconnect, close connection, install server, and show log actions
+- [x] **Tunnels group** — Show tunnel-like remote entries alongside SSH, WSL, and containers
+- [x] **Remote logs panel** — Surface connection, SSH, extension host, server, terminal, and git log streams
+- [x] **Remote process explorer** — Show remote PID entries with inspect/kill actions
+- [x] **Remote settings** — Provide User, Workspace, and Remote settings scopes in the panel
+- [x] **Connection flow timeline** — Show SSH auth through ready-state stages
+- [x] **Remote file operations** — Route create, rename, delete, move, copy, and drag/drop through remote actions
 - [ ] **Complete redesign with working functionality** — Rebuild the Remote Explorer to match VS Code's remote workspace architecture:
   - Tree: SSH Targets, Dev Containers, WSL, Tunnels, Recent Connections
   - Per-host context menu: Connect, Connect in New Window, Open Folder…, Disconnect, Rename, Edit SSH Config, Copy Host, Delete
@@ -241,9 +253,9 @@
 
 ---
 
-## Part 6 — AI Permission System
+## Part 6 — AI Permission System ✅
 
-- [ ] **Permissions toggles not enforcing** — Implement a centralized Permission Manager that every AI tool call must pass through before execution:
+- [x] **Permissions toggles not enforcing** — Implement a centralized Permission Manager that every AI tool call must pass through before execution:
   - Architecture: `AI Model → Agent Planner → Permission Manager (reads config) → Tool Executor`
   - Permission matrix with three states: **Allow / Ask / Deny**
   - Scopes: Once, Always, Session, Workspace
@@ -262,11 +274,11 @@
 ## Part 7 — AI Chat / Agent Workspace (Antigravity-level)
 
 ### Chat Experience
-- [ ] Streaming responses with Markdown rendering, syntax highlighting, Mermaid, LaTeX
+- [x] Streaming responses with Markdown rendering, syntax highlighting, Mermaid, LaTeX
 - [ ] File & image attachments (drag & drop, paste)
 - [ ] Code block actions: Copy, Apply to Editor, Retry, Continue, Edit Prompt, Branch, Regenerate, Stop
 - [ ] Token usage display, model selector, temperature control, context indicator
-- [ ] `@file`, `@folder`, `@symbol`, `@diagnostics` mentions
+- [x] `@file`, `@folder`, `@symbol`, `@diagnostics` mentions
 - [ ] Slash commands, prompt history, search chat history
 - [ ] Pin / rename / delete / export / import conversations
 - [ ] Multi-chat tabs
@@ -284,11 +296,11 @@
 - [ ] Goal → Understand Project → Analyse Dependencies → Implementation Plan → Approval → Execution → Verification → Summary
 
 ### Task System
-- [ ] Every request becomes a task with states: Planning / Running / Waiting / Completed / Failed / Cancelled
-- [ ] Task detail: Timeline, Tool Calls, Files Changed, Commands Executed, Browser Actions, Logs, Artifacts
+- [x] Every request becomes a task with states: Planning / Running / Waiting / Completed / Failed / Cancelled
+- [x] Task detail: Timeline, Tool Calls, Files Changed, Commands Executed, Browser Actions, Logs, Artifacts
 
 ### Artifacts
-- [ ] Produce structured artifacts: Implementation Plan, TODO List, Architecture Diagram, Code Diff, Screenshot, Browser Recording, Test Report, Deployment Report, Performance Report, Documentation
+- [x] Produce structured artifacts: Implementation Plan, TODO List, Architecture Diagram, Code Diff, Screenshot, Browser Recording, Test Report, Deployment Report, Performance Report, Documentation
 
 ### Tool Timeline
 - [ ] Collapsible and searchable timeline of all tool calls with timestamps

@@ -130,6 +130,24 @@ export function buildRequestParts(input: BuildRequestPartsInput) {
     } satisfies PromptRequestPart
   })
 
+  const diagnostics = input.prompt.filter((part): part is import("@/context/prompt").DiagnosticsPart => part.type === "diagnostics").map(() => {
+    return {
+      id: Identifier.ascending("part"),
+      type: "text",
+      text: "User mentioned @diagnostics. Please review the workspace diagnostics using your tools.",
+      synthetic: true,
+    } satisfies PromptRequestPart
+  })
+
+  const symbols = input.prompt.filter((part): part is import("@/context/prompt").SymbolPart => part.type === "symbol").map((attachment) => {
+    return {
+      id: Identifier.ascending("part"),
+      type: "text",
+      text: `User mentioned symbol @${attachment.name} in ${attachment.path}. Please review this symbol using your tools.`,
+      synthetic: true,
+    } satisfies PromptRequestPart
+  })
+
   const used = new Set(files.map((part) => part.url))
   const context = input.context.flatMap((item) => {
     const path = absolute(input.sessionDirectory, item.path)
@@ -192,7 +210,7 @@ export function buildRequestParts(input: BuildRequestPartsInput) {
     } satisfies PromptRequestPart
   })
 
-  requestParts.push(...files, ...context, ...agents, ...images)
+  requestParts.push(...files, ...context, ...agents, ...diagnostics, ...symbols, ...images)
 
   return {
     requestParts,

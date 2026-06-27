@@ -195,11 +195,11 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
 
       let isAllowedByGranular = false
 
-      if (action === "read" || action === "read_file" || action === "list_dir" || action === "grep_search" || action === "read_url") {
+      if (action === "read" || action === "read_file" || action === "list_dir" || action === "grep_search" || action === "read_url" || action === "filesystem.read.project") {
         isAllowedByGranular = settings.readAllFiles || settings.readProjectFiles
-      } else if (action === "edit" || action === "write" || action === "replace_file_content" || action === "write_to_file" || action === "multi_replace_file_content") {
+      } else if (action === "edit" || action === "write" || action === "replace_file_content" || action === "write_to_file" || action === "multi_replace_file_content" || action === "filesystem.write.project") {
         isAllowedByGranular = settings.editAllFiles || settings.editProjectFiles
-      } else if (action === "execute" || action === "bash" || action === "run_command") {
+      } else if (action === "execute" || action === "bash" || action === "run_command" || action === "terminal.all" || action === "terminal.safe") {
         isAllowedByGranular = settings.executeAllCommands || settings.executeSafeCommands
       } else if (action === "browser") {
         isAllowedByGranular = settings.useBrowser

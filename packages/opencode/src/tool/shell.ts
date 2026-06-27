@@ -286,7 +286,7 @@ const ask = Effect.fn("ShellTool.ask")(function* (
 
   if (scan.patterns.size === 0) return
   yield* ctx.ask({
-    permission: ShellID.ToolID,
+    permission: "terminal.all",
     patterns: Array.from(scan.patterns),
     always: Array.from(scan.always),
     metadata: {

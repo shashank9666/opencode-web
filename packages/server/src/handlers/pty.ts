@@ -47,13 +47,14 @@ export const PtyHandler = HttpApiBuilder.group(Api, "server.pty", (handlers) =>
                 ...(yield* environment.get({ directory: location.directory, cwd })),
               },
             }).pipe(
-              Effect.catchAllDefect((defect) =>
+              Effect.catchDefect((defect: unknown) =>
                 Effect.fail(
                   new InvalidRequestError({
                     message: defect instanceof Error ? defect.message : "Failed to create terminal",
                   }),
                 ),
               ),
+              Effect.map((data) => data as any)
             ),
           )
         }),

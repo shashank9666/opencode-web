@@ -6,6 +6,8 @@ import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
 export type AtOption =
   | { type: "agent"; name: string; display: string }
   | { type: "file"; path: string; display: string; recent?: boolean }
+  | { type: "diagnostics"; display: string }
+  | { type: "symbol"; name: string; path: string; display: string }
 
 export interface SlashCommand {
   id: string
@@ -65,6 +67,37 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                       >
                         <Icon name="brain" size="small" class="text-icon-info-active shrink-0" />
                         <span class="text-14-regular text-text-strong whitespace-nowrap">@{item.name}</span>
+                      </button>
+                    )
+                  }
+
+                  if (item.type === "diagnostics") {
+                    return (
+                      <button
+                        class="w-full flex items-center gap-x-2 rounded-md px-2 py-0.5"
+                        classList={{ "bg-surface-raised-base-hover": props.atActive === key }}
+                        onClick={() => props.onAtSelect(item)}
+                        onMouseEnter={() => props.setAtActive(key)}
+                      >
+                        <Icon name="bug" size="small" class="text-icon-danger-active shrink-0" />
+                        <span class="text-14-regular text-text-strong whitespace-nowrap">@diagnostics</span>
+                      </button>
+                    )
+                  }
+
+                  if (item.type === "symbol") {
+                    return (
+                      <button
+                        class="w-full flex items-center gap-x-2 rounded-md px-2 py-0.5"
+                        classList={{ "bg-surface-raised-base-hover": props.atActive === key }}
+                        onClick={() => props.onAtSelect(item)}
+                        onMouseEnter={() => props.setAtActive(key)}
+                      >
+                        <Icon name="code" size="small" class="text-icon-warning-active shrink-0" />
+                        <div class="flex items-center text-14-regular min-w-0">
+                          <span class="text-text-strong whitespace-nowrap truncate min-w-0">{item.name}</span>
+                          <span class="text-text-weak whitespace-nowrap truncate min-w-0 ml-1 text-xs">{getFilename(item.path)}</span>
+                        </div>
                       </button>
                     )
                   }

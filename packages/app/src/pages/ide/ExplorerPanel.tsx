@@ -46,6 +46,14 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
     })
   })
 
+  const removeRecentFile = (path: string) => {
+    setRecentFiles((prev) => {
+      const next = prev.filter((item) => item !== path)
+      saveRecentFiles(next)
+      return next
+    })
+  }
+
   const getFilename = (path: string) => path.split("/").pop() ?? path
   const getFileIcon = (path: string) => {
     const ext = path.split(".").pop()?.toLowerCase() ?? ""
@@ -88,7 +96,6 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
                     type="button"
                     class="w-full flex items-center gap-2 px-3 py-1 text-12-regular text-text-weak hover:bg-surface-raised-base-hover hover:text-text-strong cursor-pointer transition-colors group"
                     onClick={() => {
-                      const parts = filePath.split("/")
                       const node = { path: filePath, type: "file" }
                       props.onFileClick(node)
                     }}
@@ -98,6 +105,18 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
                     <span class="text-10-regular text-text-weaker/60 truncate max-w-24 shrink-0 text-right">
                       {filePath.split("/").slice(-2, -1).join("")}
                     </span>
+                    <IconButton
+                      icon="close"
+                      variant="ghost"
+                      size="small"
+                      class="size-5 shrink-0 opacity-0 group-hover:opacity-100 text-text-weaker hover:text-text-strong"
+                      aria-label={`Remove ${getFilename(filePath)} from recent files`}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        removeRecentFile(filePath)
+                      }}
+                    />
                   </button>
                 ))}
               </div>

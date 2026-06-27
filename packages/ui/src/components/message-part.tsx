@@ -1597,6 +1597,29 @@ PART_MAPPING["reasoning"] = function ReasoningPartDisplay(props) {
   )
 }
 
+PART_MAPPING["subtask"] = function SubtaskPartDisplay(props) {
+  const part = () => props.part as import("@opencode-ai/sdk/v2").SubtaskPart
+  
+  return (
+    <div data-component="subtask-part" data-timeline-part-id={part().id} class="flex items-start gap-3 p-3 my-2 bg-surface-raised-base rounded-md border border-border-base">
+      <div class="mt-0.5">
+        <Icon name="branch" size="small" class="text-icon-primary-active" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-13-medium text-text-strong">{part().description}</span>
+          <Show when={part().agent}>
+            <span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface-raised-stronger text-text-weak">
+              @{part().agent}
+            </span>
+          </Show>
+        </div>
+        <div class="text-12-regular text-text-base whitespace-pre-wrap">{part().prompt}</div>
+      </div>
+    </div>
+  )
+}
+
 ToolRegistry.register({
   name: "read",
   render(props) {

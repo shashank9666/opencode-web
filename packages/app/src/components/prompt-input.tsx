@@ -221,7 +221,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const command = useCommand()
   const [suggestHover, setSuggestHover] = createSignal(false)
   const [browserPanelOpen, setBrowserPanelOpen] = createSignal(false)
-  const [artifactsOpen, setArtifactsOpen] = createSignal(false)
+  const [contextImagesOpen, setContextImagesOpen] = createSignal(false)
+  const [artifactsPanelOpen, setArtifactsPanelOpen] = createSignal(false)
+  const [planningMode, setPlanningMode] = createSignal(false)
 
   const terminal = useTerminal()
 
@@ -679,6 +681,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (!option) return
     if (option.type === "agent") {
       addPart({ type: "agent", name: option.name, content: "@" + option.name, start: 0, end: 0 })
+    } else if (option.type === "diagnostics") {
+      addPart({ type: "diagnostics", content: "@diagnostics", start: 0, end: 0 })
+    } else if (option.type === "symbol") {
+      addPart({ type: "symbol", name: option.name, path: option.path, content: "@" + option.name, start: 0, end: 0 })
     } else {
       addPart({ type: "file", path: option.path, content: "@" + option.path, start: 0, end: 0 })
     }
@@ -686,7 +692,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
   const atKey = (x: AtOption | undefined) => {
     if (!x) return ""
-    return x.type === "agent" ? `agent:${x.name}` : `file:${x.path}`
+    if (x.type === "agent") return `agent:${x.name}`
+    if (x.type === "diagnostics") return `diagnostics`
+    if (x.type === "symbol") return `symbol:${x.path}:${x.name}`
+    return `file:${x.path}`
   }
 
   const {
@@ -701,19 +710,25 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       const open = recent()
       const seen = new Set(open)
       const pinned: AtOption[] = open.map((path) => ({ type: "file", path, display: path, recent: true }))
-      if (!query.trim()) return [...agents, ...pinned]
+      const diag: AtOption = { type: "diagnostics", display: "diagnostics" }
+
+      if (!query.trim()) return [...agents, diag, ...pinned]
+
+      const exactDiag = "diagnostics".includes(query.toLowerCase()) ? [diag] : []
       const paths = await files.searchFilesAndDirectories(query)
+      
       const fileOptions: AtOption[] = paths
         .filter((path) => !seen.has(path))
         .map((path) => ({ type: "file", path, display: path }))
-      return [...agents, ...pinned, ...fileOptions]
+        
+      return [...agents, ...exactDiag, ...pinned, ...fileOptions]
     },
     key: atKey,
     filterKeys: ["display"],
     skipFilter: (item) => item.type === "file" && !item.recent,
     groupBy: (item) => {
       if (item.type === "agent") return "agent"
-      if (item.recent) return "recent"
+      if (item.type === "file" && item.recent) return "recent"
       return "file"
     },
     sortGroupsBy: (a, b) => {
@@ -1604,8 +1619,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   </Tooltip>
                   <Tooltip placement="top" gutter={4} value="Artifacts">
                     <Popover 
-                      open={artifactsOpen()} 
-                      onOpenChange={setArtifactsOpen}
+                      open={contextImagesOpen()} 
+                      onOpenChange={setContextImagesOpen}
                       trigger={
                         <div class="relative block">
                           <IconButton
@@ -1629,13 +1644,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         fallback={<div class="text-11-regular text-v2-text-text-muted">No images uploaded for context.</div>}
                       >
                         <PromptImageAttachments
-                          attachments={prompt.current().filter((p): p is ImageAttachmentPart => p.type === "image")}
-                          onRemove={(index) => {
-                            const images = prompt.current().filter((p): p is ImageAttachmentPart => p.type === "image")
-                            const removedId = images[index]?.id
-                            if (removedId) {
-                              prompt.set(prompt.current().filter(p => p.id !== removedId))
-                            }
+                          attachments={prompt.current().filter((p): p is import("@/context/prompt").ImageAttachmentPart => p.type === "image")}
+                          onOpen={() => setContextImagesOpen(true)}
+                          removeLabel="Remove image"
+                          onRemove={(id) => {
+                            prompt.set(prompt.current().filter(p => !("id" in p && p.id === id)))
                           }}
                         />
                       </Show>
@@ -2092,6 +2105,20 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </div>
                     </Show>
 
+                    {/* Planning Mode Toggle */}
+                    <div class="flex items-center gap-1 ml-2 border-l border-border-base pl-2" style={control()}>
+                      <Tooltip placement="top" gutter={4} value="Planning Mode">
+                        <IconButton
+                          icon="map"
+                          variant={planningMode() ? "default" : "ghost"}
+                          size="small"
+                          class={`size-6 rounded ${planningMode() ? "bg-surface-raised-stronger text-icon-primary-active" : ""}`}
+                          onClick={() => setPlanningMode((prev) => !prev)}
+                          aria-label="Planning Mode"
+                        />
+                      </Tooltip>
+                    </div>
+
                     {/* Chatbot Options */}
                     <div class="flex items-center gap-1 ml-2 border-l border-border-base pl-2" style={control()}>
                       <Tooltip placement="top" gutter={4} value="Prompt">
@@ -2115,17 +2142,30 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         />
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Artifacts">
-                        <div class="relative">
-                          <IconButton
-                            icon="archive"
-                            variant="ghost"
-                            size="small"
-                            class="size-6 rounded"
-                            onClick={() => showToast({ title: "Artifacts", description: "Coming soon" })}
-                            aria-label="Artifacts"
-                          />
-                          <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] border border-surface-base pointer-events-none" />
-                        </div>
+                        <Popover
+                          open={artifactsPanelOpen()}
+                          onOpenChange={setArtifactsPanelOpen}
+                          trigger={
+                            <div class="relative">
+                              <IconButton
+                                icon="archive"
+                                variant={artifactsPanelOpen() ? "default" : "ghost"}
+                                size="small"
+                                class={`size-6 rounded ${artifactsPanelOpen() ? "bg-surface-raised-stronger text-icon-primary-active" : ""}`}
+                                onClick={() => setArtifactsPanelOpen((prev) => !prev)}
+                                aria-label="Artifacts"
+                              />
+                            </div>
+                          }
+                          class="bg-v2-background-bg-base border border-v2-border-border-muted rounded-md shadow-lg p-3 min-w-[280px]"
+                        >
+                          <div class="flex items-center justify-between mb-3 border-b border-v2-border-border-muted pb-2">
+                            <span class="text-13-medium text-v2-text-text-base">Workspace Artifacts</span>
+                          </div>
+                          <div class="text-12-regular text-v2-text-text-muted text-center py-4">
+                            No artifacts generated yet.
+                          </div>
+                        </Popover>
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Playwright Stream">
                         <IconButton
