@@ -604,7 +604,7 @@ export const SettingsGeneralV2: Component = () => {
               placeholder="Image URL"
               spellcheck={false}
             />
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <input 
                 type="file" 
                 accept="image/*"
@@ -619,7 +619,7 @@ export const SettingsGeneralV2: Component = () => {
                     reader.readAsDataURL(file);
                   }
                 }}
-                class="text-12-regular text-text-weak file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
+                class="text-12-regular text-text-weak file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
               />
               <Show when={settings.appearance.wallpaperUrl()}>
                 <ButtonV2 
