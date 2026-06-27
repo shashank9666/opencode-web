@@ -505,8 +505,8 @@ export const SettingsGeneralV2: Component = () => {
           description="Apply curated aesthetic color themes and glassmorphism effects"
         >
           <div class="flex flex-wrap gap-2">
-            <ButtonV2 
-              variant="neutral" 
+            <ButtonV2
+              variant="neutral"
               onClick={() => {
                 theme.setColorScheme("dark")
                 theme.setTheme("ocean-glass")
@@ -517,8 +517,8 @@ export const SettingsGeneralV2: Component = () => {
             >
               Cyberpunk Glow
             </ButtonV2>
-            <ButtonV2 
-              variant="neutral" 
+            <ButtonV2
+              variant="neutral"
               onClick={() => {
                 theme.setColorScheme("dark")
                 theme.setTheme("minimal-glass")
@@ -529,8 +529,8 @@ export const SettingsGeneralV2: Component = () => {
             >
               Cozy Lofi
             </ButtonV2>
-            <ButtonV2 
-              variant="neutral" 
+            <ButtonV2
+              variant="neutral"
               onClick={() => {
                 theme.setColorScheme("dark")
                 theme.setTheme("ocean-glass")
@@ -602,8 +602,8 @@ export const SettingsGeneralV2: Component = () => {
               spellcheck={false}
             />
             <div class="flex flex-wrap items-center gap-2">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.currentTarget.files?.[0];
@@ -619,9 +619,9 @@ export const SettingsGeneralV2: Component = () => {
                 class="text-12-regular text-text-weak file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
               />
               <Show when={settings.appearance.wallpaperUrl()}>
-                <ButtonV2 
-                  variant="ghost" 
-                  size="small" 
+                <ButtonV2
+                  variant="ghost"
+                  size="small"
                   onClick={() => settings.appearance.setWallpaperUrl("")}
                   class="text-text-danger-base hover:text-text-danger-strong"
                 >
@@ -633,10 +633,10 @@ export const SettingsGeneralV2: Component = () => {
         </SettingsRowV2>
 
         <SettingsRowV2
-          title="Wallpaper Gallery"
-          description="Choose from a selection of prebuilt anime wallpapers"
+          title=""
+          description=""
         >
-          <div class="flex flex-wrap gap-3">
+          <div class="flex flex-wrap gap-3 mt-3">
             <For each={Object.entries(import.meta.glob('/public/wallpapers/*.{png,jpg,jpeg,webp,gif}', { eager: true, as: 'url' })).map(([path, url]) => {
               const filename = path.split('/').pop() || '';
               const id = filename.split('.')[0] || '';
@@ -645,9 +645,8 @@ export const SettingsGeneralV2: Component = () => {
             })}>
               {(wp: { id: string, name: string, url: string }) => (
                 <button
-                  class={`relative w-24 h-16 rounded overflow-hidden border-2 transition-all ${
-                    settings.appearance.wallpaperUrl() === wp.url ? "border-accent-base scale-105 shadow-[0_0_10px_var(--accent-base)]" : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
+                  class={`relative w-24 h-16 rounded overflow-hidden border-2 transition-all ${settings.appearance.wallpaperUrl() === wp.url ? "border-accent-base scale-105 shadow-[0_0_10px_var(--accent-base)]" : "border-transparent opacity-70 hover:opacity-100"
+                    }`}
                   onClick={() => settings.appearance.setWallpaperUrl(wp.url)}
                   title={wp.name}
                 >

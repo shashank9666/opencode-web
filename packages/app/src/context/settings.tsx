@@ -9,6 +9,17 @@ export interface NotificationSettings {
   errors: boolean
 }
 
+export type WallpaperProviderType = "wallhaven" | "unsplash" | "pexels" | "pixabay" | "nasa" | "custom"
+
+export interface WallpaperProvider {
+  id: string
+  type: WallpaperProviderType
+  label: string
+  apiKey: string
+  query: string
+  enabled: boolean
+}
+
 export interface SoundSettings {
   agentEnabled: boolean
   agent: string
@@ -50,6 +61,9 @@ export interface Settings {
     opacity: number
     blurIntensity: number
     wallpaperUrl: string
+    wallpaperAutoRotate: boolean
+    wallpaperRotateInterval: number
+    wallpaperProviders: WallpaperProvider[]
   }
   keybinds: Record<string, string>
   permissions: {
@@ -147,6 +161,9 @@ const defaultSettings: Settings = {
     opacity: 0.8,
     blurIntensity: 20,
     wallpaperUrl: "",
+    wallpaperAutoRotate: false,
+    wallpaperRotateInterval: 300,
+    wallpaperProviders: [],
   },
   keybinds: {},
   permissions: {
@@ -382,6 +399,38 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         wallpaperUrl: withFallback(() => store.appearance?.wallpaperUrl, defaultSettings.appearance.wallpaperUrl),
         setWallpaperUrl(value: string) {
           setStore("appearance", "wallpaperUrl", value)
+        },
+        wallpaperAutoRotate: withFallback(
+          () => store.appearance?.wallpaperAutoRotate,
+          defaultSettings.appearance.wallpaperAutoRotate,
+        ),
+        setWallpaperAutoRotate(value: boolean) {
+          setStore("appearance", "wallpaperAutoRotate", value)
+        },
+        wallpaperRotateInterval: withFallback(
+          () => store.appearance?.wallpaperRotateInterval,
+          defaultSettings.appearance.wallpaperRotateInterval,
+        ),
+        setWallpaperRotateInterval(value: number) {
+          setStore("appearance", "wallpaperRotateInterval", value)
+        },
+        wallpaperProviders: withFallback(
+          () => store.appearance?.wallpaperProviders,
+          defaultSettings.appearance.wallpaperProviders,
+        ),
+        setWallpaperProviders(value: WallpaperProvider[]) {
+          setStore("appearance", "wallpaperProviders", value)
+        },
+        addWallpaperProvider(provider: WallpaperProvider) {
+          setStore("appearance", "wallpaperProviders", (prev) => [...(prev ?? []), provider])
+        },
+        removeWallpaperProvider(id: string) {
+          setStore("appearance", "wallpaperProviders", (prev) => (prev ?? []).filter((p) => p.id !== id))
+        },
+        updateWallpaperProvider(id: string, update: Partial<WallpaperProvider>) {
+          setStore("appearance", "wallpaperProviders", (prev) =>
+            (prev ?? []).map((p) => (p.id === id ? { ...p, ...update } : p)),
+          )
         },
       },
       keybinds: {
