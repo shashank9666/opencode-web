@@ -89,7 +89,7 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                         onClick={() => props.onAtSelect(item)}
                         onMouseEnter={() => props.setAtActive(key)}
                       >
-                        <Icon name="bug" size="small" class="text-icon-danger-active shrink-0" />
+                        <Icon name="circle-ban-sign" size="small" class="text-icon-danger-active shrink-0" />
                         <span class="text-14-regular text-text-strong whitespace-nowrap">@diagnostics</span>
                       </button>
                     )

@@ -421,7 +421,7 @@ export function SessionSidePanel(props: {
                         <Show when={props.canReview() && props.diffsReady() && props.diffs().length > 0}>
                           <Tabs.Trigger value="changes">
                             <div class="flex items-center gap-1.5">
-                              <Icon name="diff" size="small" />
+                              <Icon name="branch" size="small" />
                               <div>Changes</div>
                               <div>{props.reviewCount()}</div>
                             </div>

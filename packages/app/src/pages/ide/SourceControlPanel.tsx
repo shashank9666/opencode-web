@@ -65,7 +65,7 @@ function DiffViewer(props: { file: DiffFile; onClose: () => void }) {
         </For>
         <Show when={lines().length === 0}>
           <div class="flex flex-col items-center justify-center py-8 text-text-weaker gap-2">
-            <Icon name="diff" size="large" />
+            <Icon name="code" size="large" />
             <span class="text-12-regular">No diff available</span>
           </div>
         </Show>
@@ -385,7 +385,7 @@ export default function SourceControlPanel(props: SourceControlPanelProps) {
               setShowMoreActions(false)
             }}
           >
-            <Icon name="history" size="small" />
+            <Icon name="reset" size="small" />
             View History
           </button>
           <button

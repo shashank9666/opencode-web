@@ -113,7 +113,7 @@ export function FileChangeTracking(props: FileChangeTrackingProps) {
                           onClick={() => props.onViewDiff(diff.file)}
                           aria-label="View diff"
                         >
-                          <Icon name="diff" size="small" />
+                          <Icon name="branch" size="small" />
                         </button>
                         <DiffViewerActions
                           file={diff.file}

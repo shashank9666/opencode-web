@@ -324,7 +324,7 @@ export default function DebugPanel(props: {
             </Tooltip>
             <Tooltip value="Step Over" placement="bottom">
               <IconButton
-                icon="arrow-down"
+                icon="chevron-down"
                 variant="ghost"
                 size="small"
                 class="size-6 rounded"
@@ -401,7 +401,7 @@ export default function DebugPanel(props: {
       {/* Configuration selector */}
       <div class="px-3 py-1.5 border-b border-border-base shrink-0">
         <div class="flex items-center gap-1">
-          <Icon name="bug" size="small" class="text-icon-weak" />
+          <Icon name="warning" size="small" class="text-icon-weak" />
           <select
             class="flex-1 px-2 py-1 text-12-regular bg-surface-base border border-border-base rounded outline-none text-text-strong"
             value={selectedConfig()}
