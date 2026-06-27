@@ -18,16 +18,28 @@ export type SubmenuItem = {
 
 export interface IdeActions {
   // File
+  newTextFile?: () => void
   newFile?: () => void
   newWindow?: () => void
+  newWindowWithProfile?: () => void
   openFile?: () => void
   openFolder?: () => void
+  openWorkspaceFromFile?: () => void
+  openRecent?: () => void
+  addFolderToWorkspace?: () => void
+  saveWorkspaceAs?: () => void
+  duplicateWorkspace?: () => void
   save?: () => void
   saveAs?: () => void
   saveAll?: () => void
+  share?: () => void
+  autoSave?: () => void
+  preferences?: () => void
+  revertFile?: () => void
   closeEditor?: () => void
   closeFolder?: () => void
   closeWindow?: () => void
+  exit?: () => void
   // Edit
   undo?: () => void
   redo?: () => void
@@ -37,23 +49,40 @@ export interface IdeActions {
   find?: () => void
   replace?: () => void
   findInFiles?: () => void
+  replaceInFiles?: () => void
   toggleLineComment?: () => void
   toggleBlockComment?: () => void
-  formatDocument?: () => void
-  formatSelection?: () => void
+  emmetExpandAbbreviation?: () => void
   // Selection
+  selectAll?: () => void
   expandSelection?: () => void
   shrinkSelection?: () => void
-  selectAllOccurrences?: () => void
+  copyLineUp?: () => void
+  copyLineDown?: () => void
+  moveLineUp?: () => void
+  moveLineDown?: () => void
+  duplicateSelection?: () => void
   addCursorAbove?: () => void
   addCursorBelow?: () => void
-  selectLine?: () => void
-  selectWord?: () => void
+  addCursorsToLineEnds?: () => void
+  addNextOccurrence?: () => void
+  addPreviousOccurrence?: () => void
+  selectAllOccurrences?: () => void
+  switchToCtrlClickForMultiCursor?: () => void
+  columnSelectionMode?: () => void
   // View
+  commandPalette?: () => void
+  openView?: () => void
   toggleExplorer?: () => void
   toggleSearch?: () => void
   toggleSourceControl?: () => void
-  commandPalette?: () => void
+  toggleRun?: () => void
+  toggleExtensions?: () => void
+  toggleChat?: () => void
+  toggleBrowser?: () => void
+  toggleProblems?: () => void
+  toggleOutput?: () => void
+  toggleDebugConsole?: () => void
   zoomIn?: () => void
   zoomOut?: () => void
   resetZoom?: () => void
@@ -63,44 +92,126 @@ export interface IdeActions {
   toggleSecondarySideBar?: () => void
   toggleWordWrap?: () => void
   // Go
+  goBack?: () => void
+  goForward?: () => void
+  lastEditLocation?: () => void
+  switchEditor?: () => void
+  switchGroup?: () => void
   goToFile?: () => void
   goToSymbolWorkspace?: () => void
   goToSymbolEditor?: () => void
-  goToLine?: () => void
   goToDefinition?: () => void
   goToDeclaration?: () => void
   goToTypeDefinition?: () => void
   goToImplementation?: () => void
-  goBack?: () => void
-  goForward?: () => void
+  goToReferences?: () => void
+  goToLine?: () => void
+  goToBracket?: () => void
+  nextProblem?: () => void
+  previousProblem?: () => void
+  nextChange?: () => void
+  previousChange?: () => void
   // Run
-  runWithoutDebugging?: () => void
   startDebugging?: () => void
+  runWithoutDebugging?: () => void
   stopDebugging?: () => void
+  restartDebugging?: () => void
+  openConfigurations?: () => void
+  addConfiguration?: () => void
+  stepOver?: () => void
+  stepInto?: () => void
+  stepOut?: () => void
+  continue?: () => void
+  toggleBreakpoint?: () => void
+  newBreakpoint?: () => void
+  enableAllBreakpoints?: () => void
+  disableAllBreakpoints?: () => void
+  removeAllBreakpoints?: () => void
+  installAdditionalDebuggers?: () => void
   // Terminal
   newTerminal?: () => void
   splitTerminal?: () => void
+  newTerminalWindow?: () => void
   runTask?: () => void
+  runBuildTask?: () => void
+  runActiveFile?: () => void
+  runSelectedText?: () => void
+  showRunningTasks?: () => void
+  restartRunningTask?: () => void
+  terminateTask?: () => void
+  configureTasks?: () => void
+  configureDefaultBuildTask?: () => void
   selectDefaultShell?: () => void
+  // Help
+  welcome?: () => void
+  showAllCommands?: () => void
+  documentation?: () => void
+  editorPlayground?: () => void
+  openWalkthrough?: () => void
+  showReleaseNotes?: () => void
+  getStartedWithAccessibility?: () => void
+  askAtVscode?: () => void
+  keyboardShortcutsReference?: () => void
+  videoTutorials?: () => void
+  tipsAndTricks?: () => void
+  joinUsOnYoutube?: () => void
+  searchFeatureRequests?: () => void
+  reportIssue?: () => void
+  viewLicense?: () => void
+  privacyStatement?: () => void
+  toggleDeveloperTools?: () => void
+  openProcessExplorer?: () => void
+  checkForUpdates?: () => void
+  about?: () => void
+  // Settings (PSF)
+  profiles?: () => void
+  settings?: () => void
+  extensions?: () => void
+  keyboardShortcuts?: () => void
+  snippets?: () => void
+  tasks?: () => void
+  themes?: () => void
 }
 
-export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
+export function buildMenus(actions: Partial<IdeActions>, workspaceName?: string): MenuItem[] {
   const FILE_MENU: MenuItem = {
     label: "File",
     submenu: [
-      { label: "New File", shortcut: "Ctrl+N", action: actions.newFile },
+      { label: "New Text File", shortcut: "Ctrl+N", action: actions.newTextFile },
+      { label: "New File...", action: actions.newFile },
       { label: "New Window", shortcut: "Ctrl+Shift+N", action: actions.newWindow },
+      { label: "New Window with Profile", action: actions.newWindowWithProfile },
       { separator: true },
       { label: "Open File...", shortcut: "Ctrl+O", action: actions.openFile },
       { label: "Open Folder...", shortcut: "Ctrl+K Ctrl+O", action: actions.openFolder },
+      { label: "Open Workspace from File...", action: actions.openWorkspaceFromFile },
+      { separator: true },
+      { label: "Open Recent", shortcut: "Ctrl+R", submenu: [
+        { label: "More...", action: actions.openRecent },
+      ]},
+      { separator: true },
+      { label: "Add Folder to Workspace...", action: actions.addFolderToWorkspace },
+      { label: "Save Workspace As...", action: actions.saveWorkspaceAs },
+      { label: "Duplicate Workspace", action: actions.duplicateWorkspace },
       { separator: true },
       { label: "Save", shortcut: "Ctrl+S", action: actions.save },
       { label: "Save As...", shortcut: "Ctrl+Shift+S", action: actions.saveAs },
       { label: "Save All", shortcut: "Ctrl+K S", action: actions.saveAll },
       { separator: true },
+      { label: "Share", submenu: [
+        { label: "Copy Link to File...", action: actions.share },
+      ]},
+      { separator: true },
+      { label: "Auto Save", action: actions.autoSave },
+      { label: "Preferences", action: actions.preferences },
+      { separator: true },
+      { label: "Revert File", action: actions.revertFile },
+      { separator: true },
       { label: "Close Editor", shortcut: "Ctrl+F4", action: actions.closeEditor },
       { label: "Close Folder", action: actions.closeFolder },
       { label: "Close Window", shortcut: "Alt+F4", action: actions.closeWindow },
+      { separator: true },
+      { label: "Exit", shortcut: "Ctrl+Q", action: actions.exit },
     ],
   }
 
@@ -117,29 +228,37 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
       { label: "Find", shortcut: "Ctrl+F", action: actions.find },
       { label: "Replace", shortcut: "Ctrl+H", action: actions.replace },
       { label: "Find in Files", shortcut: "Ctrl+Shift+F", action: actions.findInFiles },
+      { label: "Replace in Files", shortcut: "Ctrl+Shift+H", action: actions.replaceInFiles },
       { separator: true },
       { label: "Toggle Line Comment", shortcut: "Ctrl+/", action: actions.toggleLineComment },
       { label: "Toggle Block Comment", shortcut: "Shift+Alt+A", action: actions.toggleBlockComment },
       { separator: true },
-      { label: "Format Document", shortcut: "Shift+Alt+F", action: actions.formatDocument },
-      { label: "Format Selection", shortcut: "Ctrl+K Ctrl+F", action: actions.formatSelection },
+      { label: "Emmet: Expand Abbreviation", shortcut: "Tab", action: actions.emmetExpandAbbreviation },
     ],
   }
 
   const SELECTION_MENU: MenuItem = {
     label: "Selection",
     submenu: [
-      { label: "Select All", shortcut: "Ctrl+A" },
+      { label: "Select All", shortcut: "Ctrl+A", action: actions.selectAll },
       { label: "Expand Selection", shortcut: "Shift+Alt+→", action: actions.expandSelection },
       { label: "Shrink Selection", shortcut: "Shift+Alt+←", action: actions.shrinkSelection },
       { separator: true },
-      { label: "Select Line", shortcut: "Ctrl+L", action: actions.selectLine },
-      { label: "Select Word", shortcut: "Ctrl+D", action: actions.selectWord },
+      { label: "Copy Line Up", shortcut: "Shift+Alt+↑", action: actions.copyLineUp },
+      { label: "Copy Line Down", shortcut: "Shift+Alt+↓", action: actions.copyLineDown },
+      { label: "Move Line Up", shortcut: "Alt+↑", action: actions.moveLineUp },
+      { label: "Move Line Down", shortcut: "Alt+↓", action: actions.moveLineDown },
+      { label: "Duplicate Selection", shortcut: "Ctrl+Shift+D", action: actions.duplicateSelection },
       { separator: true },
       { label: "Add Cursor Above", shortcut: "Ctrl+Alt+↑", action: actions.addCursorAbove },
       { label: "Add Cursor Below", shortcut: "Ctrl+Alt+↓", action: actions.addCursorBelow },
-      { separator: true },
+      { label: "Add Cursors to Line Ends", shortcut: "Shift+Alt+I", action: actions.addCursorsToLineEnds },
+      { label: "Add Next Occurrence", shortcut: "Ctrl+D", action: actions.addNextOccurrence },
+      { label: "Add Previous Occurrence", shortcut: "Ctrl+Shift+D", action: actions.addPreviousOccurrence },
       { label: "Select All Occurrences", shortcut: "Ctrl+Shift+L", action: actions.selectAllOccurrences },
+      { separator: true },
+      { label: "Switch to Ctrl+Click for Multi-Cursor", action: actions.switchToCtrlClickForMultiCursor },
+      { label: "Column Selection Mode", action: actions.columnSelectionMode },
     ],
   }
 
@@ -147,18 +266,28 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
     label: "View",
     submenu: [
       { label: "Command Palette...", shortcut: "Ctrl+Shift+P", action: actions.commandPalette },
+      { label: "Open View...", shortcut: "Ctrl+Shift+O", action: actions.openView },
       { separator: true },
-      { label: "Explorer", shortcut: "Ctrl+Shift+E", action: actions.toggleExplorer },
-      { label: "Search", shortcut: "Ctrl+Shift+F", action: actions.toggleSearch },
-      { label: "Source Control", shortcut: "Ctrl+Shift+G", action: actions.toggleSourceControl },
-      { label: "Run and Debug", shortcut: "Ctrl+Shift+D", action: actions.startDebugging },
-      { separator: true },
-      { label: "Toggle Terminal", shortcut: "Ctrl+`", action: actions.togglePanel },
-      { label: "Toggle Secondary Sidebar", action: actions.toggleSecondarySideBar },
-      { label: "Toggle Word Wrap", shortcut: "Alt+Z", action: actions.toggleWordWrap },
-      { separator: true },
-      { label: "Toggle Fullscreen", shortcut: "F11", action: actions.toggleFullScreen },
-      { label: "Toggle Zen Mode", shortcut: "Ctrl+K Z", action: actions.toggleZenMode },
+      { label: "Appearance", submenu: [
+        { label: "Explorer", shortcut: "Ctrl+Shift+E", action: actions.toggleExplorer },
+        { label: "Search", shortcut: "Ctrl+Shift+F", action: actions.toggleSearch },
+        { label: "Source Control", shortcut: "Ctrl+Shift+G", action: actions.toggleSourceControl },
+        { label: "Run", shortcut: "Ctrl+Shift+D", action: actions.toggleRun },
+        { label: "Extensions", shortcut: "Ctrl+Shift+X", action: actions.toggleExtensions },
+        { label: "OpenCode Chat", shortcut: "Ctrl+Shift+I", action: actions.toggleChat },
+        { label: "Browser", shortcut: "Ctrl+Shift+U", action: actions.toggleBrowser },
+        { separator: true },
+        { label: "Problems", shortcut: "Ctrl+Shift+M", action: actions.toggleProblems },
+        { label: "Output", shortcut: "Ctrl+Shift+U", action: actions.toggleOutput },
+        { label: "Debug Console", shortcut: "Ctrl+Shift+Y", action: actions.toggleDebugConsole },
+        { separator: true },
+        { label: "Toggle Terminal", shortcut: "Ctrl+`", action: actions.togglePanel },
+        { label: "Toggle Secondary Sidebar", action: actions.toggleSecondarySideBar },
+        { label: "Toggle Word Wrap", shortcut: "Alt+Z", action: actions.toggleWordWrap },
+        { separator: true },
+        { label: "Toggle Fullscreen", shortcut: "F11", action: actions.toggleFullScreen },
+        { label: "Toggle Zen Mode", shortcut: "Ctrl+K Z", action: actions.toggleZenMode },
+      ]},
       { separator: true },
       { label: "Zoom In", shortcut: "Ctrl+=", action: actions.zoomIn },
       { label: "Zoom Out", shortcut: "Ctrl+-", action: actions.zoomOut },
@@ -171,16 +300,29 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
     submenu: [
       { label: "Back", shortcut: "Alt+←", action: actions.goBack },
       { label: "Forward", shortcut: "Alt+→", action: actions.goForward },
+      { label: "Last Edit Location", shortcut: "Ctrl+K Ctrl+Q", action: actions.lastEditLocation },
+      { separator: true },
+      { label: "Switch Editor", shortcut: "Ctrl+Tab", action: actions.switchEditor },
+      { label: "Switch Group", shortcut: "Ctrl+Shift+Tab", action: actions.switchGroup },
       { separator: true },
       { label: "Go to File...", shortcut: "Ctrl+P", action: actions.goToFile },
       { label: "Go to Symbol in Workspace...", shortcut: "Ctrl+T", action: actions.goToSymbolWorkspace },
       { label: "Go to Symbol in Editor...", shortcut: "Ctrl+Shift+O", action: actions.goToSymbolEditor },
-      { label: "Go to Line...", shortcut: "Ctrl+G", action: actions.goToLine },
+      { label: "Go to Line/Column...", shortcut: "Ctrl+G", action: actions.goToLine },
       { separator: true },
       { label: "Go to Definition", shortcut: "F12", action: actions.goToDefinition },
       { label: "Go to Declaration", shortcut: "Ctrl+F12", action: actions.goToDeclaration },
       { label: "Go to Type Definition", shortcut: "Ctrl+Shift+F12", action: actions.goToTypeDefinition },
-      { label: "Go to Implementation", shortcut: "F12", action: actions.goToImplementation },
+      { label: "Go to Implementation", shortcut: "Ctrl+F12", action: actions.goToImplementation },
+      { label: "Go to References", shortcut: "Shift+F12", action: actions.goToReferences },
+      { separator: true },
+      { label: "Go to Bracket", shortcut: "Ctrl+Shift+\\", action: actions.goToBracket },
+      { separator: true },
+      { label: "Next Problem", shortcut: "F8", action: actions.nextProblem },
+      { label: "Previous Problem", shortcut: "Shift+F8", action: actions.previousProblem },
+      { separator: true },
+      { label: "Next Change", shortcut: "Ctrl+Alt+PgDn", action: actions.nextChange },
+      { label: "Previous Change", shortcut: "Ctrl+Alt+PgUp", action: actions.previousChange },
     ],
   }
 
@@ -190,8 +332,74 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
       { label: "Start Debugging", shortcut: "F5", action: actions.startDebugging },
       { label: "Run Without Debugging", shortcut: "Ctrl+F5", action: actions.runWithoutDebugging },
       { label: "Stop Debugging", shortcut: "Shift+F5", action: actions.stopDebugging },
+      { label: "Restart Debugging", shortcut: "Ctrl+Shift+F5", action: actions.restartDebugging },
       { separator: true },
-      { label: "Run Task", shortcut: "Ctrl+Shift+B", action: actions.runTask },
+      { label: "Open Configurations", action: actions.openConfigurations },
+      { label: "Add Configuration...", action: actions.addConfiguration },
+      { separator: true },
+      { label: "Step Over", shortcut: "F10", action: actions.stepOver },
+      { label: "Step Into", shortcut: "F11", action: actions.stepInto },
+      { label: "Step Out", shortcut: "Shift+F11", action: actions.stepOut },
+      { label: "Continue", shortcut: "F5", action: actions.continue },
+      { separator: true },
+      { label: "Toggle Breakpoint", shortcut: "F9", action: actions.toggleBreakpoint },
+      { label: "New Breakpoint", action: actions.newBreakpoint },
+      { separator: true },
+      { label: "Enable All Breakpoints", action: actions.enableAllBreakpoints },
+      { label: "Disable All Breakpoints", action: actions.disableAllBreakpoints },
+      { label: "Remove All Breakpoints", action: actions.removeAllBreakpoints },
+      { separator: true },
+      { label: "Install Additional Debuggers...", action: actions.installAdditionalDebuggers },
+    ],
+  }
+
+  const OPENCODE_WEB_MENU: MenuItem = {
+    label: workspaceName || "opencode-web",
+    submenu: [
+      { label: "About OpenCode Web", action: actions.about },
+      { label: "Check for Updates...", action: actions.checkForUpdates },
+      { separator: true },
+      { label: "Preferences", shortcut: "Ctrl+,", action: actions.preferences },
+      { label: "Profiles", action: actions.profiles },
+      { label: "Settings", shortcut: "Ctrl+,", action: actions.settings },
+      { label: "Extensions", shortcut: "Ctrl+Shift+X", action: actions.extensions },
+      { label: "Keyboard Shortcuts", shortcut: "Ctrl+K Ctrl+S", action: actions.keyboardShortcuts },
+      { label: "Snippets", action: actions.snippets },
+      { label: "Tasks", action: actions.tasks },
+      { separator: true },
+      { label: "Themes", action: actions.themes },
+      { separator: true },
+      { label: "Toggle Developer Tools", shortcut: "Ctrl+Shift+I", action: actions.toggleDeveloperTools },
+      { label: "Open Process Explorer", action: actions.openProcessExplorer },
+    ],
+  }
+
+  const PSF_MENU: MenuItem = {
+    label: "PSF",
+    submenu: [
+      { label: "Settings", shortcut: "Ctrl+,", action: actions.settings },
+      { label: "Profiles", action: actions.profiles },
+      { label: "Extensions", shortcut: "Ctrl+Shift+X", action: actions.extensions },
+      { label: "Keyboard Shortcuts", shortcut: "Ctrl+K Ctrl+S", action: actions.keyboardShortcuts },
+      { label: "Snippets", action: actions.snippets },
+      { label: "Tasks", action: actions.tasks },
+      { label: "Themes", action: actions.themes },
+    ],
+  }
+
+  const EXPLORER_MENU: MenuItem = {
+    label: "EXPLORER",
+    submenu: [
+      { label: "Explorer", shortcut: "Ctrl+Shift+E", action: actions.toggleExplorer },
+      { label: "Search", shortcut: "Ctrl+Shift+F", action: actions.toggleSearch },
+      { label: "Source Control", shortcut: "Ctrl+Shift+G", action: actions.toggleSourceControl },
+      { label: "Run and Debug", shortcut: "Ctrl+Shift+D", action: actions.toggleRun },
+      { label: "Extensions", shortcut: "Ctrl+Shift+X", action: actions.toggleExtensions },
+      { separator: true },
+      { label: "Problems", shortcut: "Ctrl+Shift+M", action: actions.toggleProblems },
+      { label: "Output", shortcut: "Ctrl+Shift+U", action: actions.toggleOutput },
+      { label: "Debug Console", shortcut: "Ctrl+Shift+Y", action: actions.toggleDebugConsole },
+      { label: "Terminal", shortcut: "Ctrl+`", action: actions.togglePanel },
     ],
   }
 
@@ -200,14 +408,57 @@ export function buildMenus(actions: Partial<IdeActions>): MenuItem[] {
     submenu: [
       { label: "New Terminal", shortcut: "Ctrl+Shift+`", action: actions.newTerminal },
       { label: "Split Terminal", shortcut: "Ctrl+Shift+5", action: actions.splitTerminal },
+      { label: "New Terminal Window", action: actions.newTerminalWindow },
       { separator: true },
-      { label: "Run Task", shortcut: "Ctrl+Shift+B", action: actions.runTask },
+      { label: "Run Task...", action: actions.runTask },
+      { label: "Run Build Task...", shortcut: "Ctrl+Shift+B", action: actions.runBuildTask },
+      { label: "Run Active File", action: actions.runActiveFile },
+      { label: "Run Selected Text", action: actions.runSelectedText },
       { separator: true },
-      { label: "Select Default Shell", action: actions.selectDefaultShell },
+      { label: "Show Running Tasks...", action: actions.showRunningTasks },
+      { label: "Restart Running Task...", action: actions.restartRunningTask },
+      { label: "Terminate Task...", action: actions.terminateTask },
+      { separator: true },
+      { label: "Configure Tasks...", action: actions.configureTasks },
+      { label: "Configure Default Build Task...", action: actions.configureDefaultBuildTask },
+      { separator: true },
+      { label: "Select Default Profile...", action: actions.selectDefaultShell },
     ],
   }
 
-  return [FILE_MENU, EDIT_MENU, SELECTION_MENU, VIEW_MENU, GO_MENU, RUN_MENU, TERMINAL_MENU]
+  const HELP_MENU: MenuItem = {
+    label: "Help",
+    submenu: [
+      { label: "Welcome", action: actions.welcome },
+      { label: "Show All Commands", shortcut: "Ctrl+Shift+P", action: actions.showAllCommands },
+      { label: "Documentation", action: actions.documentation },
+      { label: "Editor Playground", action: actions.editorPlayground },
+      { separator: true },
+      { label: "Walkthroughs...", action: actions.openWalkthrough },
+      { label: "Get Started with Accessibility", action: actions.getStartedWithAccessibility },
+      { separator: true },
+      { label: "Ask at opencode-web Help", action: actions.askAtVscode },
+      { label: "Keyboard Shortcuts Reference", action: actions.keyboardShortcutsReference },
+      { label: "Video Tutorials", action: actions.videoTutorials },
+      { label: "Tips and Tricks", action: actions.tipsAndTricks },
+      { label: "Join Us on YouTube", action: actions.joinUsOnYoutube },
+      { separator: true },
+      { label: "Search Feature Requests", action: actions.searchFeatureRequests },
+      { label: "Report Issue", action: actions.reportIssue },
+      { separator: true },
+      { label: "View License", action: actions.viewLicense },
+      { label: "Privacy Statement", action: actions.privacyStatement },
+      { separator: true },
+      { label: "Toggle Developer Tools", shortcut: "Ctrl+Shift+I", action: actions.toggleDeveloperTools },
+      { label: "Open Process Explorer", action: actions.openProcessExplorer },
+      { separator: true },
+      { label: "Check for Updates", action: actions.checkForUpdates },
+      { separator: true },
+      { label: "About", action: actions.about },
+    ],
+  }
+
+  return [FILE_MENU, EDIT_MENU, SELECTION_MENU, VIEW_MENU, GO_MENU, RUN_MENU, OPENCODE_WEB_MENU, PSF_MENU, EXPLORER_MENU, TERMINAL_MENU, HELP_MENU]
 }
 
 // Keep a backward compatible default MENUS array if needed elsewhere

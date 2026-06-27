@@ -1,9 +1,9 @@
-import { createSignal, For, Show, type JSX } from "solid-js"
+import { createSignal, For, Show, type JSX, onCleanup } from "solid-js"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { StatusPopover } from "@/components/status-popover"
-import { buildMenus, type IdeActions } from "./MenuBar"
+import { buildMenus, type IdeActions, type SubmenuItem } from "./MenuBar"
 
 export default function HeaderBar(props: {
   workspaceName?: string
@@ -23,7 +23,7 @@ export default function HeaderBar(props: {
   let menuBarRef: HTMLDivElement | undefined
   const dialog = useDialog()
 
-  const menus = () => buildMenus(props.actions || {})
+  const menus = () => buildMenus(props.actions || {}, props.workspaceName)
 
   const handleMenuClick = (menuLabel: string, index: number) => {
     if (activeMenu() === menuLabel) {
@@ -62,6 +62,9 @@ export default function HeaderBar(props: {
     })
   }
 
+  const [submenuActive, setSubmenuActive] = createSignal<string | null>(null)
+  const [submenuPos, setSubmenuPos] = createSignal<{ left: number; top: number }>({ left: 0, top: 0 })
+
   const handleSearchKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       setSearchOpen(false)
@@ -71,6 +74,81 @@ export default function HeaderBar(props: {
       props.onSearch()
     }
   }
+
+  const MenuItemRow = (item: SubmenuItem, parentPath: string) => {
+    const hasSubmenu = item.submenu && item.submenu.length > 0
+    const path = parentPath ? `${parentPath} > ${item.label}` : item.label || ""
+
+    return (
+      <div
+        class="relative"
+        onMouseEnter={(e) => {
+          if (hasSubmenu) {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            const menuWidth = 224
+            let left = rect.right - 4
+            const maxLeft = window.innerWidth - menuWidth - 8
+            if (left + menuWidth > window.innerWidth) {
+              left = Math.max(8, rect.left - menuWidth + 4)
+            }
+            setSubmenuPos({ left, top: rect.top - 4 })
+            setSubmenuActive(path)
+          }
+        }}
+        onMouseLeave={() => {
+          setSubmenuActive(null)
+        }}
+      >
+        <Show when={item.separator}>
+          <div class="h-px my-1 bg-border-base" />
+        </Show>
+        <Show when={!item.separator && !hasSubmenu}>
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-6 py-1.5 text-13-regular text-text-weak hover:bg-accent-base hover:text-white transition-colors cursor-default"
+            disabled={item.disabled}
+            classList={{ "opacity-50 cursor-not-allowed": item.disabled }}
+            onClick={() => { if (item.action) item.action(); setActiveMenu(null) }}
+          >
+            <span>{item.label}</span>
+            <Show when={item.shortcut}>
+              <span class="text-11-regular ml-6 opacity-70">{item.shortcut}</span>
+            </Show>
+          </button>
+        </Show>
+        <Show when={!item.separator && hasSubmenu}>
+          <div
+            class="w-full flex items-center justify-between px-6 py-1.5 text-13-regular text-text-weak hover:bg-accent-base hover:text-white transition-colors cursor-default"
+            classList={{ "opacity-50 cursor-not-allowed": item.disabled }}
+          >
+            <span>{item.label}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="shrink-0 ml-4">
+              <path d="M4 2L8 6L4 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <Show when={submenuActive() === path && item.submenu}>
+            <div
+              class="fixed min-w-56 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 z-[60] overflow-y-auto"
+              style={{
+                left: `${submenuPos().left}px`,
+                top: `${submenuPos().top}px`,
+                "max-height": `400px`,
+              }}
+              onMouseEnter={() => setSubmenuActive(path)}
+              onMouseLeave={() => setSubmenuActive(null)}
+            >
+              <For each={item.submenu}>{ (sub) => MenuItemRow(sub, path) }</For>
+            </div>
+          </Show>
+        </Show>
+      </div>
+    )
+  }
+
+  onCleanup(() => {
+    setActiveMenu(null)
+    setSubmenuActive(null)
+  })
 
   return (
     <div
@@ -88,14 +166,14 @@ export default function HeaderBar(props: {
         {/* Menus */}
         <div class="flex items-center h-full" ref={menuBarRef}>
           <For each={menus()}>{(menu, index) => (
-            <div class="relative h-full">
+            <div class="relative h-full" onMouseEnter={() => { if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}>
               <button
                 type="button"
                 data-menu-trigger
                 class="px-2.5 h-full text-13-regular hover:bg-surface-raised-base-hover hover:text-text-strong transition-colors cursor-default"
                 classList={{ "bg-surface-raised-base text-text-strong": activeMenu() === menu.label }}
                 onClick={() => handleMenuClick(menu.label, index())}
-                onMouseEnter={() => { if (activeMenu()) setActiveMenu(menu.label) }}
+                onMouseEnter={() => { if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}
               >
                 {menu.label}
               </button>
@@ -107,28 +185,9 @@ export default function HeaderBar(props: {
                     top: `${menuPosition().top}px`,
                     "max-height": `${menuPosition().maxHeight}px`,
                   }}
+                  onMouseEnter={() => setSubmenuActive(null)}
                 >
-                  <For each={menu.submenu}>{(item) => (
-                    <>
-                      <Show when={item.separator}>
-                        <div class="h-px my-1 bg-border-base" />
-                      </Show>
-                      <Show when={!item.separator}>
-                        <button
-                          type="button"
-                          class="w-full flex items-center justify-between px-6 py-1.5 text-13-regular text-text-weak hover:bg-accent-base hover:text-white transition-colors cursor-default"
-                          disabled={item.disabled}
-                          classList={{ "opacity-50 cursor-not-allowed": item.disabled }}
-                          onClick={() => { if (item.action) item.action(); setActiveMenu(null) }}
-                        >
-                          <span>{item.label}</span>
-                          <Show when={item.shortcut}>
-                            <span class="text-11-regular ml-6 opacity-70">{item.shortcut}</span>
-                          </Show>
-                        </button>
-                      </Show>
-                    </>
-                  )}</For>
+                  <For each={menu.submenu}>{ (item) => MenuItemRow(item, menu.label) }</For>
                 </div>
               </Show>
             </div>

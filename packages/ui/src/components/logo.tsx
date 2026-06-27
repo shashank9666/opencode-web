@@ -15,6 +15,11 @@ export const Mark = (props: { class?: string }) => {
   )
 }
 
+const splashCss = `
+  .splash-outer { animation: splash-outer-breathe 3s ease-in-out infinite; transform-origin: center; }
+  .splash-inner { animation: splash-inner-breathe 3s ease-in-out infinite; transform-origin: center; }
+`
+
 export const Splash = (props: Pick<ComponentProps<"svg">, "ref" | "class">) => {
   return (
     <svg
@@ -25,8 +30,9 @@ export const Splash = (props: Pick<ComponentProps<"svg">, "ref" | "class">) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path d="M60 80H20V40H60V80Z" fill="var(--icon-base)" />
-      <path d="M60 20H20V80H60V20ZM80 100H0V0H80V100Z" fill="var(--icon-strong-base)" />
+      <style>{splashCss}</style>
+      <path class="splash-inner" d="M60 80H20V40H60V80Z" fill="var(--icon-base)" />
+      <path class="splash-outer" d="M60 20H20V80H60V20ZM80 100H0V0H80V100Z" fill="var(--icon-strong-base)" />
     </svg>
   )
 }

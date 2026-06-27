@@ -6,6 +6,15 @@
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Inter", sans-serif;
     font-size: 13px; /* standard VS Code size */
     line-height: 1.4;
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  #app {
+    height: 100%;
+    overflow: hidden;
   }
 }
 

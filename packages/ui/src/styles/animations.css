@@ -1,6 +1,9 @@
 :root {
   --animate-pulse: pulse-opacity 2s ease-in-out infinite;
   --animate-pulse-scale: pulse-scale 1.2s ease-in-out infinite;
+  --animate-splash: splash-breathe 3s ease-in-out infinite;
+  --animate-splash-inner: splash-inner-breathe 3s ease-in-out infinite;
+  --animate-splash-outer: splash-outer-breathe 3s ease-in-out infinite;
 }
 
 @keyframes pulse-opacity {
@@ -10,6 +13,55 @@
   }
   50% {
     opacity: 1;
+  }
+}
+
+@keyframes splash-breathe {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  25% {
+    opacity: 0.85;
+    transform: scale(1.04);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  75% {
+    opacity: 0.7;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes splash-inner-breathe {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.94);
+  }
+  30% {
+    opacity: 0.9;
+    transform: scale(1.06);
+  }
+  60% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+}
+
+@keyframes splash-outer-breathe {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  35% {
+    opacity: 0.7;
+    transform: scale(1.03);
+  }
+  70% {
+    opacity: 0.5;
+    transform: scale(0.97);
   }
 }
 
