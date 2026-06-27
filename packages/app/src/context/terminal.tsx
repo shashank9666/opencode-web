@@ -1,6 +1,6 @@
+import { batch, createEffect, createMemo, createRoot, on, onCleanup } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { createSimpleContext } from "@opencode-ai/ui/context"
-import { batch, createEffect, createMemo, createRoot, on, onCleanup } from "solid-js"
 import { useParams } from "@solidjs/router"
 import { useSDK, type DirectorySDK } from "./sdk"
 import type { Platform } from "./platform"
@@ -18,6 +18,18 @@ export type LocalPTY = {
   buffer?: string
   scrollY?: number
   cursor?: number
+}
+
+export type CommandHistoryEntry = {
+  id: string
+  command: string
+  args?: string[]
+  exitCode?: number
+  startTime: number
+  endTime?: number
+  duration?: number
+  terminalId: string
+  title: string
 }
 
 const WORKSPACE_KEY = "__workspace__"
@@ -181,6 +193,28 @@ function createWorkspaceTerminalSession(
     )
   }
 
+  const [commandHistory, setCommandHistory] = createStore<CommandHistoryEntry[]>([])
+
+  const addCommandEntry = (entry: { command: string; args?: string[]; terminalId: string; title: string }) => {
+    const id = crypto.randomUUID()
+    setCommandHistory(commandHistory.length, { ...entry, id, startTime: Date.now() })
+    if (commandHistory.length > 200) {
+      setCommandHistory(commandHistory.slice(-200))
+    }
+  }
+
+  const clearCommandHistory = () => setCommandHistory([])
+
+  const unsubCreated = sdk.event.on("pty.created", (event: { properties: { info: { id: string; title: string; command: string; args: string[] } } }) => {
+    addCommandEntry({
+      command: event.properties.info.command,
+      args: event.properties.info.args,
+      terminalId: event.properties.info.id,
+      title: event.properties.info.title,
+    })
+  })
+  onCleanup(unsubCreated)
+
   const removeExited = (id: string) => {
     const all = store.all
     const index = all.findIndex((x) => x.id === id)
@@ -197,10 +231,21 @@ function createWorkspaceTerminalSession(
     })
   }
 
-  const unsub = sdk.event.on("pty.exited", (event: { properties: { id: string } }) => {
+  const unsubExited = sdk.event.on("pty.exited", (event: { properties: { id: string; exitCode: number } }) => {
+    const endTime = Date.now()
+    for (let i = commandHistory.length - 1; i >= 0; i--) {
+      if (commandHistory[i].terminalId === event.properties.id) {
+        setCommandHistory(i, {
+          exitCode: event.properties.exitCode,
+          endTime,
+          duration: endTime - commandHistory[i].startTime,
+        })
+        break
+      }
+    }
     removeExited(event.properties.id)
   })
-  onCleanup(unsub)
+  onCleanup(unsubExited)
 
   const update = (client: DirectorySDK["client"], pty: Partial<LocalPTY> & { id: string }) => {
     const index = store.all.findIndex((x) => x.id === pty.id)
@@ -297,6 +342,14 @@ function createWorkspaceTerminalSession(
           }
           setStore("all", store.all.length, newTerminal)
           setStore("active", id)
+          if (options.command) {
+            addCommandEntry({
+              command: options.command,
+              args: options.args,
+              terminalId: id,
+              title: pty.data?.title ?? title,
+            })
+          }
         })
         .catch((error: unknown) => {
           console.error("Failed to create shell terminal", error)
@@ -382,6 +435,9 @@ function createWorkspaceTerminalSession(
         }),
       )
     },
+    commandHistory: createMemo(() => commandHistory),
+    addCommandEntry,
+    clearCommandHistory,
   }
 }
 
@@ -472,6 +528,9 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       move: (id: string, to: number) => workspace().move(id, to),
       next: () => workspace().next(),
       previous: () => workspace().previous(),
+      commandHistory: () => workspace().commandHistory(),
+      addCommandEntry: (entry: { command: string; args?: string[]; terminalId: string; title: string }) => workspace().addCommandEntry(entry),
+      clearCommandHistory: () => workspace().clearCommandHistory(),
     }
   },
 })

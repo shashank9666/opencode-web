@@ -2,6 +2,9 @@ import { createSignal, createMemo, createEffect, Show, For } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
+import { BrowserToolbar } from "./browser/BrowserToolbar"
+import { BrowserSessionCard } from "./browser/BrowserSessionCard"
+import { BrowserDevTools, type ConsoleEntry, type NetworkRequest, type ScreenshotEntry, type DOMNode, type LogEntry } from "./browser/BrowserDevTools"
 
 // ── Connection status ──
 
@@ -71,6 +74,11 @@ function saveBrowserInstances(instances: BrowserInstance[]) {
   localStorage.setItem(BROWSER_INSTANCES_KEY, JSON.stringify(instances.slice(0, 10)))
 }
 
+let consoleIdCounter = 0
+let networkIdCounter = 0
+let screenshotIdCounter = 0
+let logIdCounter = 0
+
 // ── Main Component ──
 
 export function BrowserPreviewPanel() {
@@ -84,6 +92,19 @@ export function BrowserPreviewPanel() {
   const [browserInstances, setBrowserInstances] = createSignal<BrowserInstance[]>(loadBrowserInstances())
   const [showBrowserList, setShowBrowserList] = createSignal(false)
   const [activeBrowserId, setActiveBrowserId] = createSignal<string | null>(null)
+  const [sessionStartTime] = createSignal(Date.now())
+
+  // DevTools state
+  const [showDevTools, setShowDevTools] = createSignal(false)
+  const [showSessionCard, setShowSessionCard] = createSignal(false)
+
+  // DevTools data stores
+  const [consoleEntries, setConsoleEntries] = createSignal<ConsoleEntry[]>([])
+  const [networkRequests, setNetworkRequests] = createSignal<NetworkRequest[]>([])
+  const [screenshots, setScreenshots] = createSignal<ScreenshotEntry[]>([])
+  const [domNode, setDomNode] = createSignal<DOMNode | null>(null)
+  const [logEntries, setLogEntries] = createSignal<LogEntry[]>([])
+
   let loadStartTime = 0
 
   const iframeSrc = createMemo(() => {
@@ -99,8 +120,8 @@ export function BrowserPreviewPanel() {
     setStatus("connected")
     const loadMs = Date.now() - loadStartTime
     setLoadTime(loadMs)
+    addLog("info", `Page loaded in ${loadMs}ms`)
 
-    // Update browser instance
     const currentUrl = iframeSrc()
     if (activeBrowserId()) {
       setBrowserInstances(prev => {
@@ -118,8 +139,8 @@ export function BrowserPreviewPanel() {
   const handleIframeError = () => {
     setStatus("error")
     setLoadTime(null)
+    addLog("error", `Failed to load ${iframeSrc()}`)
 
-    // Update browser instance
     if (activeBrowserId()) {
       setBrowserInstances(prev => {
         const updated = prev.map(b =>
@@ -142,7 +163,6 @@ export function BrowserPreviewPanel() {
     setPageTitle("")
     setLoadTime(null)
 
-    // Add to history after a short delay (debounce)
     const timer = setTimeout(() => {
       setHistory(prev => {
         const entry: HistoryEntry = { url: current, timestamp: Date.now() }
@@ -159,16 +179,23 @@ export function BrowserPreviewPanel() {
     setUrl(newUrl)
     setShowHistory(false)
     setShowQuickConnect(false)
+    addLog("log", `Navigating to ${newUrl}`)
   }
 
   const reload = () => {
     const current = url()
     setUrl("")
     setTimeout(() => setUrl(current), 50)
+    addLog("log", "Reloading page")
   }
 
   const goBack = () => {
+    addLog("log", "Navigating back")
     setUrl("")
+  }
+
+  const goForward = () => {
+    addLog("log", "Navigating forward")
   }
 
   const formatTime = (ms: number) => {
@@ -194,6 +221,29 @@ export function BrowserPreviewPanel() {
     }
   }
 
+  // ── DevTools helpers ──
+
+  const addLog = (source: string, message: string) => {
+    setLogEntries(prev => [...prev.slice(-199), { id: ++logIdCounter, message, timestamp: Date.now(), source }])
+  }
+
+  const addConsoleEntry = (level: ConsoleEntry["level"], message: string, stack?: string) => {
+    setConsoleEntries(prev => [...prev.slice(-199), { id: ++consoleIdCounter, level, message, timestamp: Date.now(), stack }])
+  }
+
+  const addNetworkRequest = (method: string, url: string, status: number, statusText: string, timing: number, size: string) => {
+    setNetworkRequests(prev => [...prev.slice(-99), { id: ++networkIdCounter, method, url, status, statusText, timing, size, timestamp: Date.now() }])
+  }
+
+  const addScreenshot = (dataUrl: string, label?: string) => {
+    setScreenshots(prev => [...prev.slice(-49), { id: ++screenshotIdCounter, dataUrl, timestamp: Date.now(), label }])
+  }
+
+  const clearConsole = () => {
+    setConsoleEntries([])
+    addLog("info", "Console cleared")
+  }
+
   // ── Playwright Browser Launch ──
   const launchPlaywright = (targetUrl?: string) => {
     const launchUrl = targetUrl || url()
@@ -217,7 +267,8 @@ export function BrowserPreviewPanel() {
     setUrl(launchUrl)
     setShowBrowserList(false)
 
-    // Emit event for Playwright integration
+    addLog("info", `Launching browser ${nextNumber} to ${launchUrl}`)
+
     window.dispatchEvent(new CustomEvent("playwright-launch", {
       detail: { url: launchUrl, id: newId }
     }))
@@ -229,6 +280,7 @@ export function BrowserPreviewPanel() {
       setActiveBrowserId(id)
       setUrl(browser.url)
       setShowBrowserList(false)
+      addLog("info", `Switched to ${browser.title}`)
     }
   }
 
@@ -244,6 +296,8 @@ export function BrowserPreviewPanel() {
       setStatus("idle")
     }
 
+    addLog("info", `Closed browser instance`)
+
     window.dispatchEvent(new CustomEvent("playwright-close", {
       detail: { id }
     }))
@@ -254,186 +308,24 @@ export function BrowserPreviewPanel() {
 
   return (
     <div class="flex-1 flex flex-col min-h-0 min-w-0 bg-surface-base">
-      {/* Toolbar */}
-      <div class="flex items-center gap-1.5 px-3 py-2 border-b border-border-base bg-surface-raised-base shrink-0">
-        {/* Navigation buttons */}
-        <Tooltip value="Go Back" placement="bottom">
-          <IconButton
-            icon="arrow-left"
-            variant="ghost"
-            size="small"
-            class="size-6 rounded"
-            onClick={goBack}
-            aria-label="Go Back"
-          />
-        </Tooltip>
-        <Tooltip value="Reload" placement="bottom">
-          <IconButton
-            icon="reset"
-            variant="ghost"
-            size="small"
-            class="size-6 rounded"
-            onClick={reload}
-            aria-label="Reload"
-          />
-        </Tooltip>
-
-        <div class="w-px h-4 bg-border-base mx-1" />
-
-        {/* URL bar */}
-        <div class="flex-1 flex items-center gap-2 bg-surface-base border border-border-base rounded px-2 py-1 text-12-regular text-text-weak focus-within:border-border-strong transition-colors">
-          <Icon name={statusIcon()} size="small" class={`${statusColor()} shrink-0`} />
-          <input
-            type="text"
-            value={url()}
-            onInput={(e) => setUrl(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                navigate(url())
-              }
-            }}
-            class="flex-1 bg-transparent border-none outline-none text-text-strong"
-            placeholder="Enter a URL (e.g. http://localhost:5173)"
-          />
-          <Show when={url()}>
-            <IconButton
-              icon="close-small"
-              variant="ghost"
-              size="small"
-              class="size-4 rounded shrink-0"
-              onClick={() => { setUrl(""); setStatus("idle"); setLoadTime(null) }}
-              aria-label="Clear"
-            />
-          </Show>
-        </div>
-
-        <div class="w-px h-4 bg-border-base mx-1" />
-
-        {/* Launch Playwright */}
-        <Tooltip value="Launch Browser" placement="bottom">
-          <IconButton
-            icon="play"
-            variant="ghost"
-            size="small"
-            class="size-6 rounded text-text-success-base hover:text-text-success-base"
-            onClick={() => launchPlaywright()}
-            aria-label="Launch Browser"
-          />
-        </Tooltip>
-
-        {/* Browser list */}
-        <div class="relative">
-          <Tooltip value="Browser Instances" placement="bottom">
-            <IconButton
-              icon="browser"
-              variant="ghost"
-              size="small"
-              class="size-6 rounded"
-              onClick={() => setShowBrowserList(!showBrowserList())}
-              aria-label="Browser Instances"
-            />
-          </Tooltip>
-          <Show when={totalBrowserCount() > 0}>
-            <div class="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] rounded-full bg-accent-base text-white text-[9px] font-bold flex items-center justify-center px-0.5">
-              {totalBrowserCount()}
-            </div>
-          </Show>
-          <Show when={showBrowserList()}>
-            <div class="absolute top-full right-0 mt-1 w-72 bg-surface-raised-base border border-border-base rounded-lg shadow-xl z-50 overflow-hidden">
-              <div class="px-3 py-2 border-b border-border-base flex items-center justify-between">
-                <span class="text-12-medium text-text-strong">Browser Instances ({totalBrowserCount()})</span>
-                <button
-                  type="button"
-                  class="text-11-regular text-accent-base hover:text-accent-base-hover"
-                  onClick={() => launchPlaywright()}
-                >
-                  + New
-                </button>
-              </div>
-              <div class="max-h-64 overflow-y-auto">
-                <Show
-                  when={browserInstances().length > 0}
-                  fallback={
-                    <div class="px-3 py-4 text-12-regular text-text-weaker text-center">
-                      No browser instances
-                    </div>
-                  }
-                >
-                  <For each={browserInstances()}>
-                    {(browser) => (
-                      <div
-                        class="flex items-center gap-2 px-3 py-2 hover:bg-surface-raised-base-hover transition-colors cursor-pointer group"
-                        classList={{ "bg-accent-base/10": activeBrowserId() === browser.id }}
-                        onClick={() => switchBrowser(browser.id)}
-                      >
-                        <Icon
-                          name={browser.status === "connected" ? "circle-check" : browser.status === "loading" ? "reset" : browser.status === "error" ? "circle-x" : "browser"}
-                          size="small"
-                          class={browser.status === "connected" ? "text-text-success-base" : browser.status === "loading" ? "text-text-warning-base" : browser.status === "error" ? "text-text-danger-base" : "text-text-weak"}
-                        />
-                        <div class="flex-1 min-w-0">
-                          <div class="text-12-regular text-text-strong truncate">{browser.title}</div>
-                          <div class="text-11-regular text-text-weaker truncate">{browser.url}</div>
-                        </div>
-                        <Show when={browser.loadTime !== null}>
-                          <span class="text-10-regular text-text-weaker shrink-0">{formatTime(browser.loadTime!)}</span>
-                        </Show>
-                        <button
-                          type="button"
-                          class="size-5 flex items-center justify-center rounded hover:bg-surface-base text-text-weaker hover:text-text-danger-base opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => { e.stopPropagation(); closeBrowser(browser.id) }}
-                          aria-label="Close browser"
-                        >
-                          <Icon name="close-small" size="small" />
-                        </button>
-                      </div>
-                    )}
-                  </For>
-                </Show>
-              </div>
-              {connectedCount() > 0 && (
-                <div class="px-3 py-1.5 border-t border-border-base text-10-regular text-text-weaker">
-                  {connectedCount()} connected
-                </div>
-              )}
-            </div>
-          </Show>
-        </div>
-
-        <div class="w-px h-4 bg-border-base mx-1" />
-
-        {/* Quick connect */}
-        <Tooltip value="Quick Connect" placement="bottom">
-          <IconButton
-            icon="bolt"
-            variant="ghost"
-            size="small"
-            class="size-6 rounded"
-            onClick={() => setShowQuickConnect(!showQuickConnect())}
-            aria-label="Quick Connect"
-          />
-        </Tooltip>
-
-        {/* History */}
-        <Tooltip value="History" placement="bottom">
-          <IconButton
-            icon="history"
-            variant="ghost"
-            size="small"
-            class="size-6 rounded"
-            onClick={() => setShowHistory(!showHistory())}
-            aria-label="History"
-          />
-        </Tooltip>
-
-        {/* Page info */}
-        <Show when={status() === "connected" && loadTime() !== null}>
-          <div class="flex items-center gap-1 text-11-regular text-text-weaker ml-1">
-            <Icon name="clock" size="small" />
-            <span>{formatTime(loadTime()!)}</span>
-          </div>
-        </Show>
-      </div>
+      {/* Enhanced toolbar */}
+      <BrowserToolbar
+        url={url()}
+        onUrlChange={setUrl}
+        onNavigate={() => navigate(url())}
+        onBack={goBack}
+        onForward={goForward}
+        onReload={reload}
+        onClear={() => { setUrl(""); setStatus("idle"); setLoadTime(null) }}
+        canGoBack={true}
+        canGoForward={true}
+        statusIcon={statusIcon()}
+        statusColor={statusColor()}
+        showDevTools={showDevTools()}
+        onToggleDevTools={() => setShowDevTools(!showDevTools())}
+        showSessionCard={showSessionCard()}
+        onToggleSessionCard={() => setShowSessionCard(!showSessionCard())}
+      />
 
       {/* Quick connect dropdown */}
       <Show when={showQuickConnect()}>
@@ -482,6 +374,21 @@ export function BrowserPreviewPanel() {
             </For>
           </Show>
         </div>
+      </Show>
+
+      {/* Session card */}
+      <Show when={showSessionCard()}>
+        <BrowserSessionCard
+          url={iframeSrc()}
+          status={status()}
+          duration={Date.now() - sessionStartTime()}
+          viewportWidth={1920}
+          viewportHeight={1080}
+          actionsCount={browserInstances().length}
+          pageTitle={pageTitle()}
+          loadTime={loadTime()}
+          onClose={() => setShowSessionCard(false)}
+        />
       </Show>
 
       {/* Browser content */}
@@ -574,6 +481,19 @@ export function BrowserPreviewPanel() {
           </div>
         )}
       </div>
+
+      {/* DevTools bottom panel */}
+      <Show when={showDevTools()}>
+        <BrowserDevTools
+          consoleEntries={consoleEntries()}
+          networkRequests={networkRequests()}
+          screenshots={screenshots()}
+          domNode={domNode()}
+          logEntries={logEntries()}
+          onClearConsole={clearConsole}
+          height={220}
+        />
+      </Show>
     </div>
   )
 }

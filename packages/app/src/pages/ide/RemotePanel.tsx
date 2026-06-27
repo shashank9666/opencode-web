@@ -3,27 +3,7 @@ import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { DropdownMenu } from "@opencode-ai/ui/dropdown-menu"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
-
-type RemoteType = "WSL" | "SSH" | "Container"
-
-interface RemoteConnection {
-  type: RemoteType
-  target: string
-  status: "idle" | "connecting" | "connected" | "error"
-  error?: string
-}
-
-type SavedRemoteConnection = {
-  type: RemoteType
-  target: string
-}
-
-type RemoteSection = {
-  id: string
-  title: string
-  type: RemoteType
-  items: string[]
-}
+import { useRemote, type RemoteType, type RemoteConnection, type SavedRemoteConnection, type RemoteSection } from "@/context/remote"
 
 // Common paths for each remote type
 const COMMON_PATHS: Record<RemoteType, string[]> = {
@@ -38,8 +18,6 @@ const TYPE_INFO: Record<RemoteType, { color: string; icon: string; label: string
   SSH: { color: "text-[#3b82f6]", icon: "⚡", label: "SSH", command: "ssh" },
   Container: { color: "text-[#8b5cf6]", icon: "◈", label: "Docker", command: "docker exec -it" },
 }
-
-const RECENT_CONNECTIONS_KEY = "opencode-remote-recent-connections"
 
 const STATUS_INFO: Record<RemoteConnection["status"], { label: string; className: string; dotClassName: string }> = {
   connected: {
@@ -64,34 +42,6 @@ const STATUS_INFO: Record<RemoteConnection["status"], { label: string; className
   },
 }
 
-function loadRecentConnections() {
-  try {
-    const raw = localStorage.getItem(RECENT_CONNECTIONS_KEY)
-    if (!raw) return [] as SavedRemoteConnection[]
-    return JSON.parse(raw) as SavedRemoteConnection[]
-  } catch {
-    return [] as SavedRemoteConnection[]
-  }
-}
-
-function saveRecentConnections(connections: SavedRemoteConnection[]) {
-  localStorage.setItem(RECENT_CONNECTIONS_KEY, JSON.stringify(connections.slice(0, 8)))
-}
-
-const TREE_SECTIONS: RemoteSection[] = [
-  { id: "ssh", title: "SSH Targets", type: "SSH", items: ["user@localhost", "dev@server.local", "build@10.0.0.12"] },
-  { id: "wsl", title: "WSL", type: "WSL", items: ["Ubuntu", "Debian"] },
-  { id: "container", title: "Dev Containers", type: "Container", items: ["node-app-dev", "rust-dev-container"] },
-  { id: "tunnels", title: "Tunnels", type: "SSH", items: ["localhost:3000", "localhost:4173"] },
-]
-
-const PROCESS_LIST = [
-  { pid: 1342, name: "remote-agent", action: "Kill" },
-  { pid: 2104, name: "extension-host", action: "Inspect" },
-  { pid: 3880, name: "git", action: "Inspect" },
-]
-
-const LOG_STREAMS = ["Connection", "SSH", "Extension Host", "Server", "Terminal", "Git"]
 const SETTINGS_SCOPES = ["User", "Workspace", "Remote"] as const
 const CONNECTION_FLOW = [
   "SSH Auth",
@@ -152,47 +102,36 @@ export default function RemotePanel(props: {
   onDisconnect?: () => void
   onOpenTerminal?: (command: string, title: string) => void
 }) {
+  const remote = useRemote()
   const [connectors, setConnectors] = createSignal(false)
-  const [connection, setConnection] = createSignal<RemoteConnection | null>(null)
   const [currentPath, setCurrentPath] = createSignal("/")
   const [selectedRemoteType, setSelectedRemoteType] = createSignal<RemoteType>("WSL")
-  const [recentConnections, setRecentConnections] = createSignal<SavedRemoteConnection[]>(loadRecentConnections())
-  const [logTarget, setLogTarget] = createSignal<string | null>(null)
-  const [forwardTarget, setForwardTarget] = createSignal<string | null>(null)
   const [settingsScope, setSettingsScope] = createSignal<(typeof SETTINGS_SCOPES)[number]>("Remote")
 
   createEffect(() => {
     const value = props.connection
-    if (!value) {
-      setConnection(null)
-      return
-    }
+    const current = remote.connection()
+    if (!value) return
 
     const [type, ...targetParts] = value.split(": ")
-    if (type === "WSL" || type === "SSH" || type === "Container") {
-      setConnection({ type, target: targetParts.join(": "), status: "connected" })
+    if ((type === "WSL" || type === "SSH" || type === "Container")) {
+      const target = targetParts.join(": ")
+      if (!current || current.type !== type || current.target !== target) {
+        void remote.connect(type, target)
+      }
     }
   })
 
-  const isConnected = () => connection()?.status === "connected"
-  const isConnecting = () => connection()?.status === "connecting"
+  const isConnected = () => remote.connection()?.status === "connected"
+  const isConnecting = () => remote.connection()?.status === "connecting"
 
   const handleConnect = (type: RemoteType, target: string) => {
-    setConnection({ type, target, status: "connecting" })
-    setRecentConnections((prev) => {
-      const next = [{ type, target }, ...prev.filter((item) => item.type !== type || item.target !== target)]
-      saveRecentConnections(next)
-      return next
-    })
-    // Simulate connection (in real implementation, this would verify connectivity)
-    setTimeout(() => {
-      setConnection({ type, target, status: "connected" })
-      setCurrentPath("/")
-    }, 800)
+    void remote.connect(type, target)
+    setCurrentPath("/")
   }
 
   const handleDisconnect = () => {
-    setConnection(null)
+    remote.disconnect()
     props.onDisconnect?.()
   }
 
@@ -201,22 +140,11 @@ export default function RemotePanel(props: {
   }
 
   const updateRecentConnectionTarget = (type: RemoteType, previousTarget: string, nextTarget: string) => {
-    setRecentConnections((prev) => {
-      const next = [
-        { type, target: nextTarget },
-        ...prev.filter((item) => item.type !== type || item.target !== previousTarget),
-      ]
-      saveRecentConnections(next)
-      return next
-    })
+    remote.saveRecent(type, nextTarget)
   }
 
   const removeRecentConnection = (item: SavedRemoteConnection) => {
-    setRecentConnections((prev) => {
-      const next = prev.filter((entry) => entry.type !== item.type || entry.target !== item.target)
-      saveRecentConnections(next)
-      return next
-    })
+    remote.removeRecent(item)
   }
 
   const copyHost = async (target: string) => {
@@ -226,9 +154,6 @@ export default function RemotePanel(props: {
   const renameConnection = (type: RemoteType, target: string) => {
     const nextTarget = window.prompt(`Rename ${TYPE_INFO[type].label} target`, target)?.trim()
     if (!nextTarget || nextTarget === target) return
-    if (connection()?.type === type && connection()?.target === target) {
-      setConnection({ type, target: nextTarget, status: "connected" })
-    }
     updateRecentConnectionTarget(type, target, nextTarget)
   }
 
@@ -238,7 +163,7 @@ export default function RemotePanel(props: {
   }
 
   const showLogs = (type: RemoteType, target: string) => {
-    setLogTarget(`${type}: ${target}`)
+    remote.setLogTarget(`${type}: ${target}`)
     props.onFileClick?.(`/remote/logs/${type.toLowerCase()}/${target}.log`)
   }
 
@@ -257,7 +182,7 @@ export default function RemotePanel(props: {
   }
 
   const forwardPort = (type: RemoteType, target: string) => {
-    setForwardTarget(`${type}: ${target}`)
+    remote.setForwardTarget(`${type}: ${target}`)
     props.onOpenTerminal?.(
       type === "SSH" ? `ssh -L 3000:localhost:3000 ${target}` : `remote-${type.toLowerCase()} forward-port ${target}`,
       `${TYPE_INFO[type].label}: Forward Port`,
@@ -265,9 +190,7 @@ export default function RemotePanel(props: {
   }
 
   const reconnect = () => {
-    const conn = connection()
-    if (!conn) return
-    handleConnect(conn.type, conn.target)
+    remote.reconnect()
   }
 
   const openRemoteCommand = (label: string, command: string) => {
@@ -275,7 +198,7 @@ export default function RemotePanel(props: {
   }
 
   const openProcessAction = (pid: number, action: string) => {
-    const conn = connection()
+    const conn = remote.connection()
     if (!conn) return
     openRemoteCommand(
       `${action} PID ${pid}`,
@@ -286,7 +209,7 @@ export default function RemotePanel(props: {
   }
 
   const remoteFileOperation = (action: string) => {
-    const conn = connection()
+    const conn = remote.connection()
     if (!conn) return
     openRemoteCommand(
       `${action} in ${conn.type}`,
@@ -295,9 +218,8 @@ export default function RemotePanel(props: {
   }
 
   const openTerminal = () => {
-    const conn = connection()
+    const conn = remote.connection()
     if (!conn) return
-    const typeInfo = TYPE_INFO[conn.type]
     let cmd: string
     let title: string
     if (conn.type === "WSL") {
@@ -319,7 +241,7 @@ export default function RemotePanel(props: {
   }
 
   const openPathInTerminal = (path: string) => {
-    const conn = connection()
+    const conn = remote.connection()
     if (!conn) return
     if (conn.type === "WSL") {
       props.onOpenTerminal?.(`wsl -d ${conn.target || "Ubuntu"} -- ls -la ${path}`, `WSL: ${path}`)
@@ -331,7 +253,7 @@ export default function RemotePanel(props: {
   }
 
   const commonPaths = createMemo(() => {
-    const conn = connection()
+    const conn = remote.connection()
     return conn ? COMMON_PATHS[conn.type] : []
   })
 
@@ -342,13 +264,13 @@ export default function RemotePanel(props: {
   }
 
   const remoteStatus = (type: RemoteType, target: string) => {
-    const conn = connection()
+    const conn = remote.connection()
     if (conn?.type === type && conn.target === target) return STATUS_INFO[conn.status]
     return STATUS_INFO.idle
   }
 
   const flowStep = () => {
-    const state = connection()?.status ?? "idle"
+    const state = remote.connection()?.status ?? "idle"
     if (state === "connecting") return 1
     if (state === "connected") return CONNECTION_FLOW.length
     if (state === "error") return 0
@@ -449,7 +371,7 @@ export default function RemotePanel(props: {
               Remote connections run through the integrated terminal
             </span>
 
-            <Show when={recentConnections().length > 0}>
+            <Show when={remote.recent().length > 0}>
               <div class="w-full max-w-xs space-y-2 border border-border-base rounded-lg p-3 bg-surface-raised-base">
                 <div class="flex items-center justify-between">
                   <span class="text-12-medium text-text-strong">Recent Connections</span>
@@ -457,15 +379,16 @@ export default function RemotePanel(props: {
                     type="button"
                     class="text-11-regular text-text-weaker hover:text-text-strong"
                     onClick={() => {
-                      setRecentConnections([])
-                      saveRecentConnections([])
+                      for (const item of remote.recent()) {
+                        remote.removeRecent(item)
+                      }
                     }}
                   >
                     Clear
                   </button>
                 </div>
                 <div class="space-y-1">
-                  <For each={recentConnections()}>
+                  <For each={remote.recent()}>
                     {(item) => (
                       <button
                         type="button"
@@ -514,21 +437,21 @@ export default function RemotePanel(props: {
               <button
                 type="button"
                 class="px-2 py-1.5 rounded bg-surface-raised-base text-12-regular text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors text-left"
-                onClick={() => connection() && handleDisconnect()}
+                onClick={() => remote.connection() && handleDisconnect()}
               >
                 Close Connection
               </button>
               <button
                 type="button"
                 class="px-2 py-1.5 rounded bg-surface-raised-base text-12-regular text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors text-left"
-                onClick={() => connection() && installServer(connection()!.type, connection()!.target)}
+                onClick={() => remote.connection() && installServer(remote.connection()!.type, remote.connection()!.target)}
               >
                 Install Server
               </button>
               <button
                 type="button"
                 class="px-2 py-1.5 rounded bg-surface-raised-base text-12-regular text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors text-left"
-                onClick={() => connection() && showLogs(connection()!.type, connection()!.target)}
+                onClick={() => remote.connection() && showLogs(remote.connection()!.type, remote.connection()!.target)}
               >
                 Show Log
               </button>
@@ -550,12 +473,12 @@ export default function RemotePanel(props: {
           <div class="px-3 py-2 border-b border-border-base shrink-0">
             <div class="text-11-medium text-text-weaker uppercase tracking-wider mb-2">Remote Logs</div>
             <div class="flex flex-wrap gap-1.5">
-              <For each={LOG_STREAMS}>
+              <For each={remote.logStreams()}>
                 {(stream) => (
                   <button
                     type="button"
                     class="px-2 py-1 rounded bg-surface-raised-base text-11-regular text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors"
-                    onClick={() => showLogs(connection()!.type, `${connection()!.target} • ${stream}`)}
+                    onClick={() => showLogs(remote.connection()!.type, `${remote.connection()!.target} • ${stream}`)}
                   >
                     {stream}
                   </button>
@@ -567,16 +490,19 @@ export default function RemotePanel(props: {
           {/* Connection badge */}
           <div class="px-3 py-2 border-b border-border-base shrink-0 flex items-center justify-between gap-2">
             <div class="flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md bg-surface-raised-base border border-border-base/50 min-w-0">
-              <span class={`text-14-medium font-mono shrink-0 ${typeColor(connection()!.type)}`}>
-                {TYPE_INFO[connection()!.type].icon}
+              <span class={`text-14-medium font-mono shrink-0 ${typeColor(remote.connection()!.type)}`}>
+                {TYPE_INFO[remote.connection()!.type].icon}
               </span>
               <div class="flex-1 min-w-0">
                 <div class="text-12-medium text-text-strong truncate">
-                  {connection()!.type}: {connection()!.target}
+                  {remote.connection()!.type}: {remote.connection()!.target}
                 </div>
                 <div class="text-11-regular text-text-success-base flex items-center gap-1">
                   <span class="w-1.5 h-1.5 rounded-full bg-text-success-base inline-block" />
                   Connected
+                  <Show when={remote.duration() > 0}>
+                    <span class="text-text-weaker">· {remote.formatDuration(remote.duration())}</span>
+                  </Show>
                 </div>
               </div>
             </div>
@@ -604,7 +530,7 @@ export default function RemotePanel(props: {
                 <Icon name="terminal" size="small" class="shrink-0" />
                 <span>Open Remote Terminal</span>
               </button>
-              <Show when={connection()!.type === "WSL"}>
+              <Show when={remote.connection()!.type === "WSL"}>
                 <button
                   type="button"
                   class="w-full flex items-center gap-2 px-2 py-1.5 text-12-regular text-text-weak hover:text-text-strong bg-surface-raised-base rounded transition-colors"
@@ -648,7 +574,7 @@ export default function RemotePanel(props: {
               </button>
             </div>
             <div class="space-y-1">
-              <For each={PROCESS_LIST}>
+              <For each={remote.processes()}>
                 {(process) => (
                   <div class="flex items-center justify-between gap-2 rounded bg-surface-raised-base px-2 py-1.5">
                     <div class="min-w-0">
@@ -722,7 +648,7 @@ export default function RemotePanel(props: {
           <div class="flex-1 overflow-y-auto px-3 py-3">
             <div class="text-11-medium text-text-weaker uppercase tracking-wider mb-2">Remote Tree</div>
             <div class="space-y-3">
-              <For each={TREE_SECTIONS}>
+              <For each={remote.sections()}>
                 {(section) => (
                   <div class="space-y-1">
                     <div class="flex items-center justify-between">
@@ -817,18 +743,18 @@ export default function RemotePanel(props: {
             </div>
           </div>
 
-          <Show when={logTarget() || forwardTarget()}>
+          <Show when={remote.logTarget() || remote.forwardTarget()}>
             <div class="px-3 py-2 border-t border-border-base text-11-regular text-text-weaker">
               <div class="flex items-center justify-between gap-2">
                 <span class="truncate">
-                  {logTarget() ? `Logs: ${logTarget()}` : `Port forwarding: ${forwardTarget()}`}
+                  {remote.logTarget() ? `Logs: ${remote.logTarget()}` : `Port forwarding: ${remote.forwardTarget()}`}
                 </span>
                 <button
                   type="button"
                   class="text-text-weak hover:text-text-strong"
                   onClick={() => {
-                    setLogTarget(null)
-                    setForwardTarget(null)
+                    remote.setLogTarget(null)
+                    remote.setForwardTarget(null)
                   }}
                 >
                   Clear

@@ -1,8 +1,9 @@
-import { For, Match, Show, Switch, createEffect, createMemo, onCleanup, type JSX } from "solid-js"
+import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onCleanup, type JSX } from "solid-js"
 import { Portal } from "solid-js/web"
 import { createStore } from "solid-js/store"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Tabs } from "@opencode-ai/ui/tabs"
+import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { TooltipKeybind } from "@opencode-ai/ui/tooltip"
 import { ResizeHandle } from "@opencode-ai/ui/resize-handle"
@@ -15,7 +16,8 @@ import { useDialog } from "@opencode-ai/ui/context/dialog"
 
 import FileTree from "@/components/file-tree"
 import { SessionContextUsage } from "@/components/session-context-usage"
-import { SessionContextTab, SortableTab, FileVisual } from "@/components/session"
+import { ToolTimeline } from "@/components/session/tool-timeline"
+import { FileChangeTracking, SessionContextTab, SortableTab, FileVisual } from "@/components/session"
 import { useCommand } from "@/context/command"
 import { useFile, type SelectedLineRange } from "@/context/file"
 import { useSDK } from "@/context/sdk"
@@ -174,6 +176,42 @@ export function SessionSidePanel(props: {
 
   const platform = usePlatform()
 
+  const [changesActive, setChangesActive] = createSignal(false)
+  const effectiveTab = createMemo(() => changesActive() ? "changes" : activeTab())
+
+  const handleTabChange = (value: string) => {
+    if (value === "changes") {
+      setChangesActive(true)
+      tabs().open("changes")
+      tabs().setActive("changes")
+      return
+    }
+    setChangesActive(false)
+    openTab(value)
+  }
+
+  const acceptDiff = async (file: string) => {
+    await sdk().client.v2.fs.write({ path: file, content: (await sdk().client.file.read({ path: file })).data ?? "" })
+  }
+
+  const rejectDiff = async (file: string) => {
+    try { await sdk().client.v2.fs.delete({ path: file }) } catch {}
+  }
+
+  const viewDiff = (file: string) => {
+    setChangesActive(false)
+    props.focusReviewDiff(file)
+    if (!view().reviewPanel.opened()) view().reviewPanel.open()
+  }
+
+  const editFile = (file: string) => {
+    setChangesActive(false)
+    const tab = file.tab(file)
+    tabs().open(tab)
+    tabs().setActive(tab)
+    void file.load(file)
+  }
+
   const [store, setStore] = createStore({
     activeDraggable: undefined as string | undefined,
     contextMenu: undefined as { x: number; y: number; node: { path: string; type: string } } | undefined,
@@ -313,7 +351,7 @@ export function SessionSidePanel(props: {
                 >
                   <DragDropSensors />
                   <ConstrainDragYAxis />
-                  <Tabs value={activeTab()} onChange={openTab}>
+                  <Tabs value={effectiveTab()} onChange={handleTabChange}>
                     <div class="sticky top-0 shrink-0 flex">
                       <Tabs.List
                         ref={(el: HTMLDivElement) => {
@@ -356,6 +394,21 @@ export function SessionSidePanel(props: {
                             <div class="flex items-center gap-2">
                               <SessionContextUsage variant="indicator" />
                               <div>{language.t("session.tab.context")}</div>
+                            </div>
+                          </Tabs.Trigger>
+                        </Show>
+                        <Tabs.Trigger value="tools">
+                          <div class="flex items-center gap-1.5">
+                            <Icon name="mcp" size="small" />
+                            <div>Tools</div>
+                          </div>
+                        </Tabs.Trigger>
+                        <Show when={props.canReview() && props.diffsReady() && props.diffs().length > 0}>
+                          <Tabs.Trigger value="changes">
+                            <div class="flex items-center gap-1.5">
+                              <Icon name="diff" size="small" />
+                              <div>Changes</div>
+                              <div>{props.reviewCount()}</div>
                             </div>
                           </Tabs.Trigger>
                         </Show>
@@ -413,6 +466,42 @@ export function SessionSidePanel(props: {
                         </Show>
                       </Tabs.Content>
                     </Show>
+
+                    <Tabs.Content value="tools" class="flex flex-col h-full overflow-hidden contain-strict">
+                      <Show when={activeTab() === "tools"}>
+                        <ToolTimeline />
+                      </Show>
+                    </Tabs.Content>
+
+                    <Tabs.Content value="changes" class="flex flex-col h-full overflow-hidden contain-strict">
+                      <Show when={effectiveTab() === "changes"}>
+                        <FileChangeTracking
+                          diffs={diffs()}
+                          onAccept={async (file) => {
+                            try {
+                              const content = await sdk().client.file.read({ path: file })
+                              if (content.data) await sdk().client.v2.fs.write({ path: file, content: content.data })
+                            } catch {}
+                          }}
+                          onReject={async (file) => {
+                            try { await sdk().client.v2.fs.delete({ path: file }) } catch {}
+                          }}
+                          onViewDiff={viewDiff}
+                          onEdit={editFile}
+                          onAcceptAll={() => {
+                            for (const d of diffs()) {
+                              if (d.file) acceptDiff(d.file)
+                            }
+                          }}
+                          onRejectAll={() => {
+                            for (const d of diffs()) {
+                              if (d.file) rejectDiff(d.file)
+                            }
+                          }}
+                          class="flex-1 overflow-y-auto"
+                        />
+                      </Show>
+                    </Tabs.Content>
 
                     <Show when={activeFileTab()} keyed>
                       {(tab) => <FileTabContent tab={tab} />}

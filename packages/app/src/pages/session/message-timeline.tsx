@@ -55,7 +55,11 @@ import { Popover as KobaltePopover } from "@kobalte/core/popover"
 import { normalize } from "@opencode-ai/ui/session-diff"
 import { useFileComponent } from "@opencode-ai/ui/context/file"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"
+import { SuggestedActions } from "@/components/session/suggested-actions"
+import { PlanningModePipeline } from "@/components/session/planning-mode-pipeline"
+import { usePlanning } from "@/context/planning"
 import { SessionContextUsage } from "@/components/session-context-usage"
+import { NotificationCenter } from "@/components/notification-center"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { useLanguage } from "@/context/language"
@@ -296,6 +300,7 @@ export function MessageTimeline(props: {
   const language = useLanguage()
   const { params, sessionKey, id, dir } = useSessionKey(props.dir, props.sessionId)
   const platform = usePlatform()
+  const planning = usePlanning()
 
   let virtualizer: VirtualizerHandle | undefined
   const sessionID = createMemo(() => id())
@@ -447,6 +452,16 @@ export function MessageTimeline(props: {
       if (row._tag !== "AssistantPart") return
       result.set(row.userMessageID, row.group.key)
     })
+    return result
+  })
+  const lastAssistantPartKeyByUser = createMemo(() => {
+    const rows = timelineRows()
+    const result = new Map<string, string>()
+    for (const row of rows) {
+      if (row._tag === "AssistantPart") {
+        result.set(row.userMessageID, TimelineRow.key(row))
+      }
+    }
     return result
   })
   const keepMounted = createMemo(() => {
@@ -1189,6 +1204,9 @@ export function MessageTimeline(props: {
       }
       case "AssistantPart": {
         const assistantPartRow = row as Accessor<TimelineRowByTag<"AssistantPart">>
+        const isLastAssistantPart = () =>
+          lastAssistantPartKeyByUser().get(assistantPartRow().userMessageID) === TimelineRow.key(assistantPartRow())
+
         return (
           <TimelineRowFrame row={assistantPartRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
@@ -1199,6 +1217,9 @@ export function MessageTimeline(props: {
                 {renderAssistantPartGroup(assistantPartRow)}
               </div>
             </div>
+            <Show when={isLastAssistantPart() && !workingTurn(assistantPartRow().userMessageID)}>
+              <SuggestedActions />
+            </Show>
           </TimelineRowFrame>
         )
       }
@@ -1403,6 +1424,7 @@ export function MessageTimeline(props: {
                 {(id) => (
                   <div class="shrink-0 flex items-center gap-3">
                     <SessionContextUsage placement="bottom" />
+                    <NotificationCenter />
                     <Show when={!parentID()}>
                       <DropdownMenu
                         gutter={4}
@@ -1581,6 +1603,9 @@ export function MessageTimeline(props: {
               </Show>
             </div>
           </div>
+        </Show>
+        <Show when={planning.active()}>
+          <PlanningModePipeline />
         </Show>
         <Show when={scrollRoot()}>
           {(root) => (

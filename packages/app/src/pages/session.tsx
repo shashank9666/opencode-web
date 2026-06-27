@@ -54,6 +54,7 @@ import {
   shouldFocusTerminalOnKeyDown,
   shouldShowFileTree,
 } from "@/pages/session/helpers"
+import { PlanningProvider } from "@/context/planning"
 import { MessageTimeline } from "@/pages/session/message-timeline"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
@@ -1815,38 +1816,40 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
                       </Match>
                       <Match when={activeSessionId()}>
                         <Show when={messagesReady()}>
-                          <MessageTimeline
-                            actions={actions}
-                            scroll={ui.scroll}
-                            onResumeScroll={resumeScroll}
-                            setScrollRef={setScrollRef}
-                            onScheduleScrollState={scheduleScrollState}
-                            onAutoScrollHandleScroll={autoScroll.handleScroll}
-                            onMarkScrollGesture={markScrollGesture}
-                            hasScrollGesture={hasScrollGesture}
-                            onUserScroll={markUserScroll}
-                            onHistoryScroll={historyLoader.onScrollerScroll}
-                            onAutoScrollInteraction={autoScroll.handleInteraction}
-                            shouldAnchorBottom={() =>
-                              !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
-                            }
-                            centered={centered()}
-                            setContentRef={(el) => {
-                              content = el
-                              autoScroll.contentRef(el)
+                          <PlanningProvider>
+                            <MessageTimeline
+                              actions={actions}
+                              scroll={ui.scroll}
+                              onResumeScroll={resumeScroll}
+                              setScrollRef={setScrollRef}
+                              onScheduleScrollState={scheduleScrollState}
+                              onAutoScrollHandleScroll={autoScroll.handleScroll}
+                              onMarkScrollGesture={markScrollGesture}
+                              hasScrollGesture={hasScrollGesture}
+                              onUserScroll={markUserScroll}
+                              onHistoryScroll={historyLoader.onScrollerScroll}
+                              onAutoScrollInteraction={autoScroll.handleInteraction}
+                              shouldAnchorBottom={() =>
+                                !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
+                              }
+                              centered={centered()}
+                              setContentRef={(el) => {
+                                content = el
+                                autoScroll.contentRef(el)
 
-                              const root = scroller
-                              if (root) scheduleScrollState(root)
-                            }}
-                            historyShift={historyLoader.shift()}
-                            userMessages={historyLoader.userMessages()}
-                            anchor={anchor}
-                            setRevealMessage={(fn) => {
-                              revealMessage = fn
-                            }}
-                            sessionId={() => activeSessionId()}
-                            dir={() => activeDir()}
-                          />
+                                const root = scroller
+                                if (root) scheduleScrollState(root)
+                              }}
+                              historyShift={historyLoader.shift()}
+                              userMessages={historyLoader.userMessages()}
+                              anchor={anchor}
+                              setRevealMessage={(fn) => {
+                                revealMessage = fn
+                              }}
+                              sessionId={() => activeSessionId()}
+                              dir={() => activeDir()}
+                            />
+                          </PlanningProvider>
                         </Show>
                       </Match>
                       <Match when={true}>
@@ -1900,38 +1903,40 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
           <div class="flex-1 min-h-0 overflow-hidden">
             <Show when={activeSessionId()}>
               <Show when={messagesReady()}>
-                <MessageTimeline
-                  actions={actions}
-                  scroll={ui.scroll}
-                  onResumeScroll={resumeScroll}
-                  setScrollRef={setScrollRef}
-                  onScheduleScrollState={scheduleScrollState}
-                  onAutoScrollHandleScroll={autoScroll.handleScroll}
-                  onMarkScrollGesture={markScrollGesture}
-                  hasScrollGesture={hasScrollGesture}
-                  onUserScroll={markUserScroll}
-                  onHistoryScroll={historyLoader.onScrollerScroll}
-                  onAutoScrollInteraction={autoScroll.handleInteraction}
-                  shouldAnchorBottom={() =>
-                    !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
-                  }
-                  centered={centered()}
-                  setContentRef={(el) => {
-                    content = el
-                    autoScroll.contentRef(el)
+                <PlanningProvider>
+                  <MessageTimeline
+                    actions={actions}
+                    scroll={ui.scroll}
+                    onResumeScroll={resumeScroll}
+                    setScrollRef={setScrollRef}
+                    onScheduleScrollState={scheduleScrollState}
+                    onAutoScrollHandleScroll={autoScroll.handleScroll}
+                    onMarkScrollGesture={markScrollGesture}
+                    hasScrollGesture={hasScrollGesture}
+                    onUserScroll={markUserScroll}
+                    onHistoryScroll={historyLoader.onScrollerScroll}
+                    onAutoScrollInteraction={autoScroll.handleInteraction}
+                    shouldAnchorBottom={() =>
+                      !location.hash && !store.messageId && !ui.pendingMessage && !autoScroll.userScrolled()
+                    }
+                    centered={centered()}
+                    setContentRef={(el) => {
+                      content = el
+                      autoScroll.contentRef(el)
 
-                    const root = scroller
-                    if (root) scheduleScrollState(root)
-                  }}
-                  historyShift={historyLoader.shift()}
-                  userMessages={historyLoader.userMessages()}
-                  anchor={anchor}
-                  setRevealMessage={(fn) => {
-                    revealMessage = fn
-                  }}
-                  sessionId={() => activeSessionId()}
-                  dir={() => activeDir()}
-                />
+                      const root = scroller
+                      if (root) scheduleScrollState(root)
+                    }}
+                    historyShift={historyLoader.shift()}
+                    userMessages={historyLoader.userMessages()}
+                    anchor={anchor}
+                    setRevealMessage={(fn) => {
+                      revealMessage = fn
+                    }}
+                    sessionId={() => activeSessionId()}
+                    dir={() => activeDir()}
+                  />
+                </PlanningProvider>
               </Show>
             </Show>
           </div>

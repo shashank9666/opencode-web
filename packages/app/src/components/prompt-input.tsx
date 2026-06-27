@@ -67,6 +67,7 @@ import {
 import { createPromptSubmit, type FollowupDraft } from "./prompt-input/submit"
 import { PromptPopover, type AtOption, type SlashCommand } from "./prompt-input/slash-popover"
 import { PromptContextItems } from "./prompt-input/context-items"
+import { ChatContextChips, type ChatContextChipData } from "./prompt-input/context-chips"
 import { PromptImageAttachments } from "./prompt-input/image-attachments"
 import { PromptDragOverlay } from "./prompt-input/drag-overlay"
 import { promptPlaceholder } from "./prompt-input/placeholder"
@@ -76,6 +77,7 @@ import { pathKey } from "@/utils/path-key"
 import { displayName } from "@/pages/layout/helpers"
 import { AddContextMenu } from "./prompt-input/add-context-menu"
 import { VoiceRecorder } from "./prompt-input/voice-recorder"
+import { AgentModeSelector, type AgentMode } from "./prompt-input/agent-mode-selector"
 
 export type PromptInputState = ReturnType<typeof usePrompt>
 
@@ -224,6 +226,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const [contextImagesOpen, setContextImagesOpen] = createSignal(false)
   const [artifactsPanelOpen, setArtifactsPanelOpen] = createSignal(false)
   const [planningMode, setPlanningMode] = createSignal(false)
+  const [agentMode, setAgentMode] = createSignal<AgentMode>("ask")
   const [isDragging, setIsDragging] = createSignal(false)
 
   const terminal = useTerminal()
@@ -429,6 +432,103 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     const items = prompt.context.items()
     if (store.mode !== "shell") return items
     return items.filter((item) => !item.comment?.trim())
+  })
+
+  const [dismissedChips, setDismissedChips] = createStore<Record<string, boolean>>({})
+
+  const dismissChip = (id: string) => setDismissedChips(id, true)
+
+  const mcpServers = createMemo(() => Object.keys(sync().data.mcp ?? {}))
+
+  const contextChips = createMemo(() => {
+    const chips: ChatContextChipData[] = []
+
+    const sessionID = props.controls.session.id
+
+    if (props.controls.projects.directory && !dismissedChips.workspace) {
+      chips.push({
+        id: "workspace",
+        icon: "folder",
+        label: props.controls.projects.directory.split(/[/\\]/).pop()!,
+        onRemove: () => dismissChip("workspace"),
+      })
+    }
+
+    const filesCount = tabs().all().length
+    if (filesCount > 0 && !dismissedChips.files) {
+      chips.push({
+        id: "files",
+        icon: "file-tree",
+        label: `${filesCount} ${filesCount === 1 ? "File" : "Files"}`,
+        onRemove: () => dismissChip("files"),
+      })
+    }
+
+    const diffs = sessionID ? sync().data.session_diff[sessionID] : undefined
+    if (diffs && diffs.length > 0 && !dismissedChips.gitDiff) {
+      chips.push({
+        id: "gitDiff",
+        icon: "branch",
+        label: `Git Diff (${diffs.length})`,
+        onRemove: () => dismissChip("gitDiff"),
+      })
+    }
+
+    if (terminal.all().length > 0 && !dismissedChips.terminal) {
+      chips.push({
+        id: "terminal",
+        icon: "terminal",
+        label: `${terminal.all().length} ${terminal.all().length === 1 ? "terminal" : "terminals"}`,
+        onRemove: () => dismissChip("terminal"),
+      })
+    }
+
+    if (browserPanelOpen() && !dismissedChips.browser) {
+      chips.push({
+        id: "browser",
+        icon: "browser",
+        label: "Browser",
+        onRemove: () => dismissChip("browser"),
+      })
+    }
+
+    if (imageAttachments().length > 0 && !dismissedChips.screenshot) {
+      chips.push({
+        id: "screenshot",
+        icon: "photo",
+        label: `${imageAttachments().length} ${imageAttachments().length === 1 ? "Screenshot" : "Screenshots"}`,
+        onRemove: () => dismissChip("screenshot"),
+      })
+    }
+
+    if (terminal.all().length > 0 && !dismissedChips.console) {
+      chips.push({
+        id: "console",
+        icon: "console",
+        label: "Console",
+        onRemove: () => dismissChip("console"),
+      })
+    }
+
+    if (mcpServers().length > 0 && !dismissedChips.mcp) {
+      chips.push({
+        id: "mcp",
+        icon: "mcp",
+        label: `${mcpServers().length} ${mcpServers().length === 1 ? "MCP" : "MCPs"}`,
+        onRemove: () => dismissChip("mcp"),
+      })
+    }
+
+    if (prompt.context.items().length > 0 && !dismissedChips.memory) {
+      chips.push({
+        id: "memory",
+        icon: "brain",
+        label: "Memory",
+        onRemove: () => dismissChip("memory"),
+      })
+    }
+
+    return chips
   })
 
   const hasUserPrompt = createMemo(() => {
@@ -1731,6 +1831,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                 onRemove={removeAttachment}
                 removeLabel={language.t("prompt.attachment.remove")}
               />
+              <ChatContextChips chips={contextChips()} />
               <div
                 class="relative min-h-[52px]"
                 onMouseDown={(e) => {
@@ -1925,17 +2026,18 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
               }
               onRemove={removeAttachment}
               removeLabel={language.t("prompt.attachment.remove")}
-            />
-            <div
-              class="relative"
-              onMouseDown={(e) => {
-                const target = e.target
-                if (!(target instanceof HTMLElement)) return
-                if (target.closest('[data-action="prompt-attach"], [data-action="prompt-submit"]')) {
-                  return
-                }
-                editorRef?.focus()
-              }}
+              />
+              <ChatContextChips chips={contextChips()} />
+              <div
+                class="relative"
+                onMouseDown={(e) => {
+                  const target = e.target
+                  if (!(target instanceof HTMLElement)) return
+                  if (target.closest('[data-action="prompt-attach"], [data-action="prompt-submit"]')) {
+                    return
+                  }
+                  editorRef?.focus()
+                }}
             >
               <div
                 class="relative max-h-[240px] overflow-y-auto no-scrollbar"
@@ -2124,18 +2226,15 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </div>
                     </Show>
 
-                    {/* Planning Mode Toggle */}
+                    {/* Agent Mode Selector */}
                     <div class="flex items-center gap-1 ml-2 border-l border-border-base pl-2" style={control()}>
-                      <Tooltip placement="top" gutter={4} value="Planning Mode">
-                        <IconButton
-                          icon="brain"
-                          variant={planningMode() ? "secondary" : "ghost"}
-                          size="small"
-                          class={`size-6 rounded ${planningMode() ? "bg-surface-raised-stronger text-icon-primary-active" : ""}`}
-                          onClick={() => setPlanningMode((prev) => !prev)}
-                          aria-label="Planning Mode"
-                        />
-                      </Tooltip>
+                      <AgentModeSelector
+                        current={agentMode()}
+                        onChange={(mode) => {
+                          setAgentMode(mode)
+                          window.dispatchEvent(new CustomEvent("agent-mode-change", { detail: { mode } }))
+                        }}
+                      />
                     </div>
 
                     {/* Context Indicator */}
