@@ -289,6 +289,7 @@ export interface Interface {
   readonly branch: () => Effect.Effect<string | undefined>
   readonly defaultBranch: () => Effect.Effect<string | undefined>
   readonly status: () => Effect.Effect<FileStatus[]>
+  readonly file: (path: string, ref?: string) => Effect.Effect<string>
   readonly diff: (mode: Mode, options?: DiffOptions) => Effect.Effect<FileDiff[]>
   readonly diffRaw: () => Effect.Effect<string>
   readonly apply: (input: ApplyInput) => Effect.Effect<ApplyResult, PatchApplyError>
@@ -375,6 +376,12 @@ export const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Serv
               } satisfies FileStatus
             }),
         )
+      }),
+      file: Effect.fn("Vcs.file")(function* (path: string, ref: string = "HEAD") {
+        const ctx = yield* InstanceState.context
+        if (ctx.project.vcs !== "git") return ""
+        if (!(yield* git.hasHead(ctx.directory))) return ""
+        return yield* git.show(ctx.directory, ref, path).pipe(Effect.catchAll(() => Effect.succeed("")))
       }),
       diff: Effect.fn("Vcs.diff")(function* (mode: Mode, options?: DiffOptions) {
         const value = yield* InstanceState.get(state)

@@ -85,11 +85,11 @@ export function ReviewChangesPanel(props: { workspace: any }) {
       await file.load(path);
       const state = file.get(path);
       const after = state?.content?.type === "text" ? state.content.content : "";
-      // Try to get git original via sdk
+      // Try to get git original via vcsFile
       let before = after;
       try {
-        const resp = await sdk().client.file.read({ path });
-        if (resp && typeof (resp as any).content === "string") before = (resp as any).content;
+        const resp = await sdk().client.instance.vcsFile({ query: { path, ref: "HEAD" } });
+        if (resp && typeof resp === "string") before = resp;
       } catch {
         // fallback: show current content on both sides (no diff)
       }

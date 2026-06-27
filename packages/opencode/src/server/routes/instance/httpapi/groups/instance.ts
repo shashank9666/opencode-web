@@ -48,6 +48,7 @@ export const InstancePaths = {
   vcsDiff: "/vcs/diff",
   vcsDiffRaw: "/vcs/diff/raw",
   vcsApply: "/vcs/apply",
+  vcsFile: "/vcs/file",
   command: "/command",
   agent: "/agent",
   skill: "/skill",
@@ -122,6 +123,16 @@ export const InstanceApi = HttpApi.make("instance")
             identifier: "vcs.diff.raw",
             summary: "Get raw VCS diff",
             description: "Retrieve a raw patch for current uncommitted changes.",
+          }),
+        ),
+        HttpApiEndpoint.get("vcsFile", InstancePaths.vcsFile, {
+          query: Schema.Struct({ path: Schema.String, ref: Schema.optional(Schema.String) }),
+          success: described(Schema.String, "VCS file content"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "vcs.file",
+            summary: "Get VCS file",
+            description: "Retrieve a file's content from a specific git ref.",
           }),
         ),
         HttpApiEndpoint.post("vcsApply", InstancePaths.vcsApply, {

@@ -58,6 +58,12 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       return yield* vcs.diffRaw()
     })
 
+    const getVcsFile = Effect.fn("InstanceHttpApi.vcsFile")(function* (ctx: {
+      query: { path: string; ref?: string }
+    }) {
+      return yield* vcs.file(ctx.query.path, ctx.query.ref)
+    })
+
     const applyVcs = Effect.fn("InstanceHttpApi.vcsApply")(function* (ctx: { payload: Vcs.ApplyInput }) {
       return yield* vcs.apply(ctx.payload).pipe(
         Effect.mapError(
@@ -100,6 +106,7 @@ export const instanceHandlers = HttpApiBuilder.group(InstanceHttpApi, "instance"
       .handle("vcsStatus", getVcsStatus)
       .handle("vcsDiff", getVcsDiff)
       .handle("vcsDiffRaw", getVcsDiffRaw)
+      .handle("vcsFile", getVcsFile)
       .handle("vcsApply", applyVcs)
       .handle("command", getCommand)
       .handle("agent", getAgent)

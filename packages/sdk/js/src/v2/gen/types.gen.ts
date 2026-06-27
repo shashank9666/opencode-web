@@ -6279,6 +6279,34 @@ export type VcsDiffRawResponses = {
 
 export type VcsDiffRawResponse = VcsDiffRawResponses[keyof VcsDiffRawResponses]
 
+export type VcsFileData = {
+  body?: never
+  path?: never
+  query: {
+    path: string
+    ref?: string
+  }
+  url: "/vcs/file"
+}
+
+export type VcsFileErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type VcsFileError = VcsFileErrors[keyof VcsFileErrors]
+
+export type VcsFileResponses = {
+  /**
+   * VCS file content
+   */
+  200: string
+}
+
+export type VcsFileResponse = VcsFileResponses[keyof VcsFileResponses]
+
 export type VcsApplyData = {
   body?: {
     patch: string

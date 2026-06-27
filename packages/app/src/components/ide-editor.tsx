@@ -550,9 +550,8 @@ export function IdeDiffEditor(props: {
             )}
             <div class="w-[1px] self-stretch bg-[#3c3c3c]" />
             <div class="flex items-center gap-1.5 px-3 py-1.5 text-[#cccccc] text-12-regular">
-              <Icon name="arrow-up" class="size-3.5 cursor-pointer hover:text-white" onClick={prevDiff} />
-              <Icon name="chevron-down" class="size-3.5 cursor-pointer hover:text-white" onClick={nextDiff} />
-              <span class="opacity-70 ml-1 font-normal">Alt+J</span>
+              <Icon name="arrow-up" class="size-3.5 cursor-pointer hover:text-white" onClick={prevDiff} title="Previous Change" />
+              <Icon name="chevron-down" class="size-3.5 cursor-pointer hover:text-white" onClick={nextDiff} title="Next Change" />
             </div>
           </>
         ), widgetNode)
@@ -560,6 +559,8 @@ export function IdeDiffEditor(props: {
         contentWidget = {
           getId: () => "ai-inline-diff-widget",
           getDomNode: () => widgetNode,
+          allowEditorOverflow: true,
+          suppressMouseDown: true,
           getPosition: () => ({
             position: { lineNumber: maxLine, column: 1 },
             preference: [monaco.editor.ContentWidgetPositionPreference.BELOW]

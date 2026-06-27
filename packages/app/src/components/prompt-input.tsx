@@ -1805,19 +1805,19 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </Show>
                     </div>
                   </Tooltip>
-                  <Tooltip placement="top" gutter={4} value="Artifacts">
+                  <Tooltip placement="top" gutter={4} value="Context Images">
                     <Popover 
                       open={contextImagesOpen()} 
                       onOpenChange={setContextImagesOpen}
                       trigger={
                         <div class="relative block">
                           <IconButton
-                            icon="archive"
+                            icon="image"
                             variant="ghost"
                             size="small"
                             class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
                             onClick={() => {}}
-                            aria-label="Artifacts"
+                            aria-label="Context Images"
                           />
                           <Show when={prompt.current().filter(p => p.type === "image").length > 0}>
                             <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />

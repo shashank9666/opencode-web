@@ -369,6 +369,8 @@ import type {
   VcsDiffRawErrors,
   VcsDiffRawResponses,
   VcsDiffResponses,
+  VcsFileErrors,
+  VcsFileResponses,
   VcsGetErrors,
   VcsGetResponses,
   VcsStatusErrors,
@@ -2051,6 +2053,36 @@ export class Vcs extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<VcsDiffResponses, VcsDiffErrors, ThrowOnError>({
       url: "/vcs/diff",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get VCS file
+   *
+   * Retrieve a file's content from a specific git ref.
+   */
+  public file<ThrowOnError extends boolean = false>(
+    parameters: {
+      path: string
+      ref?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "path" },
+            { in: "query", key: "ref" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<VcsFileResponses, VcsFileErrors, ThrowOnError>({
+      url: "/vcs/file",
       ...options,
       ...params,
     })
