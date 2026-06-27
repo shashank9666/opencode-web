@@ -210,8 +210,7 @@
 
   /* Glassmorphism overrides for inner panels */
   html[data-glassmorphism="true"] .bg-background-base:not(#root-layout),
-  html[data-glassmorphism="true"] .bg-surface-base,
-  html[data-glassmorphism="true"] .bg-v2-background-bg-deep:not(#root-layout) {
+  html[data-glassmorphism="true"] .bg-surface-base {
     background-color: color-mix(in srgb, var(--background-base) calc(var(--app-opacity) * 100%), transparent) !important;
     backdrop-filter: blur(var(--app-glass-blur));
   }
@@ -219,6 +218,14 @@
     background-color: color-mix(in srgb, var(--surface-raised-base, var(--surface-base)) calc(var(--app-opacity) * 100%), transparent) !important;
     backdrop-filter: blur(var(--app-glass-blur));
   }
+
+  /* V2 Background Layers Glassmorphism */
+  html[data-glassmorphism="true"] .bg-v2-background-bg-base { background-color: color-mix(in srgb, var(--v2-background-bg-base) calc(var(--app-opacity) * 100%), transparent) !important; backdrop-filter: blur(var(--app-glass-blur)); }
+  html[data-glassmorphism="true"] .bg-v2-background-bg-deep:not(#root-layout) { background-color: color-mix(in srgb, var(--v2-background-bg-deep) calc(var(--app-opacity) * 100%), transparent) !important; backdrop-filter: blur(var(--app-glass-blur)); }
+  html[data-glassmorphism="true"] .bg-v2-background-bg-layer-01 { background-color: color-mix(in srgb, var(--v2-background-bg-layer-01) calc(var(--app-opacity) * 100%), transparent) !important; backdrop-filter: blur(var(--app-glass-blur)); }
+  html[data-glassmorphism="true"] .bg-v2-background-bg-layer-02 { background-color: color-mix(in srgb, var(--v2-background-bg-layer-02) calc(var(--app-opacity) * 100%), transparent) !important; backdrop-filter: blur(var(--app-glass-blur)); }
+  html[data-glassmorphism="true"] .bg-v2-background-bg-layer-03 { background-color: color-mix(in srgb, var(--v2-background-bg-layer-03) calc(var(--app-opacity) * 100%), transparent) !important; backdrop-filter: blur(var(--app-glass-blur)); }
+
 
   /* Make Monaco Editor transparent so glassmorphism shows through */
   html[data-glassmorphism="true"] .monaco-editor,

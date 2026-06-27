@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, createResource, onMount } from "solid-js"
+import { Component, Show, createMemo, createResource, onMount, For } from "solid-js"
 import { ButtonV2 } from "@opencode-ai/ui/v2/button-v2"
 import { SelectV2 } from "@opencode-ai/ui/v2/select-v2"
 import { Switch } from "@opencode-ai/ui/v2/switch-v2"
@@ -501,6 +501,53 @@ export const SettingsGeneralV2: Component = () => {
         </SettingsRowV2>
 
         <SettingsRowV2
+          title="Theme Presets"
+          description="Apply curated aesthetic combinations of themes and glassmorphism"
+        >
+          <div class="flex flex-wrap gap-2">
+            <ButtonV2 
+              variant="neutral" 
+              onClick={() => {
+                theme.setColorScheme("dark")
+                theme.setTheme("ocean-glass")
+                settings.appearance.setGlassmorphism(true)
+                settings.appearance.setOpacity(0.6)
+                settings.appearance.setBlurIntensity(30)
+                settings.appearance.setWallpaperUrl("/wallpapers/sunset_city.png")
+              }}
+            >
+              Cyberpunk Glow
+            </ButtonV2>
+            <ButtonV2 
+              variant="neutral" 
+              onClick={() => {
+                theme.setColorScheme("dark")
+                theme.setTheme("minimal-glass")
+                settings.appearance.setGlassmorphism(true)
+                settings.appearance.setOpacity(0.4)
+                settings.appearance.setBlurIntensity(24)
+                settings.appearance.setWallpaperUrl("/wallpapers/cozy_room.png")
+              }}
+            >
+              Cozy Lofi
+            </ButtonV2>
+            <ButtonV2 
+              variant="neutral" 
+              onClick={() => {
+                theme.setColorScheme("dark")
+                theme.setTheme("ocean-glass")
+                settings.appearance.setGlassmorphism(true)
+                settings.appearance.setOpacity(0.7)
+                settings.appearance.setBlurIntensity(40)
+                settings.appearance.setWallpaperUrl("/wallpapers/space_station.png")
+              }}
+            >
+              Space Station
+            </ButtonV2>
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
           title="Glassmorphism"
           description="Enable glassmorphism effect on IDE panels"
         >
@@ -573,6 +620,31 @@ export const SettingsGeneralV2: Component = () => {
               }}
               class="text-12-regular text-text-weak file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
             />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title="Wallpaper Gallery"
+          description="Choose from a selection of prebuilt anime wallpapers"
+        >
+          <div class="flex flex-wrap gap-3">
+            <For each={[
+              { id: "sunset_city", name: "Sunset City", url: "/wallpapers/sunset_city.png" },
+              { id: "cozy_room", name: "Cozy Room", url: "/wallpapers/cozy_room.png" },
+              { id: "space_station", name: "Space Station", url: "/wallpapers/space_station.png" },
+            ]}>
+              {(wp: { id: string, name: string, url: string }) => (
+                <button
+                  class={`relative w-24 h-16 rounded overflow-hidden border-2 transition-all ${
+                    settings.appearance.wallpaperUrl() === wp.url ? "border-accent-base scale-105" : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                  onClick={() => settings.appearance.setWallpaperUrl(wp.url)}
+                  title={wp.name}
+                >
+                  <img src={wp.url} alt={wp.name} class="w-full h-full object-cover" />
+                </button>
+              )}
+            </For>
           </div>
         </SettingsRowV2>
 
