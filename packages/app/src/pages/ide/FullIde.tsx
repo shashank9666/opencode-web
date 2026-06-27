@@ -1734,8 +1734,7 @@ export default function FullIde() {
             <Show when={isPreviewablePath(contextMenu()!.path)}>
               <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; openPreview(ctx.path); closeContextMenu() }}><Icon name="eye" class="size-4" /> Open Preview</button>
             </Show>
-            <div class="h-px bg-border-base my-1" />
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); toggleLeftPanel("explorer") }}>Reveal in File Explorer</button>
+
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); const dir = ctx.isDir ? ctx.path : ctx.path.slice(0, ctx.path.lastIndexOf("/")); terminal.newShell({ title: "Terminal", command: `cd "${dir}"` }); panelManager.showPanel("terminal-area"); }}>Open in Integrated Terminal</button>
             <div class="h-px bg-border-base my-1" />
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); copyToClipboard(ctx.path) }}>Cut<span class="text-11-regular ml-6 opacity-70">Ctrl+X</span></button>
@@ -1760,8 +1759,7 @@ export default function FullIde() {
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); void (async () => { await file.load(ctx.path); const state = file.get(ctx.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(ctx.path, state.content.content); setDiffMode(false); } })() }}>Open</button>
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); startCreate("file", ctx.path); }}><Icon name="open-file" class="size-4" /> New File</button>
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); startCreate("directory", ctx.path); }}><Icon name="folder" class="size-4" /> New Folder</button>
-            <div class="h-px bg-border-base my-1" />
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); toggleLeftPanel("explorer") }}>Reveal in File Explorer</button>
+
             <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); terminal.newShell({ title: "Terminal", command: `cd "${ctx.path}"` }); panelManager.showPanel("terminal-area"); }}>Open in Integrated Terminal</button>
             <div class="h-px bg-border-base my-1" />
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); copyToClipboard(ctx.path) }}>Cut<span class="text-11-regular ml-6 opacity-70">Ctrl+X</span></button>

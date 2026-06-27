@@ -186,9 +186,7 @@ export function buildMenus(actions: Partial<IdeActions>, workspaceName?: string)
       { label: "Open Folder...", shortcut: "Ctrl+K Ctrl+O", action: actions.openFolder },
       { label: "Open Workspace from File...", action: actions.openWorkspaceFromFile },
       { separator: true },
-      { label: "Open Recent", shortcut: "Ctrl+R", submenu: [
-        { label: "More...", action: actions.openRecent },
-      ]},
+
       { separator: true },
       { label: "Add Folder to Workspace...", action: actions.addFolderToWorkspace },
       { label: "Save Workspace As...", action: actions.saveWorkspaceAs },

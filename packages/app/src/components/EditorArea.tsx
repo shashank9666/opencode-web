@@ -430,24 +430,7 @@ if (dt) {
                       </div>
                     </ContextMenu.Item>
                     <ContextMenu.Separator />
-                    <ContextMenu.Item onSelect={() => {
-                      // @ts-ignore
-                      window.opencode?.showItemInFolder(openFile.path);
-                    }}>
-                      <div class="flex items-center justify-between w-full">
-                        <ContextMenu.ItemLabel>Reveal in File Explorer</ContextMenu.ItemLabel>
-                        <span class="text-12-regular text-text-weak">Shift+Alt+R</span>
-                      </div>
-                    </ContextMenu.Item>
-                    <ContextMenu.Item onSelect={() => {
-                      // Dispatch a custom event that FileTree could theoretically listen to, or just skip it
-                      const event = new CustomEvent('reveal-in-explorer', { detail: { path: openFile.path } });
-                      window.dispatchEvent(event);
-                    }}>
-                      <div class="flex items-center justify-between w-full">
-                        <ContextMenu.ItemLabel>Reveal in Explorer View</ContextMenu.ItemLabel>
-                      </div>
-                    </ContextMenu.Item>
+
                   </ContextMenu.Content>
                 </ContextMenu.Portal>
               </ContextMenu>

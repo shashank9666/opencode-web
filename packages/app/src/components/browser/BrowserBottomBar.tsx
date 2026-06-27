@@ -30,13 +30,7 @@ export interface BrowserBottomBarProps {
   latency: number | null
   viewportWidth: number
   viewportHeight: number
-  engine: BrowserEngine
   onViewportChange: (width: number, height: number) => void
-  onEngineChange: (engine: BrowserEngine) => void
-  showDevTools: boolean
-  onToggleDevTools: () => void
-  showSessions: boolean
-  onToggleSessions: () => void
 }
 
 export function BrowserBottomBar(props: BrowserBottomBarProps) {
@@ -110,32 +104,6 @@ export function BrowserBottomBar(props: BrowserBottomBarProps) {
             )}
           </For>
         </Popover>
-
-        {/* Engine */}
-        <div class="flex items-center gap-1.5 h-full hover:bg-white/10 px-1.5 cursor-pointer rounded-sm transition-colors border-l border-white/10">
-          <Icon name="server" class="size-3.5 opacity-80" />
-          <span class="opacity-90">{ENGINES.find(e => e.id === props.engine)?.label || "Unknown"}</span>
-        </div>
-
-        {/* Sessions Toggle */}
-        <div 
-          class={`flex items-center gap-1.5 h-full hover:bg-white/10 px-1.5 cursor-pointer rounded-sm transition-colors border-l border-white/10 ${props.showSessions ? 'bg-white/20' : ''}`}
-          onClick={props.onToggleSessions}
-          title="Toggle Sessions Sidebar"
-        >
-          <Icon name="list-flat" class="size-3.5 opacity-80" />
-          <span class="opacity-90">Sessions</span>
-        </div>
-
-        {/* DevTools Toggle */}
-        <div 
-          class={`flex items-center gap-1.5 h-full hover:bg-white/10 px-2 cursor-pointer rounded-sm transition-colors border-l border-white/10 ${props.showDevTools ? 'bg-white/20' : ''}`}
-          onClick={props.onToggleDevTools}
-          title="Toggle DevTools"
-        >
-          <Icon name="sliders" class="size-3.5 opacity-80" />
-          <span class="opacity-90">DevTools</span>
-        </div>
       </div>
     </div>
   )

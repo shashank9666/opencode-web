@@ -47,19 +47,10 @@ export function BrowserPreviewPanel() {
   const [urlStack, setUrlStack] = createSignal<string[]>([])
   const [urlIndex, setUrlIndex] = createSignal(-1)
 
-  // DevTools & UI State
-  const [showDevTools, setShowDevTools] = createSignal(false)
   const [showSidebar, setShowSidebar] = createSignal(false)
   const [viewportWidth, setViewportWidth] = createSignal(1920)
   const [viewportHeight, setViewportHeight] = createSignal(1080)
   const [engine, setEngine] = createSignal<BrowserEngine>("chromium")
-
-  // DevTools data stores
-  const [consoleEntries, setConsoleEntries] = createSignal<ConsoleEntry[]>([])
-  const [networkRequests, setNetworkRequests] = createSignal<NetworkRequest[]>([])
-  const [screenshots, setScreenshots] = createSignal<ScreenshotEntry[]>([])
-  const [domNode, setDomNode] = createSignal<DOMNode | null>(null)
-  const [logEntries, setLogEntries] = createSignal<LogEntry[]>([])
 
   onCleanup(() => {
     window.dispatchEvent(new CustomEvent("playwright-close-all"))
@@ -193,15 +184,8 @@ export function BrowserPreviewPanel() {
     }
   }
 
-  // ── DevTools helpers ──
-
   const addLog = (source: string, message: string) => {
-    setLogEntries(prev => [...prev.slice(-199), { id: ++logIdCounter, message, timestamp: Date.now(), source }])
-  }
-
-  const clearConsole = () => {
-    setConsoleEntries([])
-    addLog("info", "Console cleared")
+    // Basic log keeping if needed
   }
 
   // ── Tab Management ──
@@ -304,8 +288,6 @@ export function BrowserPreviewPanel() {
               latency={loadTime()}
               viewportWidth={viewportWidth()}
               viewportHeight={viewportHeight()}
-              onScreenshot={() => addLog("info", "Screenshot captured")}
-              onInspect={() => setShowDevTools(true)}
               onRefresh={reload}
               onOpenExternal={() => {
                 const current = iframeSrc()
@@ -340,21 +322,6 @@ export function BrowserPreviewPanel() {
               </div>
             </div>
 
-            {/* DevTools Pane */}
-            <Show when={showDevTools()}>
-              <div class="h-[250px] border-t border-[#3c3c3c] bg-[#1e1e1e] flex-shrink-0 relative">
-                <BrowserDevTools
-                  consoleEntries={consoleEntries()}
-                  networkRequests={networkRequests()}
-                  screenshots={screenshots()}
-                  domNode={domNode()}
-                  logEntries={logEntries()}
-                  onClearConsole={clearConsole}
-                  onClose={() => setShowDevTools(false)}
-                  height={250}
-                />
-              </div>
-            </Show>
           </Show>
         </div>
       </div>
@@ -369,8 +336,6 @@ export function BrowserPreviewPanel() {
         engine={engine()}
         onViewportChange={(w, h) => { setViewportWidth(w); setViewportHeight(h) }}
         onEngineChange={setEngine}
-        showDevTools={showDevTools()}
-        onToggleDevTools={() => setShowDevTools(!showDevTools())}
         showSessions={showSidebar()}
         onToggleSessions={() => setShowSidebar(!showSidebar())}
       />

@@ -1805,43 +1805,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </Show>
                     </div>
                   </Tooltip>
-                  <Tooltip placement="top" gutter={4} value="Context Images">
-                    <Popover 
-                      open={contextImagesOpen()} 
-                      onOpenChange={setContextImagesOpen}
-                      trigger={
-                        <div class="relative block">
-                          <IconButton
-                            icon="photo"
-                            variant="ghost"
-                            size="small"
-                            class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
-                            onClick={() => {}}
-                            aria-label="Context Images"
-                          />
-                          <Show when={prompt.current().filter(p => p.type === "image").length > 0}>
-                            <div class="absolute right-[3px] bottom-[3px] size-[7px] rounded-full bg-[#007AFF] pointer-events-none shadow-[0_0_0_1.5px_var(--v2-background-bg-base)]" />
-                          </Show>
-                        </div>
-                      }
-                      class="bg-v2-background-bg-base border border-v2-border-border-muted rounded-md shadow-lg p-2 min-w-[200px]"
-                    >
-                      <div class="text-12-medium text-v2-text-text-base mb-2">Context Images</div>
-                      <Show 
-                        when={prompt.current().filter(p => p.type === "image").length > 0}
-                        fallback={<div class="text-11-regular text-v2-text-text-muted">No images uploaded for context.</div>}
-                      >
-                        <PromptImageAttachments
-                          attachments={prompt.current().filter((p): p is import("@/context/prompt").ImageAttachmentPart => p.type === "image")}
-                          onOpen={() => setContextImagesOpen(true)}
-                          removeLabel="Remove image"
-                          onRemove={(id) => {
-                            prompt.set(prompt.current().filter(p => !("id" in p && p.id === id)))
-                          }}
-                        />
-                      </Show>
-                    </Popover>
-                  </Tooltip>
                   <Tooltip placement="top" gutter={4} value="Local Preview">
                     <IconButton
                       icon="browser"
