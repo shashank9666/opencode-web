@@ -516,7 +516,14 @@ export const SettingsWallpaperV2: Component = () => {
                   onClick={() => settings.appearance.setWallpaperUrl(wp.url)}
                   title={wp.name}
                 >
-                  <img src={wp.url} alt={wp.name} loading="lazy" />
+                  <img
+                    src={wp.url}
+                    alt={wp.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                    }}
+                  />
                   <span class="wallpaper-preset-label">{wp.name}</span>
                 </button>
               )}
