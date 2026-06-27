@@ -68,7 +68,6 @@ export function BrowserBottomBar(props: BrowserBottomBarProps) {
         {/* Latency */}
         <Show when={props.latency !== null}>
           <div class="flex items-center gap-1.5 h-full hover:bg-white/10 px-1.5 cursor-pointer rounded-sm transition-colors">
-            <Icon name="activity" class="size-3.5 opacity-80" />
             <span class="opacity-90">{props.latency} ms</span>
           </div>
         </Show>

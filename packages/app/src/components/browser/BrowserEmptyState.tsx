@@ -35,7 +35,7 @@ export function BrowserEmptyState(props: BrowserEmptyStateProps) {
 
       <form onSubmit={handleSubmit} class="w-full max-w-xl mb-12 relative group">
         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-          <Icon name="search" class="text-[#8a8a8a] size-5 group-focus-within:text-[#007AFF] transition-colors" />
+          <Icon name="magnifying-glass" class="text-[#8a8a8a] size-5 group-focus-within:text-[#007AFF] transition-colors" />
         </div>
         <input
           ref={inputRef}
@@ -59,7 +59,7 @@ export function BrowserEmptyState(props: BrowserEmptyStateProps) {
                     class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#2a2d2e] transition-colors text-left group"
                     onClick={() => props.onNavigate(url)}
                   >
-                    <Icon name="history" class="text-[#8a8a8a] group-hover:text-[#cccccc] size-4" />
+                    <Icon name="reset" class="text-[#8a8a8a] group-hover:text-[#cccccc] size-4" />
                     <span class="text-13-regular text-[#cccccc] truncate">{url}</span>
                   </button>
                 )}

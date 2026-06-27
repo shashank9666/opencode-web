@@ -2,6 +2,7 @@ import { For, Show, createMemo, createSignal } from "solid-js";
 import { Icon } from "@opencode-ai/ui/icon";
 import { getFilename } from "@opencode-ai/core/util/path";
 import { IdeDiffEditor } from "./ide-editor";
+import { FileIcon } from "@opencode-ai/ui/file-icon";
 import { useSync } from "@/context/sync";
 import { useSDK } from "@/context/sdk";
 import { useFile } from "@/context/file";
@@ -138,7 +139,7 @@ export function ReviewChangesPanel(props: { workspace: any }) {
               const isSelected = createMemo(() => selectedFile()?.path === change.path);
               return (
                 <button
-                  class={`w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors border-b border-border-base/50 ${isSelected() ? "bg-accent-base/10 border-l-2 border-l-accent-base" : "hover:bg-surface-base"}`}
+                  class={`w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors border-b border-border-base/50 ${isSelected() ? "bg-accent-base/10 border-l-2 border-l-accent-base" : "hover:bg-surface-base"}`}
                   onClick={() => {
                     if (change.before !== "" || change.after !== "") {
                       setSelectedFile(change);
@@ -147,14 +148,15 @@ export function ReviewChangesPanel(props: { workspace: any }) {
                     }
                   }}
                 >
-                  <Icon name="open-file" size="small" class="mt-0.5 text-icon-muted shrink-0" />
-                  <div class="flex-1 min-w-0">
-                    <div class="text-12-medium text-text-strong truncate">{getFilename(change.path)}</div>
-                    <div class="text-11-regular text-text-weaker truncate">{change.path}</div>
-                    <div class="flex gap-2 mt-0.5">
-                      <span class="text-11-regular text-success-base">+{diff().added}</span>
-                      <span class="text-11-regular text-danger-base">-{diff().removed}</span>
-                    </div>
+                  <FileIcon node={{ path: change.path, type: "file" }} class="shrink-0 size-4" />
+                  <div class="flex-1 min-w-0 flex items-baseline gap-2 overflow-hidden">
+                    <span class="text-12-regular text-text-strong whitespace-nowrap">{getFilename(change.path)}</span>
+                    <span class="text-11-regular text-text-weaker truncate">{change.path}</span>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="text-11-regular text-success-base">+{diff().added}</span>
+                    <span class="text-11-regular text-danger-base">-{diff().removed}</span>
+                    <Icon name="chevron-right" size="small" class="text-icon-weaker shrink-0" />
                   </div>
                 </button>
               );
