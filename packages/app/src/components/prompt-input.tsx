@@ -224,7 +224,27 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const command = useCommand()
   const [suggestHover, setSuggestHover] = createSignal(false)
   const [browserPanelOpen, setBrowserPanelOpen] = createSignal(false)
+  const [browserPageCount, setBrowserPageCount] = createSignal(
+    (() => {
+      try {
+        const raw = localStorage.getItem("opencode-browser-instances")
+        if (raw) return JSON.parse(raw).length
+      } catch {}
+      return 0
+    })()
+  )
   const [contextImagesOpen, setContextImagesOpen] = createSignal(false)
+
+  createEffect(() => {
+    const onLaunch = () => setBrowserPageCount(c => c + 1)
+    const onClose = () => setBrowserPageCount(c => Math.max(0, c - 1))
+    window.addEventListener("playwright-launch", onLaunch)
+    window.addEventListener("playwright-close", onClose)
+    onCleanup(() => {
+      window.removeEventListener("playwright-launch", onLaunch)
+      window.removeEventListener("playwright-close", onClose)
+    })
+  })
   const [artifactsPanelOpen, setArtifactsPanelOpen] = createSignal(false)
   const [planningMode, setPlanningMode] = createSignal(false)
   const [agentMode, setAgentMode] = createSignal<AgentMode>("ask")
@@ -1864,7 +1884,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   variant="ghost"
                   size="small"
                   class="text-[13px] font-[440] leading-5 text-v2-text-text-faint hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base rounded px-2 gap-1.5"
-                  onClick={() => command.trigger("review.toggle")}
+                  onClick={() => {
+                    command.trigger("review.toggle")
+                    window.dispatchEvent(new CustomEvent("open-review-panel"))
+                  }}
                 >
                   <Icon name="review" size="small" class="text-v2-icon-icon-muted" />
                   Review Changes
@@ -1878,18 +1901,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       Browser
                     </span>
                     <div class="w-px h-3 bg-border-base" />
-                    <span>0 pages</span>
+                    <span>{browserPageCount()} {browserPageCount() === 1 ? "page" : "pages"}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <Button variant="ghost" size="small" class="text-text-weak hover:text-text-base">
-                      <Icon name="reset" size="small" />
-                      Refresh
-                    </Button>
                     <Button 
                       variant="primary" 
                       size="small" 
                       onClick={() => {
-                        window.dispatchEvent(new CustomEvent("toggle-panel", { detail: "browser" }))
+                        window.dispatchEvent(new CustomEvent("open-playwright-preview"))
                       }}
                     >
                       Open Browser

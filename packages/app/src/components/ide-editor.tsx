@@ -573,15 +573,19 @@ export function IdeDiffEditor(props: {
   createEffect(() => {
     if (!diffEditor) return
     const lang = languageFromPath(props.path)
-    const model = diffEditor.getModel()
-    if (!model) return
     const norm = (s: string) => s.replace(/\r\n/g, "\n").replace(/\n+$/, "") + "\n"
     const normOriginal = norm(props.original || "")
     const normModified = norm(props.modified || "")
-    if (model.original.getValue() !== normOriginal) model.original.setValue(normOriginal)
-    if (model.modified.getValue() !== normModified) model.modified.setValue(normModified)
-    monaco.editor.setModelLanguage(model.original, lang)
-    monaco.editor.setModelLanguage(model.modified, lang)
+    const model = diffEditor.getModel()
+    if (model) {
+      if (model.original.getValue() === normOriginal && model.modified.getValue() === normModified) return
+      model.original.dispose()
+      model.modified.dispose()
+    }
+    diffEditor.setModel({
+      original: monaco.editor.createModel(normOriginal, lang),
+      modified: monaco.editor.createModel(normModified, lang),
+    })
   })
 
   createEffect(() => {

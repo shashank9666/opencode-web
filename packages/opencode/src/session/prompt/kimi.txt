@@ -29,7 +29,7 @@ When building something from scratch, you should:
 
 Always use tools to implement your code changes:
 
-- Use `write`/`edit` to create or modify source files. Code that only appears in your text response is NOT saved to the file system and will not take effect.
+- Use `edit` for targeted modifications to source files. Only use `write` for NEW files or when the entire file content must be replaced. Code that only appears in your text response is NOT saved to the file system and will not take effect.
 - Use `bash` to run and test your code after writing it.
 - Iterate: if tests fail, read the error, fix the code with `write`/`edit`, and re-test with `bash`.
 

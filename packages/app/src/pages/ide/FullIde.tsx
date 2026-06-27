@@ -418,8 +418,15 @@ export default function FullIde() {
     const handleOpenPlaywright = () => {
       workspace.openFile("browser://playwright", "", workspace.activeGroupId())
     }
+    const handleOpenReview = () => {
+      workspace.openFile("review://changes", "", workspace.activeGroupId())
+    }
     window.addEventListener("open-playwright-preview", handleOpenPlaywright)
-    onCleanup(() => window.removeEventListener("open-playwright-preview", handleOpenPlaywright))
+    window.addEventListener("open-review-panel", handleOpenReview)
+    onCleanup(() => {
+      window.removeEventListener("open-playwright-preview", handleOpenPlaywright)
+      window.removeEventListener("open-review-panel", handleOpenReview)
+    })
   })
 
   createEffect(() => {
@@ -457,9 +464,15 @@ export default function FullIde() {
     const input = (toolPart.state as any).input
     if (!input) return undefined
     const filePath = input.path || input.filePath || ""
-    const content = input.content || input.code || ""
     if (!filePath) return undefined
-    return { path: filePath, content }
+    const content = input.content || input.code || ""
+    return {
+      path: filePath,
+      content,
+      oldString: input.oldString,
+      newString: input.newString,
+      replaceAll: input.replaceAll,
+    }
   })
 
   // Whenever a pending edit starts, auto-focus the file and load its content
@@ -1374,13 +1387,25 @@ export default function FullIde() {
                 if (!args?.path) return undefined
                 const state = file.get(args.path)
                 if (!state?.content || state.content.type !== "text") return undefined
-                return { path: args.path, modified: args.content, original: state.content.content }
+                const original = state.content.content
+                const modified = args.oldString != null
+                  ? (args.replaceAll
+                    ? original.replaceAll(args.oldString, args.newString || "")
+                    : original.replace(args.oldString, args.newString || ""))
+                  : args.content
+                return { path: args.path, modified, original }
               })()
             }
             onAcceptDiff={() => {
               const req = pendingEditPermission()
               if (!req) return
+              const args = pendingEditToolArgs()
               sdk().client.permission.respond({ sessionID: req.sessionID, permissionID: req.id, response: "once" })
+                .then(() => {
+                  if (args?.path) {
+                    file.load(args.path).catch(() => {})
+                  }
+                })
                 .catch((err: unknown) => {
                   showToast({ title: "Failed to accept", description: err instanceof Error ? err.message : String(err) })
                 })
