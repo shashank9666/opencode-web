@@ -22,6 +22,8 @@ import { SettingsFormattersV2 } from "./formatters"
 import { SettingsLspV2 } from "./lsp"
 import { SettingsNetworkV2 } from "./network"
 import { SettingsPoliciesV2 } from "./policies"
+import { SettingsWallpaperV2 } from "./wallpaper"
+
 
 export const DialogSettings: Component = () => {
   const language = useLanguage()
@@ -49,6 +51,11 @@ export const DialogSettings: Component = () => {
                       <Icon name="code" />
                       Auto-Approve
                     </TabsV2.Trigger>
+                    <TabsV2.Trigger value="wallpaper">
+                      <Icon name="photo" />
+                      Wallpaper
+                    </TabsV2.Trigger>
+
                   </div>
                 </div>
 
@@ -136,6 +143,10 @@ export const DialogSettings: Component = () => {
         <TabsV2.Content value="auto-approve" class="settings-v2-panel">
           <SettingsAutoApproveV2 />
         </TabsV2.Content>
+        <TabsV2.Content value="wallpaper" class="settings-v2-panel">
+          <SettingsWallpaperV2 />
+        </TabsV2.Content>
+
         <TabsV2.Content value="servers" class="settings-v2-panel">
           <SettingsServersV2 />
         </TabsV2.Content>

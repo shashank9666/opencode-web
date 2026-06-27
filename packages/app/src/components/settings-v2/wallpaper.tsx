@@ -22,6 +22,42 @@ type ProviderMeta = {
   placeholder: string
 }
 
+// ─── Preset wallpapers ──────────────────────────────────────────────────────────
+
+type WallpaperPreset = {
+  id: string
+  name: string
+  url: string
+}
+
+const WALLPAPER_PRESETS: WallpaperPreset[] = [
+  {
+    id: "anime-chilling",
+    name: "Anime-chilling",
+    url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
+  },
+  {
+    id: "anime-room",
+    name: "Anime-room",
+    url: "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400&q=80",
+  },
+  {
+    id: "rainy-neon",
+    name: "Rainy Neon Tokyo",
+    url: "https://images.unsplash.com/photo-1504608524841-42fe6f032b4b?w=400&q=80",
+  },
+  {
+    id: "space-theme",
+    name: "Space Theme",
+    url: "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=400&q=80",
+  },
+  {
+    id: "weathering-with-you",
+    name: "Weathering With You",
+    url: "https://images.unsplash.com/photo-1534274988757-a28bf1a57c17?w=400&q=80",
+  },
+]
+
 const PROVIDER_META: ProviderMeta[] = [
   {
     type: "wallhaven",
@@ -396,24 +432,23 @@ export const SettingsWallpaperV2: Component = () => {
                     src={settings.appearance.wallpaperUrl()}
                     alt="Current wallpaper"
                     class="wallpaper-preview-thumb"
+                    onError={(e) => {
+                      const target = e.currentTarget
+                      target.style.display = "none"
+                      const fallback = target.parentElement?.querySelector(".wallpaper-preview-error")
+                      if (fallback) fallback.style.display = "flex"
+                    }}
                   />
+                  <div class="wallpaper-preview-error" style="display: none;">
+                    <span>⚠️</span>
+                    <span>Failed to load image</span>
+                  </div>
                 </Show>
                 <div class="flex flex-col gap-1">
                   <ButtonV2 variant="neutral" size="small" onClick={fetchFromAnyEnabled}>
                     <Icon name="reset" />
                     Fetch Random
                   </ButtonV2>
-                  <Show when={settings.appearance.wallpaperUrl()}>
-                    <ButtonV2
-                      variant="ghost"
-                      size="small"
-                      class="wallpaper-remove-btn"
-                      onClick={() => settings.appearance.setWallpaperUrl("")}
-                    >
-                      <Icon name="trash" />
-                      Clear
-                    </ButtonV2>
-                  </Show>
                 </div>
               </div>
             </SettingsRowV2>
@@ -422,6 +457,71 @@ export const SettingsWallpaperV2: Component = () => {
           <Show when={fetchError()}>
             <div class="wallpaper-error">{fetchError()}</div>
           </Show>
+        </div>
+
+        {/* ── Image URL / file / presets ── */}
+        <div class="settings-v2-section">
+          <h3 class="settings-v2-section-title">Image Source</h3>
+          <SettingsListV2>
+            <SettingsRowV2
+              title="Image URL"
+              description="Set a custom background image (URL or local file)"
+            >
+              <div class="flex flex-col gap-2 w-full sm:w-[220px]">
+                <TextInputV2
+                  type="text"
+                  appearance="base"
+                  value={settings.appearance.wallpaperUrl()}
+                  onInput={(event) => settings.appearance.setWallpaperUrl(event.currentTarget.value)}
+                  placeholder="Image URL"
+                  spellcheck={false}
+                />
+                <div class="flex flex-wrap items-center gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.currentTarget.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (e) => {
+                          const result = e.target?.result as string
+                          settings.appearance.setWallpaperUrl(result)
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                    class="text-12-regular text-text-weak file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
+                  />
+                  <Show when={settings.appearance.wallpaperUrl()}>
+                    <ButtonV2
+                      variant="ghost"
+                      size="small"
+                      onClick={() => settings.appearance.setWallpaperUrl("")}
+                      class="text-text-danger-base hover:text-text-danger-strong"
+                    >
+                      Remove
+                    </ButtonV2>
+                  </Show>
+                </div>
+              </div>
+            </SettingsRowV2>
+          </SettingsListV2>
+
+          <div class="wallpaper-presets-grid">
+            <For each={WALLPAPER_PRESETS}>
+              {(wp) => (
+                <button
+                  class={`wallpaper-preset-thumb ${settings.appearance.wallpaperUrl() === wp.url ? "active" : ""}`}
+                  onClick={() => settings.appearance.setWallpaperUrl(wp.url)}
+                  title={wp.name}
+                >
+                  <img src={wp.url} alt={wp.name} loading="lazy" />
+                  <span class="wallpaper-preset-label">{wp.name}</span>
+                </button>
+              )}
+            </For>
+          </div>
         </div>
 
         {/* ── Auto-rotate ── */}
