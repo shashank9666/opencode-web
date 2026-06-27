@@ -501,8 +501,8 @@ export const SettingsGeneralV2: Component = () => {
         </SettingsRowV2>
 
         <SettingsRowV2
-          title="Theme Presets"
-          description="Apply curated aesthetic combinations of themes and glassmorphism"
+          title="Color Combos"
+          description="Apply curated aesthetic color themes and glassmorphism effects"
         >
           <div class="flex flex-wrap gap-2">
             <ButtonV2 
@@ -513,7 +513,6 @@ export const SettingsGeneralV2: Component = () => {
                 settings.appearance.setGlassmorphism(true)
                 settings.appearance.setOpacity(0.6)
                 settings.appearance.setBlurIntensity(30)
-                settings.appearance.setWallpaperUrl("/wallpapers/sunset_city.png")
               }}
             >
               Cyberpunk Glow
@@ -526,7 +525,6 @@ export const SettingsGeneralV2: Component = () => {
                 settings.appearance.setGlassmorphism(true)
                 settings.appearance.setOpacity(0.4)
                 settings.appearance.setBlurIntensity(24)
-                settings.appearance.setWallpaperUrl("/wallpapers/cozy_room.png")
               }}
             >
               Cozy Lofi
@@ -539,7 +537,6 @@ export const SettingsGeneralV2: Component = () => {
                 settings.appearance.setGlassmorphism(true)
                 settings.appearance.setOpacity(0.7)
                 settings.appearance.setBlurIntensity(40)
-                settings.appearance.setWallpaperUrl("/wallpapers/space_station.png")
               }}
             >
               Space Station
@@ -640,15 +637,16 @@ export const SettingsGeneralV2: Component = () => {
           description="Choose from a selection of prebuilt anime wallpapers"
         >
           <div class="flex flex-wrap gap-3">
-            <For each={[
-              { id: "sunset_city", name: "Sunset City", url: "/wallpapers/sunset_city.png" },
-              { id: "cozy_room", name: "Cozy Room", url: "/wallpapers/cozy_room.png" },
-              { id: "space_station", name: "Space Station", url: "/wallpapers/space_station.png" },
-            ]}>
+            <For each={Object.entries(import.meta.glob('/public/wallpapers/*.{png,jpg,jpeg,webp,gif}', { eager: true, as: 'url' })).map(([path, url]) => {
+              const filename = path.split('/').pop() || '';
+              const id = filename.split('.')[0] || '';
+              const name = id.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+              return { id, name, url: typeof url === 'string' ? url : (url as any).default };
+            })}>
               {(wp: { id: string, name: string, url: string }) => (
                 <button
                   class={`relative w-24 h-16 rounded overflow-hidden border-2 transition-all ${
-                    settings.appearance.wallpaperUrl() === wp.url ? "border-accent-base scale-105" : "border-transparent opacity-70 hover:opacity-100"
+                    settings.appearance.wallpaperUrl() === wp.url ? "border-accent-base scale-105 shadow-[0_0_10px_var(--accent-base)]" : "border-transparent opacity-70 hover:opacity-100"
                   }`}
                   onClick={() => settings.appearance.setWallpaperUrl(wp.url)}
                   title={wp.name}

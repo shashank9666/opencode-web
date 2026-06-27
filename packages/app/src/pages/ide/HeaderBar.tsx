@@ -151,7 +151,7 @@ export default function HeaderBar(props: {
           </div>
           <Show when={submenuActive() === path && item.submenu}>
             <div
-              class="fixed min-w-56 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 z-[60] overflow-y-auto"
+              class="fixed min-w-56 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 z-[60] overflow-y-auto overflow-x-hidden"
               style={{
                 left: `${submenuPos().left}px`,
                 top: `${submenuPos().top}px`,
@@ -226,7 +226,7 @@ export default function HeaderBar(props: {
               </button>
               <Show when={activeMenu() === menu.label && menu.submenu}>
                 <div
-                  class="fixed min-w-56 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 z-50 overflow-y-auto"
+                  class="fixed min-w-56 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 z-50 overflow-y-auto overflow-x-hidden"
                   style={{
                     left: `${menuPosition().left}px`,
                     top: `${menuPosition().top}px`,
