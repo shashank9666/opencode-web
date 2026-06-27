@@ -1842,14 +1842,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       </Show>
                     </Popover>
                   </Tooltip>
-                  <Tooltip placement="top" gutter={4} value="Playwright Stream">
+                  <Tooltip placement="top" gutter={4} value="Local Preview">
                     <IconButton
                       icon="browser"
                       variant="ghost"
                       size="small"
                       class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
                       onClick={() => setBrowserPanelOpen(!browserPanelOpen())}
-                      aria-label="Playwright Stream"
+                      aria-label="Local Preview"
                     />
                   </Tooltip>
                   <Tooltip placement="top" gutter={4} value="Templates">
@@ -2438,14 +2438,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                           </div>
                         </Popover>
                       </Tooltip>
-                      <Tooltip placement="top" gutter={4} value="Playwright Stream">
+                      <Tooltip placement="top" gutter={4} value="Local Preview">
                         <IconButton
                           icon="browser"
-                          variant="ghost"
+                          variant={browserPanelOpen() ? "secondary" : "ghost"}
                           size="small"
                           class="size-6 rounded"
-                          onClick={() => window.dispatchEvent(new CustomEvent("open-playwright-preview"))}
-                          aria-label="Playwright Stream"
+                          onClick={() => setBrowserPanelOpen(!browserPanelOpen())}
+                          aria-label="Local Preview"
                         />
                       </Tooltip>
                     </div>

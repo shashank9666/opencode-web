@@ -350,6 +350,7 @@ export function BrowserPreviewPanel() {
                   domNode={domNode()}
                   logEntries={logEntries()}
                   onClearConsole={clearConsole}
+                  onClose={() => setShowDevTools(false)}
                   height={250}
                 />
               </div>

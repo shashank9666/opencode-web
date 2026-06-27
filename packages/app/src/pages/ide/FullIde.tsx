@@ -416,7 +416,7 @@ export default function FullIde() {
   // Handle custom events
   createEffect(() => {
     const handleOpenPlaywright = () => {
-      workspace.openFile("browser://playwright", "", workspace.activeGroupId())
+      workspace.openFile("browser://Local Preview", "", workspace.activeGroupId())
     }
     const handleOpenReview = () => {
       workspace.openFile("review://changes", "", workspace.activeGroupId())

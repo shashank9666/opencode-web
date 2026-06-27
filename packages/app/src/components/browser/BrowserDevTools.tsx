@@ -402,6 +402,7 @@ export function BrowserDevTools(props: {
   domNode: DOMNode | null
   logEntries: LogEntry[]
   onClearConsole: () => void
+  onClose?: () => void
   height?: number
 }) {
   const [activeTab, setActiveTab] = createSignal<DevToolsTab>("console")
@@ -444,6 +445,16 @@ export function BrowserDevTools(props: {
             )}
           </For>
         </div>
+        <Show when={props.onClose}>
+          <button
+            type="button"
+            class="flex items-center justify-center w-8 h-full text-text-weaker hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors"
+            onClick={props.onClose}
+            aria-label="Close DevTools"
+          >
+            <Icon name="close" size="small" />
+          </button>
+        </Show>
       </div>
 
       {/* Tab content */}

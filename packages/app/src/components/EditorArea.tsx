@@ -153,7 +153,7 @@ export function EditorAreaGroup(props: {
   const [editorInstance, setEditorInstance] = createSignal<monaco.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [editorLine, setEditorLine] = createSignal(1);
   const [editorColumn, setEditorColumn] = createSignal(1);
-  const isBrowserPreview = () => activeFile() === "browser://playwright";
+  const isBrowserPreview = () => activeFile() === "browser://Local Preview";
 
   const file = useFile();
   const settings = useSettings();
