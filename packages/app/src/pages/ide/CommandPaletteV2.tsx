@@ -171,14 +171,21 @@ export default function CommandPaletteV2(props: {
     return result
   })
 
+  const groupedItems = createMemo(() => {
+    const items: PaletteAction[] = []
+    for (const [, , group] of grouped()) {
+      items.push(...group)
+    }
+    return items
+  })
+
   const executeSelected = () => {
-    if (mode() === "commands") {
-      const cmd = filtered()[selectedIndex()]
-      if (cmd) {
-        trackRecent(cmd.id)
-        props.onClose()
-        cmd.onSelect()
-      }
+    if (mode() !== "commands") return
+    const cmd = groupedItems()[selectedIndex()]
+    if (cmd) {
+      trackRecent(cmd.id)
+      props.onClose()
+      cmd.onSelect()
     }
   }
 
@@ -239,7 +246,7 @@ export default function CommandPaletteV2(props: {
   }
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    const maxIndex = mode() === "files" ? fileResults().length - 1 : filtered().length - 1
+    const maxIndex = mode() === "files" ? fileResults().length - 1 : groupedItems().length - 1
     if (e.key === "ArrowDown") {
       e.preventDefault()
       setSelectedIndex(Math.min(selectedIndex() + 1, maxIndex < 0 ? 0 : maxIndex))
