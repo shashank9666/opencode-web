@@ -199,26 +199,28 @@ export function SessionSidePanel(props: {
     openTab(value)
   }
 
-  const acceptDiff = async (file: string) => {
-    await sdk().client.v2.fs.write({ path: file, content: (await sdk().client.file.read({ path: file })).data ?? "" })
+  const acceptDiff = async (filePath: string) => {
+    const data = (await sdk().client.file.read({ path: filePath })) as { data?: string | null }
+    const content = data.data ?? ""
+    await sdk().client.v2.fs.write({ path: filePath, content })
   }
 
-  const rejectDiff = async (file: string) => {
-    try { await sdk().client.v2.fs.delete({ path: file }) } catch {}
+  const rejectDiff = async (filePath: string) => {
+    try { await sdk().client.v2.fs.delete({ path: filePath }) } catch {}
   }
 
-  const viewDiff = (file: string) => {
+  const viewDiff = (filePath: string) => {
     setChangesActive(false)
-    props.focusReviewDiff(file)
+    props.focusReviewDiff(filePath)
     if (!view().reviewPanel.opened()) view().reviewPanel.open()
   }
 
-  const editFile = (file: string) => {
+  const editFile = (filePath: string) => {
     setChangesActive(false)
-    const tab = file.tab(file)
+    const tab = file.tab(filePath)
     tabs().open(tab)
     tabs().setActive(tab)
-    void file.load(file)
+    void file.load(filePath)
   }
 
   const [store, setStore] = createStore({
@@ -536,8 +538,8 @@ export function SessionSidePanel(props: {
                           diffs={diffs()}
                           onAccept={async (file) => {
                             try {
-                              const content = await sdk().client.file.read({ path: file })
-                              if (content.data) await sdk().client.v2.fs.write({ path: file, content: content.data })
+                              const result = (await sdk().client.file.read({ path: file })) as { data?: string | null }
+                              if (result.data) await sdk().client.v2.fs.write({ path: file, content: result.data })
                             } catch {}
                           }}
                           onReject={async (file) => {

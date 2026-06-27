@@ -329,7 +329,7 @@ export default function ExtensionsPanel() {
           <Tooltip value="Show Installed" placement="bottom">
             <IconButton
               icon="circle-check"
-              variant={showInstalled() ? "solid" : "ghost"}
+              variant={showInstalled() ? "primary" : "ghost"}
               size="small"
               class="size-6 rounded-md"
               onClick={() => setShowInstalled(!showInstalled())}

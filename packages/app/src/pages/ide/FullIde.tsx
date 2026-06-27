@@ -1014,6 +1014,10 @@ export default function FullIde() {
     if (isMod && e.key === "b") { e.preventDefault(); toggleLeftPanel("explorer") }
     if (isMod && e.shiftKey && e.key === "F") { e.preventDefault(); toggleLeftPanel("search") }
     if (isMod && e.shiftKey && e.key === "G") { e.preventDefault(); toggleLeftPanel("source-control") }
+    if (isMod && !e.shiftKey && e.key === "V") {
+      const active = editor.activeFile()
+      if (active && isMarkdownPath(active)) { e.preventDefault(); openPreview(active) }
+    }
 
     if (isMod && e.shiftKey && e.key === "I") { e.preventDefault(); toggleRightPanel(rightTab() === "ai-chat" ? "ai-workspace" : "ai-chat") }
     if (isMod && e.shiftKey && e.key === "D") { e.preventDefault(); toggleRightPanel("debug") }

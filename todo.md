@@ -384,20 +384,30 @@ All 21 `"Coming soon"` placeholders across the IDE have been replaced with real 
 
 ---
 
-## Part 9 — TypeScript Error Cleanup 🔄
+## Part 9 — TypeScript Error Cleanup ✅
 
-- [ ] **Invalid icon names** (12 occurrences) — Replace with valid v1 icon names:
-  - `'file'` → `'open-file'` (MultiFileDiffOverlay, ReviewChangesPanel)
-  - `'git-commit'` → `'download'` (MultiFileDiffOverlay)
-  - `'globe'` → `'browser'` (MultiFileDiffOverlay)
-  - `'edit-2'` → `'edit'` (MultiFileDiffOverlay)
-  - `'git-pull-request'` → `'branch'` (MultiFileDiffOverlay)
-  - `'arrow-down'` → `'chevron-down'` (ide-editor, DebugPanel)
-  - `'bug'` → `'warning'` (slash-popover, DebugPanel)
-  - `'diff'` → `'branch'` (file-change-tracking, SourceControlPanel, session-side-panel)
-  - `'bell'` → `'bubble-5'` (ModernStatusBar)
-  - `'history'` → `'reset'` (SourceControlPanel)
-- [ ] **ExplorerPanel.tsx** — `marks` prop doesn't exist on FileTree (use `_marks`)
-- [ ] **ExtensionsPanel.tsx** — `'solid'` not a valid Button variant (use `'primary'`)
-- [ ] **DebugPanel.tsx** — `cfg.args` possibly undefined
-- [ ] **session-side-panel.tsx** — `FileContent` type mismatch, `tab` and `load` properties on string type
+All 20 type errors in `packages/app` have been resolved:
+
+- **Invalid icon names** (12 occurrences across 9 files) — Replaced with valid v1 icon names
+- **ExplorerPanel.tsx** — `marks` → `_marks`
+- **ExtensionsPanel.tsx** — `"solid"` → `"primary"`
+- **DebugPanel.tsx** — `cfg.args` possibly undefined (added local const to narrow type)
+- **session-side-panel.tsx** — Renamed `file` param → `filePath` to avoid shadowing `useFile()` context; added explicit type assertions for SDK read responses
+
+---
+
+## Part 10 — Markdown Preview 🔄
+
+- [ ] **Rewrite `MarkdownPreviewPanel`** — done:
+  - Proper error handling with "Failed to render markdown" state, error message, and retry button
+  - Fallback parser using direct `marked.parse()` import when context parser fails
+  - Table of Contents outline with scroll-to-heading
+  - Toolbar with refresh button and TOC toggle
+  - Smart link handling (internal `#hash` scrolls, external opens in new tab)
+- [ ] **Add `Ctrl+Shift+V` keyboard shortcut** in FullIde.tsx — opens markdown preview for current `.md` file
+- [ ] **TODO**: Test and verify preview rendering works end-to-end:
+  - Context menu "Open Preview" on `.md` files
+  - `Ctrl+Shift+V` shortcut
+  - Split-pane side-by-side view
+  - Live update when source content changes
+  - Error states when marked extensions fail

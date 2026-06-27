@@ -171,7 +171,7 @@ export default function ExplorerPanel(props: ExplorerPanelProps) {
             onFileClick={props.onFileClick}
             onContextMenu={props.onFileContextMenu}
             kinds={props.kinds}
-            marks={props.marks}
+            _marks={props.marks}
           />
         </div>
       </div>

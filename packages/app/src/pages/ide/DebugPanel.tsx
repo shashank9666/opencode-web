@@ -128,7 +128,8 @@ export default function DebugPanel(props: {
     setConsoleLines([`[debug] Starting debug session: ${cfg.name}`])
     setConsoleLines(prev => [...prev, `[debug] Type: ${cfg.type}, Request: ${cfg.request}`])
     if (cfg.program) setConsoleLines(prev => [...prev, `[debug] Program: ${cfg.program}`])
-    if (cfg.args?.length) setConsoleLines(prev => [...prev, `[debug] Args: ${cfg.args.join(" ")}`])
+    const args = cfg.args
+    if (args?.length) setConsoleLines(prev => [...prev, `[debug] Args: ${args.join(" ")}`])
     if (cfg.env && Object.keys(cfg.env).length > 0) {
       setConsoleLines(prev => [...prev, `[debug] Env: ${Object.entries(cfg.env!).map(([k, v]) => `${k}=${v}`).join(", ")}`])
     }

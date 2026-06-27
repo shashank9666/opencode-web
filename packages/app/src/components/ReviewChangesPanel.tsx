@@ -36,7 +36,6 @@ export function ReviewChangesPanel(props: { workspace: any }) {
                   class="flex items-center gap-3 px-4 py-3 bg-surface-raised-base hover:bg-surface-base cursor-pointer transition-colors group"
                   onClick={() => props.workspace.openFile(f.path, f.content, f.groupId)}
                 >
-                  <Icon name="open-file" class="size-4 text-accent-base opacity-80" />
                   <div class="flex-1 min-w-0 flex items-center gap-2">
                     <Icon name="open-file" size="small" class="text-icon-muted" />
                     <span class="text-13-medium text-text-strong">{getFilename(f.path)}</span>
