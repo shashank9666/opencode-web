@@ -48,6 +48,7 @@ export interface Settings {
     customBackgroundColor: string
     glassmorphism: boolean
     opacity: number
+    blurIntensity: number
     wallpaperUrl: string
   }
   keybinds: Record<string, string>
@@ -144,6 +145,7 @@ const defaultSettings: Settings = {
     customBackgroundColor: "",
     glassmorphism: false,
     opacity: 0.8,
+    blurIntensity: 20,
     wallpaperUrl: "",
   },
   keybinds: {},
@@ -372,6 +374,10 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         opacity: withFallback(() => store.appearance?.opacity, defaultSettings.appearance.opacity),
         setOpacity(value: number) {
           setStore("appearance", "opacity", value)
+        },
+        blurIntensity: withFallback(() => store.appearance?.blurIntensity, defaultSettings.appearance.blurIntensity),
+        setBlurIntensity(value: number) {
+          setStore("appearance", "blurIntensity", value)
         },
         wallpaperUrl: withFallback(() => store.appearance?.wallpaperUrl, defaultSettings.appearance.wallpaperUrl),
         setWallpaperUrl(value: string) {

@@ -203,6 +203,23 @@
     }
   }
 
+  /* If glassmorphism is enabled and wallpaper is present, the root background should be transparent so we see the wallpaper clearly */
+  html[data-glassmorphism="true"][data-has-wallpaper="true"] #root-layout {
+    background-color: transparent !important;
+  }
+
+  /* Glassmorphism overrides for inner panels */
+  html[data-glassmorphism="true"] .bg-background-base:not(#root-layout),
+  html[data-glassmorphism="true"] .bg-surface-base,
+  html[data-glassmorphism="true"] .bg-v2-background-bg-deep:not(#root-layout) {
+    background-color: color-mix(in srgb, var(--background-base) calc(var(--app-opacity) * 100%), transparent) !important;
+    backdrop-filter: blur(var(--app-glass-blur));
+  }
+  html[data-glassmorphism="true"] .bg-surface-raised-base {
+    background-color: color-mix(in srgb, var(--surface-raised-base, var(--surface-base)) calc(var(--app-opacity) * 100%), transparent) !important;
+    backdrop-filter: blur(var(--app-glass-blur));
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;
