@@ -210,16 +210,18 @@ export const SettingsProjectV2: Component = () => {
                 <Show when={instructions().length === 0}>
                   <span class="text-13-regular text-text-muted">No instruction paths configured</span>
                 </Show>
-                <div class="flex items-center gap-2">
-                  <TextInputV2
-                    type="text"
-                    appearance="base"
-                    value={state.newInstruction}
-                    onInput={(event) => setState("newInstruction", event.currentTarget.value)}
-                    placeholder="path/to/instructions.md"
-                    spellcheck={false}
-                  />
-                  <ButtonV2 variant="ghost-muted" icon="plus" onClick={addInstruction}>
+                <div class="flex items-center gap-2 w-full">
+                  <div class="flex-1 min-w-0">
+                    <TextInputV2
+                      type="text"
+                      appearance="base"
+                      value={state.newInstruction}
+                      onInput={(event) => setState("newInstruction", event.currentTarget.value)}
+                      placeholder="path/to/instructions.md"
+                      spellcheck={false}
+                    />
+                  </div>
+                  <ButtonV2 variant="ghost-muted" icon="plus" onClick={addInstruction} class="shrink-0">
                     Add
                   </ButtonV2>
                 </div>
@@ -249,16 +251,18 @@ export const SettingsProjectV2: Component = () => {
                 <Show when={watcherIgnore().length === 0}>
                   <span class="text-13-regular text-text-muted">No ignore patterns configured</span>
                 </Show>
-                <div class="flex items-center gap-2">
-                  <TextInputV2
-                    type="text"
-                    appearance="base"
-                    value={state.newWatcherPattern}
-                    onInput={(event) => setState("newWatcherPattern", event.currentTarget.value)}
-                    placeholder="e.g. **/node_modules/**"
-                    spellcheck={false}
-                  />
-                  <ButtonV2 variant="ghost-muted" icon="plus" onClick={addWatcherPattern}>
+                <div class="flex items-center gap-2 w-full">
+                  <div class="flex-1 min-w-0">
+                    <TextInputV2
+                      type="text"
+                      appearance="base"
+                      value={state.newWatcherPattern}
+                      onInput={(event) => setState("newWatcherPattern", event.currentTarget.value)}
+                      placeholder="e.g. **/node_modules/**"
+                      spellcheck={false}
+                    />
+                  </div>
+                  <ButtonV2 variant="ghost-muted" icon="plus" onClick={addWatcherPattern} class="shrink-0">
                     Add
                   </ButtonV2>
                 </div>

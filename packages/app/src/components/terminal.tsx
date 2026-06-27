@@ -357,7 +357,7 @@ export const Terminal = (props: TerminalProps) => {
         rows: restoreSize?.rows,
         fontSize: 14,
         fontFamily: terminalFontFamily(settings.appearance.terminalFont()),
-        allowTransparency: false,
+        allowTransparency: true,
         convertEol: false,
         theme: terminalColors(),
         scrollback: 10_000,

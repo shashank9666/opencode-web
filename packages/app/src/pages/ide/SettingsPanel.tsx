@@ -198,6 +198,18 @@ export default function SettingsPanel(props: {
               </div>
 
               <div class="flex flex-col gap-1.5">
+                <label class="text-13-regular text-text-strong">Blur Intensity: {settings.appearance.blurIntensity()}px</label>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="64" 
+                  value={settings.appearance.blurIntensity()} 
+                  onInput={(e) => settings.appearance.setBlurIntensity(Number(e.currentTarget.value))} 
+                  class="w-full accent-accent-base" 
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
                 <label class="text-13-regular text-text-strong">Wallpaper URL (or Base64)</label>
                 <input 
                   type="text" 

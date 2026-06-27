@@ -151,9 +151,10 @@ export default function Layout(props: ParentProps) {
   const appStyle = createMemo(() => {
     const isGlass = settings.appearance.glassmorphism()
     const opacity = settings.appearance.opacity()
+    const blur = settings.appearance.blurIntensity()
     return {
       "--app-opacity": isGlass ? opacity : 1,
-      "--app-glass-blur": isGlass ? "20px" : "0px",
+      "--app-glass-blur": isGlass ? `${blur}px` : "0px",
     } as any
   })
   

@@ -220,6 +220,19 @@
     backdrop-filter: blur(var(--app-glass-blur));
   }
 
+  /* Make Monaco Editor transparent so glassmorphism shows through */
+  html[data-glassmorphism="true"] .monaco-editor,
+  html[data-glassmorphism="true"] .monaco-editor-background,
+  html[data-glassmorphism="true"] .monaco-editor .margin {
+    background-color: transparent !important;
+  }
+
+  /* Make Terminal transparent so glassmorphism shows through */
+  html[data-glassmorphism="true"] .xterm-viewport,
+  html[data-glassmorphism="true"] .xterm-screen {
+    background-color: transparent !important;
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;

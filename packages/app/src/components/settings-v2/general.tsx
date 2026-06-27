@@ -501,6 +501,82 @@ export const SettingsGeneralV2: Component = () => {
         </SettingsRowV2>
 
         <SettingsRowV2
+          title="Glassmorphism"
+          description="Enable glassmorphism effect on IDE panels"
+        >
+          <div data-action="settings-glassmorphism">
+            <Switch
+              checked={settings.appearance.glassmorphism()}
+              onChange={(checked) => settings.appearance.setGlassmorphism(checked)}
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title="Background Opacity"
+          description={`Set the opacity of the IDE background (${Math.round(settings.appearance.opacity() * 100)}%)`}
+        >
+          <div class="w-full sm:w-[220px] flex items-center h-8">
+            <input
+              type="range"
+              class="w-full accent-accent-base"
+              value={String(settings.appearance.opacity() * 100)}
+              onInput={(event) => settings.appearance.setOpacity(Number(event.currentTarget.value) / 100)}
+              min={0}
+              max={100}
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title="Blur Intensity"
+          description={`Set the blur amount for glassmorphism (${settings.appearance.blurIntensity()}px)`}
+        >
+          <div class="w-full sm:w-[220px] flex items-center h-8">
+            <input
+              type="range"
+              class="w-full accent-accent-base"
+              value={String(settings.appearance.blurIntensity())}
+              onInput={(event) => settings.appearance.setBlurIntensity(Number(event.currentTarget.value))}
+              min={0}
+              max={64}
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
+          title="Wallpaper"
+          description="Set a custom background image (URL or local file)"
+        >
+          <div class="flex flex-col gap-2 w-full sm:w-[220px]">
+            <TextInputV2
+              type="text"
+              appearance="base"
+              value={settings.appearance.wallpaperUrl()}
+              onInput={(event) => settings.appearance.setWallpaperUrl(event.currentTarget.value)}
+              placeholder="Image URL"
+              spellcheck={false}
+            />
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.currentTarget.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                    const result = e.target?.result as string;
+                    settings.appearance.setWallpaperUrl(result);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              class="text-12-regular text-text-weak file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-12-medium file:bg-surface-raised-base file:text-text-strong hover:file:bg-surface-raised-base-hover cursor-pointer"
+            />
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
           title={language.t("settings.general.row.uiFont.title")}
           description={language.t("settings.general.row.uiFont.description")}
         >
