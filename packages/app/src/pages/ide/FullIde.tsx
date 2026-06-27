@@ -613,13 +613,17 @@ export default function FullIde() {
         if (state?.content?.type === "text") {
           let targetGroupId = workspace.activeGroupId()
           const groups = workspace.getGroups()
+          
           if (groups.length === 1) {
-            workspace.splitGroup(targetGroupId!, "horizontal")
-            targetGroupId = workspace.getGroups()[1].id
+            // Only split if the current group actually has files open
+            if (groups[0].files.length > 0) {
+              workspace.splitGroup(targetGroupId!, "horizontal")
+              targetGroupId = workspace.getGroups()[1].id
+            }
           } else {
-            // Find a group that is not the active one
             targetGroupId = groups.find(g => g.id !== targetGroupId)?.id ?? targetGroupId
           }
+          
           workspace.openFile(`preview://${path}`, state.content.content, targetGroupId)
         }
       })()
