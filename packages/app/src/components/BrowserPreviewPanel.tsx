@@ -68,7 +68,7 @@ export function BrowserPreviewPanel() {
   // Active Tab helpers
   const activeTab = createMemo(() => tabs().find(t => t.id === activeTabId()) || null)
   const url = createMemo(() => activeTab()?.url || "")
-  const status = createMemo(() => activeTab()?.isLoading ? "loading" : url() ? "connected" : "idle") // Simplified for now
+  const status = createMemo<ConnectionStatus>(() => activeTab()?.isLoading ? "loading" : url() ? "connected" : "idle") // Simplified for now
 
   let loadStartTime = 0
   const [loadTime, setLoadTime] = createSignal<number | null>(null)
@@ -314,9 +314,9 @@ export function BrowserPreviewPanel() {
             />
 
             {/* Viewport Container (Centered) */}
-            <div class="flex-1 w-full h-full bg-[#e5e5e5] overflow-auto flex items-center justify-center p-4">
+            <div class="flex-1 w-full h-full bg-transparent overflow-auto flex items-center justify-center">
               <div 
-                class="relative bg-white shadow-2xl transition-all duration-300 flex-shrink-0"
+                class="relative bg-transparent transition-all duration-300 flex-shrink-0"
                 style={{ 
                   width: viewportWidth() === 1920 ? '100%' : `${viewportWidth()}px`, 
                   height: viewportHeight() === 1080 ? '100%' : `${viewportHeight()}px`,
@@ -331,7 +331,7 @@ export function BrowserPreviewPanel() {
                 
                 <iframe
                   src={iframeSrc()}
-                  class="w-full h-full border-none bg-white"
+                  class="w-full h-full border-none bg-transparent"
                   title="Browser Preview"
                   onLoad={handleIframeLoad}
                   onError={handleIframeError}
