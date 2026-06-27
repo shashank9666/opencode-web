@@ -36,7 +36,8 @@ export default function ModernStatusBar(props: {
 
   return (
     <div
-      class="flex items-center justify-between px-3 text-12-regular bg-surface-base text-text-weak border-t border-border-base shrink-0 select-none"
+      class="status-bar flex items-center justify-between px-3 text-12-regular bg-surface-base text-text-weak border-t border-border-base shrink-0 select-none"
+      data-testid="status-bar"
       style={{ height: "26px" }}
     >
       {/* Left section */}
@@ -62,7 +63,7 @@ export default function ModernStatusBar(props: {
           <Tooltip value={`Git: ${props.gitBranch}${props.gitChanges ? ` (${props.gitChanges} changes)` : ""}`} placement="top">
             <button
               type="button"
-              class="flex items-center gap-1 px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+              class="git-status flex items-center gap-1 px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
               onClick={props.onGitClick}
             >
               <Icon name="branch" size="small" class="size-3" />
@@ -113,6 +114,15 @@ export default function ModernStatusBar(props: {
 
       {/* Right section */}
       <div class="flex items-center gap-0 h-full">
+        {/* Notifications */}
+        <button
+          type="button"
+          class="notifications-btn flex items-center gap-1 px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+          aria-label="Notifications"
+        >
+          <Icon name="bell" size="small" class="size-3" />
+        </button>
+
         {/* Context Usage */}
         <IdeContextUsage activeSessionId={props.activeSessionId ?? null} />
 
@@ -159,7 +169,7 @@ export default function ModernStatusBar(props: {
         <Tooltip value="Select Language Mode" placement="top">
           <button
             type="button"
-            class="px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
+            class="language-mode px-2 h-full hover:bg-surface-raised-base-hover transition-colors cursor-pointer"
             onClick={props.onLanguageClick}
           >
             <span>{props.language}</span>

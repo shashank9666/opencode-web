@@ -34,7 +34,8 @@ export default function BottomPanel(props: {
 }) {
   return (
     <div
-      class="flex flex-col bg-surface-base border-t border-border-base shrink-0"
+      class="bottom-panel flex flex-col bg-surface-base border-t border-border-base shrink-0"
+      data-testid="bottom-panel"
       style={{ height: `${props.height}px` }}
     >
       {/* Tabs bar */}
@@ -97,7 +98,7 @@ export default function BottomPanel(props: {
             </DropdownMenu>
             <div class="w-px h-4 bg-border-base mx-0.5" />
             <Tooltip value={props.isTerminalSplit ? "Unsplit Terminal" : "Split Terminal"} placement="top">
-              <IconButton icon={props.isTerminalSplit ? "sidebar-close" : "layout-right"} fallbackIcon="layout-sidebar" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onSplitTerminal} />
+              <IconButton icon={props.isTerminalSplit ? "collapse" : "layout-right"} fallbackIcon="collapse" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onSplitTerminal} />
             </Tooltip>
             <Tooltip value="Kill Terminal" placement="top">
               <IconButton icon="trash" variant="ghost" size="small" class="size-6 rounded hover:bg-surface-raised-base-hover hover:text-text-strong" onClick={props.onKillTerminal} />
@@ -232,7 +233,7 @@ export function ProblemsTab(props: {
                         size="small" 
                         class="text-icon-weak shrink-0" 
                       />
-                      <Icon name="file" size="small" class="text-icon-weak shrink-0" />
+                      <Icon name="file-tree" size="small" class="text-icon-weak shrink-0" />
                       <div class="flex items-baseline gap-2 min-w-0 flex-1">
                         <span class="text-text-strong font-medium truncate">{file.split('/').pop()}</span>
                         <span class="text-text-weak text-12-regular truncate">{file.substring(0, file.lastIndexOf('/'))}</span>

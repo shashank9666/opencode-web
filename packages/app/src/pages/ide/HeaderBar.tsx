@@ -173,7 +173,8 @@ export default function HeaderBar(props: {
 
   return (
     <div
-      class="shrink-0 flex items-center justify-between px-2 border-b border-border-base bg-[#181818] select-none [app-region:drag] z-30 text-text-weaker relative"
+      class="title-bar shrink-0 flex items-center justify-between px-2 border-b border-border-base bg-[#181818] select-none [app-region:drag] z-30 text-text-weaker relative"
+      data-testid="title-bar"
       style={{ height: "35px" }}
       onMouseLeave={handleMouseLeave}
     >
@@ -185,7 +186,7 @@ export default function HeaderBar(props: {
         </div>
 
         {/* Menus */}
-        <div class="flex items-center h-full" ref={menuBarRef}>
+        <div class="menubar flex items-center h-full" data-testid="menubar" ref={menuBarRef}>
           <For each={menus()}>{(menu, index) => (
             <div class="relative h-full" onMouseEnter={() => { if (menuCloseTimeout !== undefined) { window.clearTimeout(menuCloseTimeout); menuCloseTimeout = undefined } if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}>
               <button
@@ -224,7 +225,7 @@ export default function HeaderBar(props: {
       </div>
 
       {/* ── Center: Search Bar (VS Code style) ── */}
-      <div class="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex items-center justify-center">
+      <div class="command-center absolute left-1/2 -translate-x-1/2 top-0 bottom-0 flex items-center justify-center" data-testid="command-center">
         <Show when={searchOpen()}>
           <div class="flex items-center gap-1 bg-surface-base border border-border-base rounded-md px-2 py-0.5 w-[400px] max-w-[50vw] pointer-events-auto">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" class="text-icon-weaker shrink-0">
@@ -293,8 +294,10 @@ export default function HeaderBar(props: {
             />
           </Tooltip>
         </div>
+        
+        {/* Window controls spacer */}
+        <div class="window-controls" data-testid="window-controls" style="display: none;" />
       </div>
     </div>
   )
 }
-

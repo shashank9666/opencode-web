@@ -1,8 +1,8 @@
-import { For } from "solid-js"
+import { For, createSignal } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 
-export type ActivityBarTab = "explorer" | "search" | "source-control" | "run-debug" | "ai-chat" | "database" | "remote" | "testing"
+export type ActivityBarTab = "explorer" | "search" | "source-control" | "run-debug" | "extensions" | "ai-chat" | "database" | "remote" | "testing"
 
 export type BottomPanelTab = "terminal" | "problems" | "output" | "debug-console"
 
@@ -11,6 +11,7 @@ const SIDEBAR_TABS = [
   { tab: "search" as const, icon: "magnifying-glass" as const, label: "Search", shortcut: "Ctrl+Shift+F" },
   { tab: "source-control" as const, icon: "branch" as const, label: "Source Control", shortcut: "Ctrl+Shift+G" },
   { tab: "run-debug" as const, icon: "window-cursor" as const, label: "Run & Debug", shortcut: "Ctrl+Shift+D" },
+  { tab: "extensions" as const, icon: "sliders" as const, label: "Extensions", shortcut: "Ctrl+Shift+X" },
   { tab: "ai-chat" as const, icon: "brain" as const, label: "AI Assistant", shortcut: "Ctrl+Shift+I" },
   { tab: "remote" as const, icon: "arrow-right" as const, label: "Remote Explorer", shortcut: "" },
   { tab: "testing" as const, icon: "check" as const, label: "Testing", shortcut: "" },
@@ -29,6 +30,8 @@ export default function ActivityBar(props: {
   onRemoteClick: () => void
   remoteConnection?: string
 }) {
+  const [contextMenuPos, setContextMenuPos] = createSignal<{ x: number; y: number } | null>(null)
+  
   const active = (tab: ActivityBarTab) => {
     if (tab === "ai-chat") return props.activeRightTab === "ai-chat" && props.rightPanelOpen
     return props.activeTab === tab && props.sidebarOpen
@@ -36,7 +39,34 @@ export default function ActivityBar(props: {
   const activeBottom = (tab: BottomPanelTab) => props.bottomPanelOpen && props.bottomTab === tab
 
   return (
-    <div class="w-12 shrink-0 flex flex-col items-center py-0 border-r border-border-base bg-surface-base select-none [app-region:no-drag] size-full">
+    <>
+      {contextMenuPos() && (
+        <>
+          <div class="fixed inset-0 z-40" onClick={() => setContextMenuPos(null)} onContextMenu={(e) => { e.preventDefault(); setContextMenuPos(null); }} />
+          <div 
+            class="context-menu fixed z-50 bg-surface-raised-base border border-border-base rounded-md shadow-xl py-1 min-w-48 text-13-regular text-text-weak"
+            data-testid="context-menu"
+            style={{ left: `${contextMenuPos()!.x}px`, top: `${contextMenuPos()!.y}px` }}
+          >
+            <For each={SIDEBAR_TABS}>
+              {(item) => (
+                <button class="w-full flex items-center px-4 py-1.5 hover:bg-accent-base hover:text-white transition-colors">
+                  <span class="mr-2">✓</span>
+                  {item.label}
+                </button>
+              )}
+            </For>
+          </div>
+        </>
+      )}
+      <div 
+        class="activity-bar w-12 shrink-0 flex flex-col items-center py-0 border-r border-border-base bg-surface-base select-none [app-region:no-drag] size-full" 
+        data-testid="activity-bar"
+        onContextMenu={(e) => {
+          e.preventDefault()
+          setContextMenuPos({ x: e.clientX, y: e.clientY })
+        }}
+      >
       {/* Top section - sidebar panels */}
       <div class="flex flex-col items-center w-full">
         <For each={SIDEBAR_TABS}>
@@ -142,5 +172,6 @@ export default function ActivityBar(props: {
         </Tooltip>
       </div>
     </div>
+    </>
   )
 }
