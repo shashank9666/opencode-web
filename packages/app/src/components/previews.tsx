@@ -19,6 +19,59 @@ function sanitizeHtml(html: string): string {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "")
 }
 
+export function MarkdownPreviewPanel(props: { content: string; filename: string }) {
+  const marked = useMarked()
+  const [html, setHtml] = createSignal("")
+  const [loading, setLoading] = createSignal(true)
+  let previewRef: HTMLDivElement | undefined
+
+  createEffect(() => {
+    const content = props.content
+    setLoading(true)
+    const parser = (marked as unknown) as { (markdown: string): Promise<string> } | { parse: (markdown: string) => Promise<string> }
+    const render = (result: string) => {
+      const cleaned = sanitizeHtml(result)
+      const resolved = resolveRelativeUrls(cleaned, props.filename)
+      setHtml(resolved)
+      setLoading(false)
+    }
+    if (typeof parser === "function") {
+      parser(content).then(render).catch(() => {
+        setHtml(`<p>Failed to render markdown</p>`)
+        setLoading(false)
+      })
+    } else if (parser && typeof (parser as { parse: Function }).parse === "function") {
+      ;(parser as { parse: (markdown: string) => Promise<string> }).parse(content).then(render).catch(() => {
+        setHtml(`<p>Failed to render markdown</p>`)
+        setLoading(false)
+      })
+    }
+  })
+
+  const handleContextMenu = (e: MouseEvent) => {
+    const target = e.target as HTMLElement
+    if (target.tagName === "A") {
+      e.preventDefault()
+      const href = target.getAttribute("href")
+      if (href) window.open(href, "_blank")
+    }
+  }
+
+  return (
+    <div class="flex-1 overflow-y-auto p-8 bg-background-base" ref={previewRef} onContextMenu={handleContextMenu}>
+      <Show when={loading()} fallback={
+        <div
+          class="prose prose-sm max-w-none text-text-strong [&_pre]:bg-surface-base [&_pre]:border [&_pre]:border-border-base [&_pre]:rounded-md [&_pre]:p-3 [&_code]:text-12-regular [&_h1]:text-18-medium [&_h2]:text-16-medium [&_h3]:text-14-medium [&_a]:text-accent-base [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-accent-base [&_blockquote]:pl-3 [&_blockquote]:text-text-weak [&_img]:rounded-md [&_img]:max-w-full [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_hr]:border-border-base [&_table]:w-full [&_th]:text-left [&_th]:p-2 [&_th]:bg-surface-base [&_td]:p-2 [&_td]:border-t [&_td]:border-border-base [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre_code]:text-12-regular [&_pre_code]:leading-relaxed"
+          innerHTML={html()}
+        />
+      }>
+        <div class="flex items-center justify-center py-10 text-text-weak">Rendering...</div>
+      </Show>
+    </div>
+  )
+}
+
+
 export function MarkdownPreview(props: { content: string; filename: string; onClose: () => void }) {
   const marked = useMarked()
   const [html, setHtml] = createSignal("")

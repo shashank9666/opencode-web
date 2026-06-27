@@ -3,6 +3,11 @@ import { FileIcon } from "@opencode-ai/ui/file-icon"
 import { Icon } from "@opencode-ai/ui/icon"
 import { getDirectory, getFilename } from "@opencode-ai/core/util/path"
 
+export type HashOption = {
+  type: "file" | "symbol" | "diagnostics"
+  display: string
+}
+
 export type AtOption =
   | { type: "agent"; name: string; display: string }
   | { type: "file"; path: string; display: string; recent?: boolean }
@@ -20,7 +25,7 @@ export interface SlashCommand {
 }
 
 type PromptPopoverProps = {
-  popover: "at" | "slash" | null
+  popover: "at" | "slash" | "hash" | null
   setSlashPopoverRef: (el: HTMLDivElement) => void
   atFlat: AtOption[]
   atActive?: string
@@ -31,6 +36,11 @@ type PromptPopoverProps = {
   slashActive?: string
   setSlashActive: (id: string) => void
   onSlashSelect: (item: SlashCommand) => void
+  hashFlat: HashOption[]
+  hashActive?: string
+  hashKey: (item: HashOption) => string
+  setHashActive: (id: string) => void
+  onHashSelect: (item: HashOption) => void
   commandKeybind: (id: string) => string | undefined
   t: (key: string) => string
 }
@@ -164,6 +174,33 @@ export const PromptPopover: Component<PromptPopoverProps> = (props) => {
                     </div>
                   </button>
                 )}
+              </For>
+            </Show>
+          </Match>
+          <Match when={props.popover === "hash"}>
+            <Show
+              when={props.hashFlat.length > 0}
+              fallback={<div class="text-text-weak px-2 py-1">{props.t("prompt.popover.emptyResults")}</div>}
+            >
+              <For each={props.hashFlat}>
+                {(item) => {
+                  const key = props.hashKey(item)
+
+                  const iconName = item.type === "file" ? "file-tree" : item.type === "symbol" ? "code" : "bug"
+                  const iconClass = item.type === "file" ? "text-icon-info-active" : item.type === "symbol" ? "text-icon-warning-active" : "text-icon-danger-active"
+
+                  return (
+                    <button
+                      class="w-full flex items-center gap-x-2 rounded-md px-2 py-0.5"
+                      classList={{ "bg-surface-raised-base-hover": props.hashActive === key }}
+                      onClick={() => props.onHashSelect(item)}
+                      onMouseEnter={() => props.setHashActive(key)}
+                    >
+                      <Icon name={iconName as any} size="small" class={`${iconClass} shrink-0`} />
+                      <span class="text-14-regular text-text-strong whitespace-nowrap">#{item.display}</span>
+                    </button>
+                  )
+                }}
               </For>
             </Show>
           </Match>

@@ -14,6 +14,7 @@ import { useSDK } from "@/context/sdk";
 
 import { Button } from "@opencode-ai/ui/button";
 import { BrowserPreviewPanel } from "./BrowserPreviewPanel";
+import { MarkdownPreviewPanel } from "./previews";
 
 let draggedTab: { path: string; sourceGroupId: string } | null = null
 
@@ -319,8 +320,10 @@ if (dt) {
                       }
                   }}
                 >
-                  <Icon name="open-file" size="small" class="text-icon-weak shrink-0" />
-                  <span class="truncate max-w-32">{getFilename(openFile.path)}</span>
+                  <Icon name={openFile.path.startsWith("preview://") ? "eye" : "open-file"} size="small" class="text-icon-weak shrink-0" />
+                  <span class="truncate max-w-32" title={openFile.path.startsWith("preview://") ? `Preview ${getFilename(openFile.path.slice(10))}` : openFile.path}>
+                    {openFile.path.startsWith("preview://") ? `Preview ${getFilename(openFile.path.slice(10))}` : getFilename(openFile.path)}
+                  </span>
                   <Show when={openFile.dirty}><span class="text-12-medium text-text-warning-base">●</span></Show>
                   <IconButton
                     icon="close"
@@ -482,7 +485,10 @@ if (dt) {
       <Show when={isBrowserPreview()}>
         <BrowserPreviewPanel />
       </Show>
-      <Show when={!isBrowserPreview()}>
+      <Show when={activeFile()?.startsWith("preview://")}>
+        <MarkdownPreviewPanel content={activeFileState()?.content ?? ""} filename={getFilename(activeFile()!.slice(10))} />
+      </Show>
+      <Show when={!isBrowserPreview() && !activeFile()?.startsWith("preview://")}>
         <Show when={activeFileState()} fallback={
           <div class="flex-1 flex flex-col items-center justify-center text-text-weak gap-3 select-none">
             <Icon name="open-file" size="large" class="text-icon-weaker opacity-30" style={{ "font-size": "48px" }} />

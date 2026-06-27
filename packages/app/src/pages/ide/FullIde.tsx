@@ -596,13 +596,16 @@ export default function FullIde() {
         await file.load(path)
         const state = file.get(path)
         if (state?.content?.type === "text") {
-          const current = editor.activeFile()
-          if (current) editor.closeFile(current)
-          workspace.openFile(path, state.content.content)
-          setDiffMode(false)
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent("open-markdown-preview", { detail: { path } }))
-          }, 50)
+          let targetGroupId = workspace.getActiveGroupId()
+          const groups = workspace.getGroups()
+          if (groups.length === 1) {
+            workspace.splitGroup(targetGroupId!, "horizontal")
+            targetGroupId = workspace.getGroups()[1].id
+          } else {
+            // Find a group that is not the active one
+            targetGroupId = groups.find(g => g.id !== targetGroupId)?.id ?? targetGroupId
+          }
+          workspace.openFile(`preview://${path}`, state.content.content, targetGroupId)
         }
       })()
     } else if (isPdfPath(path)) {
@@ -1061,7 +1064,7 @@ export default function FullIde() {
     openFolder: () => handleOpenFolder(),
     save: async () => {
       const activeFile = editor.activeFile()
-      if (activeFile) {
+      if (activeFile && !activeFile.startsWith("preview://")) {
         const group = workspace.getActiveGroup()
         if (group) {
           const state = workspace.getFileState(activeFile, group.id);
@@ -1650,7 +1653,7 @@ export default function FullIde() {
         <div class="fixed z-50 bg-surface-raised-base border border-border-base rounded-xl shadow-xl py-1 min-w-52 max-h-[calc(100vh-24px)] overflow-y-auto animate-in fade-in zoom-in-95 duration-100" style={{ left: `${contextMenu()!.x}px`, top: `${contextMenu()!.y}px`, "max-width": "calc(100vw - 24px)" }} onClick={(e) => e.stopPropagation()}>
           <Show when={!contextMenu()!.isDir}>
             <button class="w-full flex items-center justify-between px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; handleFileClick({ path: ctx.path, type: "file" }); closeContextMenu() }}>Open</button>
-            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); void (async () => { await file.load(ctx.path); const state = file.get(ctx.path); if (state?.content?.type === "text") { const current = editor.activeFile(); if (current) editor.closeFile(current); workspace.openFile(ctx.path, state.content.content); setDiffMode(false); } })() }}><Icon name="layout-right-partial" class="size-4" /> Open to the Side</button>
+            <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; closeContextMenu(); void (async () => { await file.load(ctx.path); const state = file.get(ctx.path); if (state?.content?.type === "text") { let targetGroupId = workspace.getActiveGroupId(); const groups = workspace.getGroups(); if (groups.length === 1) { workspace.splitGroup(targetGroupId!, "horizontal"); targetGroupId = workspace.getGroups()[1].id; } else { targetGroupId = groups.find(g => g.id !== targetGroupId)?.id ?? targetGroupId; } workspace.openFile(ctx.path, state.content.content, targetGroupId); } })() }}><Icon name="layout-right-partial" class="size-4" /> Open to the Side</button>
             <Show when={isPreviewablePath(contextMenu()!.path)}>
               <button class="w-full flex items-center gap-2 px-3 py-1.5 text-13-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors" onClick={() => { const ctx = contextMenu()!; openPreview(ctx.path); closeContextMenu() }}><Icon name="eye" class="size-4" /> Open Preview</button>
             </Show>

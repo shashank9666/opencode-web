@@ -216,7 +216,7 @@
 
 ---
 
-## Part 5 — Remote Explorer (Full Redesign)
+## Part 5 — Remote Explorer (Full Redesign) ✅
 
 - [x] **Recent connections list** — Show saved remote targets and reconnect from the panel
 - [x] **Sectioned remote tree** — Show SSH, WSL, and Dev Container groups with clickable entries
@@ -230,7 +230,7 @@
 - [x] **Remote settings** — Provide User, Workspace, and Remote settings scopes in the panel
 - [x] **Connection flow timeline** — Show SSH auth through ready-state stages
 - [x] **Remote file operations** — Route create, rename, delete, move, copy, and drag/drop through remote actions
-- [ ] **Complete redesign with working functionality** — Rebuild the Remote Explorer to match VS Code's remote workspace architecture:
+- [x] **Complete redesign with working functionality** — Rebuild the Remote Explorer to match VS Code's remote workspace architecture:
   - Tree: SSH Targets, Dev Containers, WSL, Tunnels, Recent Connections
   - Per-host context menu: Connect, Connect in New Window, Open Folder…, Disconnect, Rename, Edit SSH Config, Copy Host, Delete
   - Status indicators: ● Connected, ○ Connecting…, ⚠ Auth Failed, ✕ Offline
@@ -271,7 +271,7 @@
 
 ---
 
-## Part 7 — AI Chat / Agent Workspace (Antigravity-level)
+## Part 7 — AI Chat / Agent Workspace (Antigravity-level) ✅
 
 ### Chat Experience
 - [x] Streaming responses with Markdown rendering, syntax highlighting, Mermaid, LaTeX
@@ -284,16 +284,16 @@
 - [x] Multi-chat tabs
 
 ### Context Management
-- [ ] Workspace-wide context, selected files, open editors, Git diff, diagnostics, terminal output, browser logs, clipboard, images, URLs, PDFs, MCP resources, symbols, definitions, references, call hierarchy, workspace & project memories
+- [x] Workspace-wide context, selected files, open editors, Git diff, diagnostics, terminal output, browser logs, clipboard, images, URLs, PDFs, MCP resources, symbols, definitions, references, call hierarchy, workspace & project memories
 
 ### Agent Capabilities
-- [ ] Read / edit / create / delete / rename / move files
-- [ ] Codebase search, terminal execution, browser automation, Git operations
-- [ ] Run tests, formatter, linter, package installs, build, deploy, debug
-- [ ] Execute MCP tools
+- [x] Read / edit / create / delete / rename / move files
+- [x] Codebase search, terminal execution, browser automation, Git operations
+- [x] Run tests, formatter, linter, package installs, build, deploy, debug
+- [x] Execute MCP tools
 
 ### Planning Mode
-- [ ] Goal → Understand Project → Analyse Dependencies → Implementation Plan → Approval → Execution → Verification → Summary
+- [x] Goal → Understand Project → Analyse Dependencies → Implementation Plan → Approval → Execution → Verification → Summary
 
 ### Task System
 - [x] Every request becomes a task with states: Planning / Running / Waiting / Completed / Failed / Cancelled
@@ -303,70 +303,70 @@
 - [x] Produce structured artifacts: Implementation Plan, TODO List, Architecture Diagram, Code Diff, Screenshot, Browser Recording, Test Report, Deployment Report, Performance Report, Documentation
 
 ### Tool Timeline
-- [ ] Collapsible and searchable timeline of all tool calls with timestamps
+- [x] Collapsible and searchable timeline of all tool calls with timestamps
 
 ### File Change Tracking
-- [ ] Modified / Created / Deleted file list; click to open side-by-side diff
-- [ ] Per-edit: Accept / Reject / View Diff / Edit Manually
+- [x] Modified / Created / Deleted file list; click to open side-by-side diff
+- [x] Per-edit: Accept / Reject / View Diff / Edit Manually
 
 ### Browser Integration (Antigravity-style)
-- [ ] Layout: Chat panel | Live Browser panel + bottom panel (Timeline, Console, Network, Screenshots, DOM, Logs)
-- [ ] Browser Session Card: website, status, duration, viewport, actions count
-- [ ] DOM Inspector with live highlight on click
-- [ ] Element Details: Tag, Text, Role, Selector, Visible, Clickable
-- [ ] Console panel (Error / Warning / Info / Log)
-- [ ] Network panel (identical to DevTools: Headers, Request, Response, Timing, Preview)
-- [ ] Screenshot timeline with full-size preview on click
-- [ ] Browser recording (Pause, Stop, Download)
-- [ ] Browser state: Cookies, Local Storage, Session Storage, IndexedDB
-- [ ] Permission prompt before each AI interaction ("Allow Once / Always Allow / Reject")
-- [ ] Recovery options on failure: Retry, Search Similar, Use OCR, Ask User, Cancel
-- [ ] Playwright step view (Navigate → Click → Fill → Submit → Wait — each expandable)
-- [ ] Toggle between Actions view and generated Playwright code view
-- [ ] Browser memory: Visited Pages, Form Data, Downloads, Cookies, History
-- [ ] Downloads panel: Open, Reveal, Delete
-- [ ] Page Errors panel: 404, 500, Console, Accessibility, Slow Request
-- [ ] Visual Diff (Before / After / Highlight Changes) when AI edits a page
-- [ ] Multi-browser support: Chromium, Firefox, WebKit
-- [ ] Device profiles: Desktop, Laptop, Tablet, iPhone, Pixel
-- [ ] Responsive view breakpoints: 390 / 768 / 1024 / 1440 px
-- [ ] AI Summary card at completion with step status and failure reason
+- [x] Layout: Chat panel | Live Browser panel + bottom panel (Timeline, Console, Network, Screenshots, DOM, Logs)
+- [x] Browser Session Card: website, status, duration, viewport, actions count
+- [x] DOM Inspector with live highlight on click
+- [x] Element Details: Tag, Text, Role, Selector, Visible, Clickable
+- [x] Console panel (Error / Warning / Info / Log)
+- [x] Network panel (identical to DevTools: Headers, Request, Response, Timing, Preview)
+- [x] Screenshot timeline with full-size preview on click
+- [x] Browser recording (Pause, Stop, Download)
+- [x] Browser state: Cookies, Local Storage, Session Storage, IndexedDB
+- [x] Permission prompt before each AI interaction ("Allow Once / Always Allow / Reject")
+- [x] Recovery options on failure: Retry, Search Similar, Use OCR, Ask User, Cancel
+- [x] Playwright step view (Navigate → Click → Fill → Submit → Wait — each expandable)
+- [x] Toggle between Actions view and generated Playwright code view
+- [x] Browser memory: Visited Pages, Form Data, Downloads, Cookies, History
+- [x] Downloads panel: Open, Reveal, Delete
+- [x] Page Errors panel: 404, 500, Console, Accessibility, Slow Request
+- [x] Visual Diff (Before / After / Highlight Changes) when AI edits a page
+- [x] Multi-browser support: Chromium, Firefox, WebKit
+- [x] Device profiles: Desktop, Laptop, Tablet, iPhone, Pixel
+- [x] Responsive view breakpoints: 390 / 768 / 1024 / 1440 px
+- [x] AI Summary card at completion with step status and failure reason
 
 ### Terminal Integration
-- [ ] Terminal panel shows: Commands, Exit Code, Duration, Output; actions: Restart, Kill, Copy
+- [x] Terminal panel shows: Commands, Exit Code, Duration, Output; actions: Restart, Kill, Copy
 
 ### Agent Modes
-- [ ] Modes: Ask, Edit, Agent, Turbo, Review, Debug, Planning
+- [x] Modes: Ask, Edit, Agent, Turbo, Review, Debug, Planning
 
 ### Multi-Agent Support
-- [ ] Orchestrate parallel sub-agents: Backend, Frontend, Testing, Documentation, Refactor — merge results
+- [x] Orchestrate parallel sub-agents: Backend, Frontend, Testing, Documentation, Refactor — merge results
 
 ### Knowledge / Memory
-- [ ] Persist project memory: Coding Style, Architecture, Libraries, Patterns, Rules, Preferences
+- [x] Persist project memory: Coding Style, Architecture, Libraries, Patterns, Rules, Preferences
 
 ### Verification Pipeline
-- [ ] Before "Done": Run Tests → Linter → Formatter → Build → Browser Test → Accessibility → Performance
+- [x] Before "Done": Run Tests → Linter → Formatter → Build → Browser Test → Accessibility → Performance
 
 ### Chat Input
-- [ ] Support `@`, `/`, `#`, drag files, paste images, voice/microphone, Stop, Continue, history, templates
+- [x] Support `@`, `/`, `#`, drag files, paste images, voice/microphone, Stop, Continue, history, templates
 
 ### Conversation Memory
-- [ ] Remember: current workspace, open files, previous edits/prompts, user preferences, pending tasks
+- [x] Remember: current workspace, open files, previous edits/prompts, user preferences, pending tasks
 
 ### Diff Viewer
-- [ ] Old / New / Accept / Reject / Accept All
+- [x] Old / New / Accept / Reject / Accept All
 
 ### Background Tasks
-- [ ] Run indexing, testing, doc generation, refactoring, search in the background while the user codes
+- [x] Run indexing, testing, doc generation, refactoring, search in the background while the user codes
 
 ### Notifications
-- [ ] Task Completed, Tests Failed, Merge Conflict, Build Failed, Deployment Complete, Review Needed
+- [x] Task Completed, Tests Failed, Merge Conflict, Build Failed, Deployment Complete, Review Needed
 
 ### Chat Context Chips
-- [ ] Removable chips above prompt: Workspace, N Files, Git Diff, Terminal, Browser, Screenshot, Console, MCP, Memory
+- [x] Removable chips above prompt: Workspace, N Files, Git Diff, Terminal, Browser, Screenshot, Console, MCP, Memory
 
 ### Suggested Actions
-- [ ] After every response show quick-action buttons: Apply, Run Tests, Commit, Explain, Refactor, Optimize, Generate Docs, Continue
+- [x] After every response show quick-action buttons: Apply, Run Tests, Commit, Explain, Refactor, Optimize, Generate Docs, Continue
 
 ### Production Features
-- [ ] Conversation search, workspace history, undo/redo AI edits, agent logs, metrics, cost & token tracking, model fallback, retry failed tools, offline queue, session restore, autosave
+- [x] Conversation search, workspace history, undo/redo AI edits, agent logs, metrics, cost & token tracking, model fallback, retry failed tools, offline queue, session restore, autosave

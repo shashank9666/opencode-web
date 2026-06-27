@@ -65,7 +65,7 @@ import {
   promptLength,
 } from "./prompt-input/history"
 import { createPromptSubmit, type FollowupDraft } from "./prompt-input/submit"
-import { PromptPopover, type AtOption, type SlashCommand } from "./prompt-input/slash-popover"
+import { PromptPopover, type AtOption, type SlashCommand, type HashOption } from "./prompt-input/slash-popover"
 import { PromptContextItems } from "./prompt-input/context-items"
 import { ChatContextChips, type ChatContextChipData } from "./prompt-input/context-chips"
 import { PromptImageAttachments } from "./prompt-input/image-attachments"
@@ -78,6 +78,7 @@ import { displayName } from "@/pages/layout/helpers"
 import { AddContextMenu } from "./prompt-input/add-context-menu"
 import { VoiceRecorder } from "./prompt-input/voice-recorder"
 import { AgentModeSelector, type AgentMode } from "./prompt-input/agent-mode-selector"
+import { TemplatesPopover, saveTemplate } from "./prompt-input/templates"
 
 export type PromptInputState = ReturnType<typeof usePrompt>
 
@@ -228,6 +229,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const [planningMode, setPlanningMode] = createSignal(false)
   const [agentMode, setAgentMode] = createSignal<AgentMode>("ask")
   const [isDragging, setIsDragging] = createSignal(false)
+  const [templatesOpen, setTemplatesOpen] = createSignal(false)
 
   const terminal = useTerminal()
 
@@ -364,7 +366,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   )
 
   const [store, setStore] = createStore<{
-    popover: "at" | "slash" | null
+    popover: "at" | "slash" | "hash" | null
     historyIndex: number
     savedPrompt: PromptHistoryEntry | null
     placeholder: number
@@ -898,6 +900,42 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     onSelect: handleSlashSelect,
   })
 
+  const hashOptions: HashOption[] = [
+    { type: "file", display: "file" },
+    { type: "symbol", display: "symbol" },
+    { type: "diagnostics", display: "diagnostics" },
+  ]
+
+  const handleHashSelect = (option: HashOption | undefined) => {
+    if (!option) return
+    closePopover()
+    if (option.type === "diagnostics") {
+      addPart({ type: "text", content: "@diagnostics ", start: 0, end: 0 })
+      return
+    }
+    addPart({ type: "text", content: "@", start: 0, end: 0 })
+    setStore("popover", "at")
+    atOnInput("")
+  }
+
+  const hashKey = (x: HashOption | undefined) => {
+    if (!x) return ""
+    return x.type
+  }
+
+  const {
+    flat: hashFlat,
+    active: hashActive,
+    setActive: setHashActive,
+    onInput: hashOnInput,
+    onKeyDown: hashOnKeyDown,
+  } = useFilteredList<HashOption>({
+    items: hashOptions,
+    key: hashKey,
+    filterKeys: ["display"],
+    onSelect: handleHashSelect,
+  })
+
   const createPill = (part: FileAttachmentPart | AgentPart) => {
     const pill = document.createElement("span")
     pill.textContent = part.content
@@ -973,6 +1011,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       const active = slashActive()
       const item = items.find((entry) => entry.id === active) ?? items[0]
       handleSlashSelect(item)
+    }
+
+    if (store.popover === "hash") {
+      const items = hashFlat()
+      if (items.length === 0) return
+      const active = hashActive()
+      const item = items.find((entry) => hashKey(entry) === active) ?? items[0]
+      handleHashSelect(item)
     }
   }
 
@@ -1112,6 +1158,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     if (!shellMode) {
       const atMatch = rawText.substring(0, cursorPosition).match(/@(\S*)$/)
       const slashMatch = rawText.match(/^\/(\S*)$/)
+      const hashMatch = rawText.substring(0, cursorPosition).match(/#(\S*)$/)
 
       if (atMatch) {
         atOnInput(atMatch[1])
@@ -1119,6 +1166,15 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       } else if (slashMatch) {
         slashOnInput(slashMatch[1])
         setStore("popover", "slash")
+      } else if (hashMatch) {
+        const query = hashMatch[1].toLowerCase()
+        const filtered = hashOptions.filter((o) => o.display.includes(query))
+        if (filtered.length > 0) {
+          hashOnInput(query)
+          setStore("popover", "hash")
+        } else {
+          closePopover()
+        }
       } else {
         closePopover()
       }
@@ -1452,6 +1508,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         if (store.popover === "slash") {
           slashOnKeyDown(event)
         }
+        if (store.popover === "hash") {
+          hashOnKeyDown(event)
+        }
         event.preventDefault()
         return
       }
@@ -1684,6 +1743,11 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         slashActive={slashActive() ?? undefined}
         setSlashActive={setSlashActive}
         onSlashSelect={handleSlashSelect}
+        hashFlat={hashFlat()}
+        hashActive={hashActive() ?? undefined}
+        hashKey={hashKey}
+        setHashActive={setHashActive}
+        onHashSelect={handleHashSelect}
         commandKeybind={command.keybind}
         t={(key) => language.t(key as Parameters<typeof language.t>[0])}
       />
@@ -1764,6 +1828,35 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       onClick={() => setBrowserPanelOpen(!browserPanelOpen())}
                       aria-label="Playwright Stream"
                     />
+                  </Tooltip>
+                  <Tooltip placement="top" gutter={4} value="Templates">
+                    <Popover
+                      open={templatesOpen()}
+                      onOpenChange={setTemplatesOpen}
+                      trigger={
+                        <IconButton
+                          icon="edit"
+                          variant="ghost"
+                          size="small"
+                          class="size-6 rounded text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"
+                          aria-label="Templates"
+                        />
+                      }
+                      class="bg-v2-background-bg-base border border-v2-border-border-muted rounded-md shadow-lg p-3"
+                    >
+                      <TemplatesPopover
+                        onSelect={(content) => {
+                          setEditorText(content)
+                          prompt.set([{ type: "text", content, start: 0, end: content.length }], content.length)
+                          setTemplatesOpen(false)
+                          requestAnimationFrame(() => {
+                            editorRef.focus()
+                            setCursorPosition(editorRef, content.length)
+                          })
+                        }}
+                        onClose={() => setTemplatesOpen(false)}
+                      />
+                    </Popover>
                   </Tooltip>
                 </div>
                 <div class="flex-1" />
@@ -2251,15 +2344,34 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
                     {/* Chatbot Options */}
                     <div class="flex items-center gap-1 ml-2 border-l border-border-base pl-2" style={control()}>
-                      <Tooltip placement="top" gutter={4} value="Prompt">
-                        <IconButton
-                          icon="prompt"
-                          variant="ghost"
-                          size="small"
-                          class="size-6 rounded"
-                          onClick={() => showToast({ title: "Prompt", description: "Coming soon" })}
-                          aria-label="Prompt"
-                        />
+                      <Tooltip placement="top" gutter={4} value="Templates">
+                        <Popover
+                          open={templatesOpen()}
+                          onOpenChange={setTemplatesOpen}
+                          trigger={
+                            <IconButton
+                              icon="edit"
+                              variant="ghost"
+                              size="small"
+                              class="size-6 rounded"
+                              aria-label="Templates"
+                            />
+                          }
+                          class="bg-v2-background-bg-base border border-v2-border-border-muted rounded-md shadow-lg p-3"
+                        >
+                          <TemplatesPopover
+                            onSelect={(content) => {
+                              setEditorText(content)
+                              prompt.set([{ type: "text", content, start: 0, end: content.length }], content.length)
+                              setTemplatesOpen(false)
+                              requestAnimationFrame(() => {
+                                editorRef.focus()
+                                setCursorPosition(editorRef, content.length)
+                              })
+                            }}
+                            onClose={() => setTemplatesOpen(false)}
+                          />
+                        </Popover>
                       </Tooltip>
                       <Tooltip placement="top" gutter={4} value="Background Terminals">
                         <IconButton
@@ -2316,7 +2428,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       size="small"
                       class="text-[13px] font-[440] leading-5 text-v2-text-text-faint hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-base rounded px-2 gap-1.5"
                       style={control()}
-                      onClick={() => showToast({ title: "Review Changes", description: "Coming soon" })}
+                      onClick={() => command.trigger("review.toggle")}
                     >
                       <Icon name="review" size="small" class="text-v2-icon-icon-muted" />
                       Review Changes
