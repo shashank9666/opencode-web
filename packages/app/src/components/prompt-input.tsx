@@ -238,11 +238,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   createEffect(() => {
     const onLaunch = () => setBrowserPageCount(c => c + 1)
     const onClose = () => setBrowserPageCount(c => Math.max(0, c - 1))
+    const onCloseAll = () => setBrowserPageCount(0)
     window.addEventListener("playwright-launch", onLaunch)
     window.addEventListener("playwright-close", onClose)
+    window.addEventListener("playwright-close-all", onCloseAll)
     onCleanup(() => {
       window.removeEventListener("playwright-launch", onLaunch)
       window.removeEventListener("playwright-close", onClose)
+      window.removeEventListener("playwright-close-all", onCloseAll)
     })
   })
   const [artifactsPanelOpen, setArtifactsPanelOpen] = createSignal(false)
@@ -509,7 +512,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       chips.push({
         id: "browser",
         icon: "browser",
-        label: "Browser",
+        label: "Local Preview",
         onRemove: () => dismissChip("browser"),
       })
     }
@@ -1898,7 +1901,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                   <div class="flex items-center gap-2 text-text-weak text-12-regular">
                     <span class="flex items-center gap-1">
                       <Icon name="browser" size="small" />
-                      Browser
+                      Local Preview
                     </span>
                     <div class="w-px h-3 bg-border-base" />
                     <span>{browserPageCount()} {browserPageCount() === 1 ? "page" : "pages"}</span>
@@ -1911,7 +1914,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         window.dispatchEvent(new CustomEvent("open-playwright-preview"))
                       }}
                     >
-                      Open Browser
+                      Open Preview
                     </Button>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { createSignal, createMemo, createEffect, Show, For } from "solid-js"
+import { createSignal, createMemo, createEffect, Show, For, onCleanup } from "solid-js"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
@@ -106,6 +106,11 @@ export function BrowserPreviewPanel() {
   const [screenshots, setScreenshots] = createSignal<ScreenshotEntry[]>([])
   const [domNode, setDomNode] = createSignal<DOMNode | null>(null)
   const [logEntries, setLogEntries] = createSignal<LogEntry[]>([])
+
+  onCleanup(() => {
+    localStorage.removeItem(BROWSER_INSTANCES_KEY)
+    window.dispatchEvent(new CustomEvent("playwright-close-all"))
+  })
 
   let loadStartTime = 0
 
@@ -454,7 +459,7 @@ export function BrowserPreviewPanel() {
             <iframe
               src={iframeSrc()}
               class="w-full h-full border-none bg-white"
-              title="Browser Preview"
+              title="Local Preview"
               onLoad={handleIframeLoad}
               onError={handleIframeError}
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
@@ -466,7 +471,7 @@ export function BrowserPreviewPanel() {
               <Icon name="browser" size="large" class="text-icon-weaker opacity-50" />
             </div>
             <div class="flex flex-col gap-1">
-              <p class="text-14-medium text-text-weak">Browser Preview</p>
+              <p class="text-14-medium text-text-weak">Local Preview</p>
               <p class="text-12-regular text-text-weaker">Enter a URL or port number to preview your app</p>
             </div>
 
