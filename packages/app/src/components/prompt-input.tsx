@@ -2422,7 +2422,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                                 icon="archive"
                                 variant={artifactsPanelOpen() ? "secondary" : "ghost"}
                                 size="small"
-                                class={`size-6 rounded ${artifactsPanelOpen() ? "bg-surface-raised-stronger text-icon-primary-active" : ""}`}
+                                class={`size-6 rounded ${artifactsPanelOpen() ? "bg-surface-raised-stronger text-icon-primary-active" : "text-v2-icon-icon-muted hover:text-v2-icon-icon-base hover:bg-v2-overlay-simple-overlay-hover"}`}
                                 onClick={() => setArtifactsPanelOpen((prev) => !prev)}
                                 aria-label="Artifacts"
                               />

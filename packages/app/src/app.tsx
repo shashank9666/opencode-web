@@ -351,19 +351,19 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean }>) {
     props.disableHealthCheck
       ? true
       : Effect.gen(function* () {
-          if (!server.current) return true
-          const { http, type } = server.current
+        if (!server.current) return true
+        const { http, type } = server.current
 
-          while (true) {
-            const res = yield* Effect.promise(() => checkServerHealth(http))
-            if (res.healthy) return true
-            if (checkMode() === "background" || type === "http") return false
-          }
-        }).pipe(
-          Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.succeed(false) }),
-          Effect.ensuring(Effect.sync(() => setCheckMode("background"))),
-          Effect.runPromise,
-        ),
+        while (true) {
+          const res = yield* Effect.promise(() => checkServerHealth(http))
+          if (res.healthy) return true
+          if (checkMode() === "background" || type === "http") return false
+        }
+      }).pipe(
+        Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.succeed(false) }),
+        Effect.ensuring(Effect.sync(() => setCheckMode("background"))),
+        Effect.runPromise,
+      ),
   )
   const checking = createMemo(
     () => checkMode() === "blocking" && ["unresolved", "pending"].includes(startupHealthCheck.state),

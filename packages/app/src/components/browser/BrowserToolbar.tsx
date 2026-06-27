@@ -16,14 +16,14 @@ export function BrowserToolbar(props: {
   statusColor: string
 }) {
   return (
-    <div class="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 p-1 bg-[#1e1e1e]/90 backdrop-blur-md border border-[#3c3c3c] rounded-xl shadow-xl hover:shadow-2xl hover:bg-[#1e1e1e] transition-all max-w-[600px] w-full mx-4">
+    <div class="flex items-center gap-1 px-2 py-1.5 bg-[#1e1e1e] border-b border-[#3c3c3c] w-full shrink-0">
       {/* Navigation */}
       <IconButton
         icon="arrow-left"
         variant="ghost"
         size="small"
-        class="size-8 rounded-lg"
-        classList={{ "opacity-40": !props.canGoBack, "text-[#cccccc] hover:bg-[#2d2d2d]": props.canGoBack }}
+        class="size-7 rounded text-[#8a8a8a] hover:text-[#cccccc] hover:bg-[#2d2d2d]"
+        classList={{ "opacity-40": !props.canGoBack }}
         onClick={props.canGoBack ? props.onBack : undefined}
         aria-label="Go Back"
       />
@@ -31,8 +31,8 @@ export function BrowserToolbar(props: {
         icon="arrow-right"
         variant="ghost"
         size="small"
-        class="size-8 rounded-lg"
-        classList={{ "opacity-40": !props.canGoForward, "text-[#cccccc] hover:bg-[#2d2d2d]": props.canGoForward }}
+        class="size-7 rounded text-[#8a8a8a] hover:text-[#cccccc] hover:bg-[#2d2d2d]"
+        classList={{ "opacity-40": !props.canGoForward }}
         onClick={props.canGoForward ? props.onForward : undefined}
         aria-label="Go Forward"
       />
@@ -40,13 +40,13 @@ export function BrowserToolbar(props: {
         icon="reset"
         variant="ghost"
         size="small"
-        class="size-8 rounded-lg text-[#cccccc] hover:bg-[#2d2d2d]"
+        class="size-7 rounded text-[#8a8a8a] hover:text-[#cccccc] hover:bg-[#2d2d2d]"
         onClick={props.onReload}
         aria-label="Reload"
       />
 
       {/* URL bar */}
-      <div class="flex-1 flex items-center gap-2 bg-[#252526] border border-[#3c3c3c] hover:border-[#4c4c4c] focus-within:border-[#007AFF] focus-within:ring-1 focus-within:ring-[#007AFF] rounded-lg px-3 py-1.5 transition-all">
+      <div class="flex-1 flex items-center gap-2 bg-[#252526] border border-[#3c3c3c] hover:border-[#4c4c4c] focus-within:border-[#007AFF] focus-within:ring-1 focus-within:ring-[#007AFF] rounded-full px-4 py-1.5 transition-all max-w-4xl mx-auto">
         <Icon name="lock" class="size-3 text-[#10b981] shrink-0" />
         <input
           type="text"
