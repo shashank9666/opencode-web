@@ -1,28 +1,30 @@
 {
   "name": "Ocean Glass",
   "light": {
-    "primary": "#0077b6",
-    "accent": "#00b4d8",
-    "success": "#90be6d",
-    "warning": "#f9c74f",
-    "error": "#f94144",
-    "info": "#48cae4",
-    "interactive": "#0096c7",
-    "neutral": "#caf0f8",
-    "ink": "#03045e",
-    "compact": true
+    "palette": {
+      "primary": "#0077b6",
+      "accent": "#00b4d8",
+      "success": "#90be6d",
+      "warning": "#f9c74f",
+      "error": "#f94144",
+      "info": "#48cae4",
+      "interactive": "#0096c7",
+      "neutral": "#caf0f8",
+      "ink": "#03045e"
+    }
   },
   "dark": {
-    "primary": "#00b4d8",
-    "accent": "#90e0ef",
-    "success": "#90be6d",
-    "warning": "#f9c74f",
-    "error": "#f94144",
-    "info": "#caf0f8",
-    "interactive": "#0077b6",
-    "neutral": "#023e8a",
-    "ink": "#caf0f8",
-    "compact": true,
+    "palette": {
+      "primary": "#00b4d8",
+      "accent": "#90e0ef",
+      "success": "#90be6d",
+      "warning": "#f9c74f",
+      "error": "#f94144",
+      "info": "#caf0f8",
+      "interactive": "#0077b6",
+      "neutral": "#023e8a",
+      "ink": "#caf0f8"
+    },
     "overrides": {
       "background-base": "#03045e"
     }

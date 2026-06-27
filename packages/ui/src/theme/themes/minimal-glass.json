@@ -1,28 +1,30 @@
 {
   "name": "Minimal Glass",
   "light": {
-    "primary": "#333333",
-    "accent": "#555555",
-    "success": "#228b22",
-    "warning": "#d4af37",
-    "error": "#b22222",
-    "info": "#4682b4",
-    "interactive": "#444444",
-    "neutral": "#f0f0f0",
-    "ink": "#111111",
-    "compact": true
+    "palette": {
+      "primary": "#333333",
+      "accent": "#555555",
+      "success": "#228b22",
+      "warning": "#d4af37",
+      "error": "#b22222",
+      "info": "#4682b4",
+      "interactive": "#444444",
+      "neutral": "#f0f0f0",
+      "ink": "#111111"
+    }
   },
   "dark": {
-    "primary": "#dddddd",
-    "accent": "#bbbbbb",
-    "success": "#32cd32",
-    "warning": "#ffd700",
-    "error": "#ff4500",
-    "info": "#87ceeb",
-    "interactive": "#cccccc",
-    "neutral": "#1a1a1a",
-    "ink": "#eeeeee",
-    "compact": true,
+    "palette": {
+      "primary": "#dddddd",
+      "accent": "#bbbbbb",
+      "success": "#32cd32",
+      "warning": "#ffd700",
+      "error": "#ff4500",
+      "info": "#87ceeb",
+      "interactive": "#cccccc",
+      "neutral": "#1a1a1a",
+      "ink": "#eeeeee"
+    },
     "overrides": {
       "background-base": "#0a0a0a"
     }
