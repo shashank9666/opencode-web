@@ -197,14 +197,30 @@ export default function HeaderBar(props: {
         {/* Menus */}
         <div class="menubar flex items-center h-full" data-testid="menubar" ref={menuBarRef}>
           <For each={menus()}>{(menu, index) => (
-            <div class="relative h-full" onMouseEnter={() => { if (menuCloseTimeout !== undefined) { window.clearTimeout(menuCloseTimeout); menuCloseTimeout = undefined } if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}>
+            <div class="relative h-full" onMouseEnter={() => { 
+              if (menuCloseTimeout !== undefined) { 
+                window.clearTimeout(menuCloseTimeout); 
+                menuCloseTimeout = undefined; 
+              } 
+              if (activeMenu() && activeMenu() !== menu.label) { 
+                setActiveMenu(menu.label); 
+                updateMenuPosition(index());
+                setSubmenuActive(null); 
+              } 
+            }}>
               <button
                 type="button"
                 data-menu-trigger
                 class="px-2.5 h-full text-13-regular hover:bg-surface-raised-base-hover hover:text-text-strong transition-colors cursor-default"
                 classList={{ "bg-surface-raised-base text-text-strong": activeMenu() === menu.label }}
                 onClick={() => handleMenuClick(menu.label, index())}
-                onMouseEnter={() => { if (activeMenu()) setActiveMenu(menu.label); setSubmenuActive(null) }}
+                onMouseEnter={() => { 
+                  if (activeMenu() && activeMenu() !== menu.label) {
+                    setActiveMenu(menu.label); 
+                    updateMenuPosition(index());
+                    setSubmenuActive(null);
+                  } 
+                }}
               >
                 {menu.label}
               </button>
