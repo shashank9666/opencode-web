@@ -26,6 +26,7 @@ export interface TerminalProps extends ComponentProps<"div"> {
   onCleanup?: (pty: Partial<LocalPTY> & { id: string }) => void
   onConnect?: () => void
   onConnectError?: (error: unknown) => void
+  onCommand?: (command: string) => void
 }
 
 let shared: Promise<{ mod: typeof import("ghostty-web"); ghostty: Ghostty }> | undefined

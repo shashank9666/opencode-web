@@ -534,7 +534,7 @@ export default function RemotePanel(props: {
                 <button
                   type="button"
                   class="w-full flex items-center gap-2 px-2 py-1.5 text-12-regular text-text-weak hover:text-text-strong bg-surface-raised-base rounded transition-colors"
-                  onClick={() => props.onOpenTerminal?.(`wsl -d ${connection()!.target || "Ubuntu"} -- bash`, `WSL: ${connection()!.target || "Ubuntu"} (bash)`)}
+                  onClick={() => props.onOpenTerminal?.(`wsl -d ${remote.connection()!.target || "Ubuntu"} -- bash`, `WSL: ${remote.connection()!.target || "Ubuntu"} (bash)`)}
                 >
                   <Icon name="terminal" size="small" class="shrink-0" />
                   <span>Open Bash Shell</span>
