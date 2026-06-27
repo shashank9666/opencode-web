@@ -1,4 +1,4 @@
-import { createEffect, createSignal, createMemo, For, onCleanup, Show } from "solid-js"
+import { createEffect, createSignal, createMemo, For, onCleanup, Show, onMount } from "solid-js"
 import { Dialog } from "@opencode-ai/ui/dialog"
 import { Icon } from "@opencode-ai/ui/icon"
 import { IconButton } from "@opencode-ai/ui/icon-button"
@@ -34,7 +34,7 @@ function extractToc(html: string): { id: string; text: string; level: number }[]
   return headings
 }
 
-const proseClass = "prose prose-sm max-w-none text-text-strong [&_pre]:bg-surface-base [&_pre]:border [&_pre]:border-border-base [&_pre]:rounded-md [&_pre]:p-3 [&_code]:text-12-regular [&_h1]:text-18-medium [&_h2]:text-16-medium [&_h3]:text-14-medium [&_a]:text-accent-base [&_a]:underline [&_blockquote]:border-l-2 [&_blockquote]:border-accent-base [&_blockquote]:pl-3 [&_blockquote]:text-text-weak [&_img]:rounded-md [&_img]:max-w-full [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_hr]:border-border-base [&_table]:w-full [&_th]:text-left [&_th]:p-2 [&_th]:bg-surface-base [&_td]:p-2 [&_td]:border-t [&_td]:border-border-base [&_pre]:overflow-x-auto [&_pre]:max-w-full [&_pre_code]:text-12-regular [&_pre_code]:leading-relaxed [&_pre_code]:block"
+const proseClass = "prose prose-sm max-w-none text-text-strong"
 
 export function MarkdownPreviewToolbar(props: {
   filename: string
@@ -43,31 +43,88 @@ export function MarkdownPreviewToolbar(props: {
   onToggleToc: () => void
   toc: { id: string; text: string; level: number }[]
   onScrollToHeading: (id: string) => void
+  showSource?: boolean
+  onToggleSource?: () => void
+  wordWrap?: boolean
+  onToggleWordWrap?: () => void
+  scrollContainer?: () => HTMLElement | undefined
 }) {
+  const scrollTop = () => {
+    const el = props.scrollContainer?.()
+    if (!el) return 0
+    return el.scrollTop
+  }
+  const scrollMax = () => {
+    const el = props.scrollContainer?.()
+    if (!el) return 1
+    return Math.max(1, el.scrollHeight - el.clientHeight)
+  }
+  const scrollPercent = () => Math.round((scrollTop() / scrollMax()) * 100)
+
   return (
-    <div class="flex items-center justify-between px-3 py-1.5 border-b border-border-base bg-surface-base shrink-0">
+    <div data-component="markdown-toolbar">
       <div class="flex items-center gap-1">
-        <IconButton icon="eye" size="small" variant="ghost" class="size-6 rounded" title="Refresh preview" onClick={props.onRefresh} />
+        {/* File name */}
         <span class="text-12-medium text-text-weak ml-1">{props.filename}</span>
       </div>
-      <Show when={props.toc.length > 0}>
-        <div class="flex items-center gap-1 relative">
-          <IconButton icon="bullet-list" size="small" variant="ghost" class="size-6 rounded" title="Table of Contents" onClick={props.onToggleToc} />
-          <Show when={props.showToc}>
-            <div class="absolute top-full right-0 mt-1 w-56 max-h-64 overflow-y-auto bg-surface-raised-base border border-border-base rounded-lg shadow-xl z-50 p-1.5">
-              <For each={props.toc}>
-                {(item) => (
-                  <button
-                    class="w-full text-left px-2 py-1 text-12-regular text-text-strong hover:bg-surface-raised-base-hover rounded transition-colors truncate block"
-                    style={{ "padding-left": `${item.level * 8 + 8}px` }}
-                    onClick={() => props.onScrollToHeading(item.id)}
-                  >
-                    {item.text}
-                  </button>
-                )}
-              </For>
-            </div>
-          </Show>
+
+      <div class="flex-1" />
+
+      <div class="flex items-center gap-0.5">
+        {/* Scroll position */}
+        <span class="text-10-regular text-text-weaker tabular-nums mr-1">{scrollPercent()}%</span>
+
+        {/* Word wrap toggle */}
+        <Show when={props.onToggleWordWrap}>
+          <button
+            data-active={props.wordWrap ? "true" : "false"}
+            title="Toggle word wrap"
+            onClick={props.onToggleWordWrap}
+          >
+            <Icon name="wrap" size="small" />
+          </button>
+        </Show>
+
+        {/* Source/Preview toggle */}
+        <Show when={props.onToggleSource}>
+          <button
+            data-active={props.showSource ? "true" : "false"}
+            title="Toggle source view"
+            onClick={props.onToggleSource}
+          >
+            <Icon name="code" size="small" />
+          </button>
+        </Show>
+
+        <div data-slot="toolbar-separator" />
+
+        {/* Table of contents */}
+        <Show when={props.toc.length > 0}>
+          <button title="Table of Contents" onClick={props.onToggleToc}>
+            <Icon name="bullet-list" size="small" />
+          </button>
+        </Show>
+
+        {/* Refresh */}
+        <button title="Refresh preview" onClick={props.onRefresh}>
+          <Icon name="reset" size="small" />
+        </button>
+      </div>
+
+      {/* TOC dropdown */}
+      <Show when={props.showToc}>
+        <div class="absolute top-full right-2 mt-1 w-60 max-h-72 overflow-y-auto bg-surface-raised-base border border-border-base rounded-lg shadow-xl z-50 py-1">
+          <For each={props.toc}>
+            {(item) => (
+              <button
+                class="w-full text-left px-3 py-1.5 text-12-regular text-text-strong hover:bg-surface-raised-base-hover transition-colors truncate block"
+                style={{ "padding-left": `${item.level * 10 + 12}px` }}
+                onClick={() => props.onScrollToHeading(item.id)}
+              >
+                {item.text}
+              </button>
+            )}
+          </For>
         </div>
       </Show>
     </div>
@@ -81,7 +138,11 @@ export function MarkdownPreviewPanel(props: { content: string; filename: string 
   const [loading, setLoading] = createSignal(true)
   const [showToc, setShowToc] = createSignal(false)
   const [toc, setToc] = createSignal<{ id: string; text: string; level: number }[]>([])
+  const [showSource, setShowSource] = createSignal(false)
+  const [wordWrap, setWordWrap] = createSignal(false)
+  const [scrollProgress, setScrollProgress] = createSignal(0)
   let previewRef: HTMLDivElement | undefined
+  let scrollContainerRef: HTMLDivElement | undefined
 
   const tryParse = async (markdown: string): Promise<string> => {
     const parser = markedContext as unknown
@@ -125,11 +186,36 @@ export function MarkdownPreviewPanel(props: { content: string; filename: string 
     void renderMarkdown(content)
   })
 
+  // Scroll progress tracking
+  const handleScroll = () => {
+    if (!scrollContainerRef) return
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef
+    const max = Math.max(1, scrollHeight - clientHeight)
+    const progress = Math.min(100, Math.round((scrollTop / max) * 100))
+    setScrollProgress(progress)
+    // Update CSS custom property for the progress bar
+    scrollContainerRef.style.setProperty("--scroll-progress", `${progress}%`)
+  }
+
+  onMount(() => {
+    scrollContainerRef?.addEventListener("scroll", handleScroll, { passive: true })
+    onCleanup(() => scrollContainerRef?.removeEventListener("scroll", handleScroll))
+  })
+
   const scrollToHeading = (id: string) => {
     if (!previewRef) return
     const el = previewRef.querySelector(`#${CSS.escape(id)}`)
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" })
     setShowToc(false)
+  }
+
+  const scrollToTop = () => {
+    scrollContainerRef?.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const scrollToBottom = () => {
+    if (!scrollContainerRef) return
+    scrollContainerRef.scrollTo({ top: scrollContainerRef.scrollHeight, behavior: "smooth" })
   }
 
   const handleLinkClick = (e: MouseEvent) => {
@@ -156,33 +242,70 @@ export function MarkdownPreviewPanel(props: { content: string; filename: string 
         onToggleToc={() => setShowToc((p) => !p)}
         toc={toc()}
         onScrollToHeading={scrollToHeading}
+        showSource={showSource()}
+        onToggleSource={() => setShowSource((p) => !p)}
+        wordWrap={wordWrap()}
+        onToggleWordWrap={() => setWordWrap((p) => !p)}
+        scrollContainer={() => scrollContainerRef}
       />
-      <div class="flex-1 overflow-y-auto p-8 bg-background-base" ref={previewRef} onClick={handleLinkClick}>
-        <Show when={!loading()} fallback={
-          <div class="flex items-center justify-center py-10 text-text-weak">
-            <div class="flex items-center gap-2">
-              <Icon name="cursor" size="small" class="animate-pulse" />
-              <span>Rendering...</span>
-            </div>
+      <Show
+        when={!showSource()}
+        fallback={
+          <div
+            class="flex-1 overflow-auto bg-background-base"
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+          >
+            <pre
+              class="p-6 text-12-regular font-mono text-text-strong whitespace-pre-wrap break-words m-0"
+              style={{ "white-space": wordWrap() ? "pre-wrap" : "pre" }}
+            >
+              {props.content}
+            </pre>
           </div>
-        }>
-          <Show when={!error()} fallback={
-            <div class="flex flex-col items-center gap-3 py-10">
-              <Icon name="circle-ban-sign" size="large" class="text-icon-danger-active" />
-              <p class="text-text-weak text-13-regular">Failed to render markdown</p>
-              <p class="text-text-weaker text-11-regular max-w-md text-center">{error()}</p>
-              <button
-                class="px-3 py-1.5 text-12-medium text-accent-base hover:bg-accent-base/10 rounded-md transition-colors"
-                onClick={() => void renderMarkdown(props.content)}
-              >
-                Retry
-              </button>
-            </div>
-          }>
-            <div class={proseClass} innerHTML={html()} />
+        }
+      >
+        <div
+          data-component="markdown-preview"
+          class="flex-1 overflow-y-auto p-8 bg-background-base"
+          ref={(el) => {
+            scrollContainerRef = el
+            previewRef = el
+          }}
+          onClick={handleLinkClick}
+        >
+          <Show
+            when={!loading()}
+            fallback={
+              <div class="flex items-center justify-center py-10 text-text-weak">
+                <div class="flex items-center gap-2">
+                  <Icon name="cursor" size="small" class="animate-pulse" />
+                  <span>Rendering...</span>
+                </div>
+              </div>
+            }
+          >
+            <Show
+              when={!error()}
+              fallback={
+                <div class="flex flex-col items-center gap-3 py-10">
+                  <Icon name="circle-ban-sign" size="large" class="text-icon-danger-active" />
+                  <p class="text-text-weak text-13-regular">Failed to render markdown</p>
+                  <p class="text-text-weaker text-11-regular max-w-md text-center">{error()}</p>
+                  <button
+                    class="px-3 py-1.5 text-12-medium text-accent-base hover:bg-accent-base/10 rounded-md transition-colors"
+                    onClick={() => void renderMarkdown(props.content)}
+                  >
+                    Retry
+                  </button>
+                </div>
+              }
+            >
+              <div class={proseClass} innerHTML={html()} />
+            </Show>
           </Show>
-        </Show>
-      </div>
+        </div>
+      </Show>
     </div>
   )
 }

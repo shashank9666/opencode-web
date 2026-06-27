@@ -1,3 +1,89 @@
+/* ══════════════════════════════════════════════════════════════════
+   Markdown Preview — VS Code-style
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Preview wrapper (scroll container) ──────────────────────── */
+[data-component="markdown-preview"] {
+  position: relative;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* ── Scroll progress bar (thin accent line at top) ───────────── */
+[data-component="markdown-preview"]::before {
+  content: "";
+  position: sticky;
+  top: 0;
+  left: 0;
+  display: block;
+  width: var(--scroll-progress, 0%);
+  height: 2px;
+  background: var(--text-interactive-base);
+  z-index: 10;
+  transition: width 0.1s linear;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Toolbar
+   ══════════════════════════════════════════════════════════════════ */
+[data-component="markdown-toolbar"] {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-base);
+  background: var(--surface-base);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+[data-component="markdown-toolbar"] [data-slot="toolbar-separator"] {
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background: var(--border-weak-base);
+}
+
+[data-component="markdown-toolbar"] button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--icon-base);
+  font-family: var(--font-family-sans);
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+  white-space: nowrap;
+}
+
+[data-component="markdown-toolbar"] button:hover {
+  background: var(--surface-raised-base-hover);
+  color: var(--text-strong);
+}
+
+[data-component="markdown-toolbar"] button:active {
+  background: var(--surface-raised-base-active);
+}
+
+[data-component="markdown-toolbar"] button[data-active="true"] {
+  background: var(--surface-raised-base-active);
+  color: var(--text-interactive-base);
+}
+
+[data-component="markdown-toolbar"] button[data-active="true"]:hover {
+  background: var(--border-weak-base);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Content Container
+   ══════════════════════════════════════════════════════════════════ */
 [data-component="markdown"] {
   /* Reset & Base Typography */
   min-width: 0;
@@ -6,7 +92,7 @@
   color: var(--text-strong);
   font-family: var(--font-family-sans);
   font-size: var(--font-size-base); /* 14px */
-  line-height: 160%;
+  line-height: 1.65;
 
   /* Spacing for flow */
   > *:first-child {
@@ -16,52 +102,172 @@
     margin-bottom: 0;
   }
 
-  /* Headings: Same size, distinguished by color and spacing */
+  /* ── Headings with hover anchors ───────────────────────────── */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    font-size: 14px;
+    position: relative;
     color: var(--text-strong);
-    font-weight: var(--font-weight-medium);
-    margin-top: 0px;
-    margin-bottom: 24px;
-    line-height: var(--line-height-large);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.35;
+    scroll-margin-top: 48px;
   }
 
-  /* Emphasis & Strong: Neutral strong color */
+  h1 {
+    font-size: 24px;
+    margin-top: 32px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-weaker-base);
+  }
+
+  h2 {
+    font-size: 20px;
+    margin-top: 28px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-weaker-base);
+  }
+
+  h3 {
+    font-size: 16px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+
+  h4 {
+    font-size: 14px;
+    margin-top: 20px;
+    margin-bottom: 6px;
+  }
+
+  h5,
+  h6 {
+    font-size: 13px;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    color: var(--text-weak);
+  }
+
+  /* Anchor link that appears on heading hover */
+  h1 > a.anchor,
+  h2 > a.anchor,
+  h3 > a.anchor,
+  h4 > a.anchor,
+  h5 > a.anchor,
+  h6 > a.anchor {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h1 > a.anchor::after,
+  h2 > a.anchor::after,
+  h3 > a.anchor::after,
+  h4 > a.anchor::after,
+  h5 > a.anchor::after,
+  h6 > a.anchor::after {
+    content: " #";
+    color: var(--text-weaker);
+    font-weight: var(--font-weight-normal);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  h1:hover > a.anchor::after,
+  h2:hover > a.anchor::after,
+  h3:hover > a.anchor::after,
+  h4:hover > a.anchor::after,
+  h5:hover > a.anchor::after,
+  h6:hover > a.anchor::after {
+    opacity: 1;
+  }
+
+  /* Direct heading hover (no anchor child) */
+  h1:hover::after,
+  h2:hover::after,
+  h3:hover::after,
+  h4:hover::after,
+  h5:hover::after,
+  h6:hover::after {
+    content: " #";
+    color: var(--text-weaker);
+    font-weight: var(--font-weight-normal);
+    opacity: 1;
+    transition: opacity 0.15s ease;
+  }
+
+  /* ── Emphasis & Strong ─────────────────────────────────────── */
   strong,
   b {
     color: var(--text-strong);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);
   }
 
-  /* Paragraphs */
+  em,
+  i {
+    font-style: italic;
+    color: var(--text-strong);
+  }
+
+  del,
+  s {
+    color: var(--text-weak);
+    text-decoration: line-through;
+  }
+
+  /* ── Paragraphs ────────────────────────────────────────────── */
   p {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    line-height: 1.65;
   }
 
-  /* Links */
+  /* ── Links with external icon ──────────────────────────────── */
   a {
     color: var(--text-interactive-base);
     text-decoration: none;
     font-weight: inherit;
+    transition: color 0.1s ease;
   }
 
   a:hover {
+    color: var(--text-interactive-hover);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
+
+  a.external-link {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 1h5v5L8.86 3.85 4.7 8 4 7.3l4.15-4.16L6 1zM2 3h2v1H2v6h6V8h1v2c0 .55-.45 1-1 1H2c-.55 0-1-.45-1-1V4c0-.55.45-1 1-1z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 11px;
+    padding-right: 14px;
+  }
+
+  a.external-link:hover > code {
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
-  /* Lists */
+  /* Internal anchor links */
+  a[href^="#"] {
+    color: var(--text-interactive-base);
+  }
+
+  a[href^="#"]:hover {
+    color: var(--text-interactive-hover);
+  }
+
+  /* ── Lists ─────────────────────────────────────────────────── */
   ul,
   ol {
-    margin-top: 8px;
-    margin-bottom: 12px;
+    margin-top: 6px;
+    margin-bottom: 14px;
     margin-left: 0;
-    padding-left: 32px;
+    padding-left: 28px;
     list-style-position: outside;
   }
 
@@ -71,11 +277,12 @@
 
   ol {
     list-style-type: decimal;
-    padding-left: 2.25rem;
+    padding-left: 26px;
   }
 
   li {
-    margin-bottom: 8px;
+    margin-bottom: 5px;
+    line-height: 1.6;
   }
 
   li > p:first-child {
@@ -92,82 +299,188 @@
     color: var(--text-weak);
   }
 
-  /* Nested lists spacing */
+  /* Nested lists */
   li > ul,
   li > ol {
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-    padding-left: 1rem; /* Minimal indent for nesting only */
+    margin-top: 4px;
+    margin-bottom: 4px;
+    padding-left: 20px;
   }
 
   li > ol {
-    padding-left: 1.75rem;
+    padding-left: 22px;
   }
 
-  /* Blockquotes */
+  /* Task lists (checkboxes) */
+  li:has(> input[type="checkbox"]) {
+    list-style: none;
+    margin-left: -20px;
+    padding-left: 0;
+  }
+
+  li > input[type="checkbox"] {
+    margin-right: 6px;
+    vertical-align: middle;
+    accent-color: var(--text-interactive-base);
+  }
+
+  /* ── Blockquotes ───────────────────────────────────────────── */
   blockquote {
-    border-left: 2px solid var(--border-weak-base);
-    margin: 1.5rem 0;
-    padding-left: 0.5rem;
+    border-left: 3px solid var(--border-interactive-base);
+    margin: 14px 0;
+    padding: 4px 0 4px 16px;
     color: var(--text-weak);
+    background: var(--surface-raised-base);
+    border-radius: 0 4px 4px 0;
     font-style: normal;
   }
 
-  /* Horizontal Rule - Invisible spacing only */
+  blockquote p:last-child {
+    margin-bottom: 0;
+  }
+
+  blockquote blockquote {
+    margin: 8px 0;
+    border-left-color: var(--border-interactive-hover);
+  }
+
+  /* ── Horizontal Rule ───────────────────────────────────────── */
   hr {
     border: none;
-    height: 0;
-    margin: 40px 0;
+    height: 1px;
+    background: var(--border-base);
+    margin: 28px 0;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Code
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* Inline code */
+  :not(pre) > code {
+    font-family: var(--font-family-mono);
+    font-feature-settings: var(--font-family-mono--font-feature-settings);
+    font-size: 12.5px;
+    color: var(--syntax-string);
+    font-weight: var(--font-weight-medium);
+    background: var(--surface-raised-base);
+    border: 1px solid var(--border-weaker-base);
+    border-radius: 4px;
+    padding: 1px 5px;
+    transition: background 0.1s ease, border-color 0.1s ease;
+  }
+
+  :not(pre) > code:hover {
+    background: var(--surface-raised-base-hover);
+    border-color: var(--border-weak-base);
+  }
+
+  /* Code blocks */
+  pre {
+    position: relative;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-base);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--surface-base);
+  }
+
+  .shiki,
+  pre code {
+    font-size: 13px;
+    line-height: 1.55;
+    display: block;
   }
 
   .shiki {
-    font-size: 13px;
-    padding: 12px;
-    border-radius: 6px;
-    border: 0.5px solid var(--border-weak-base);
+    padding: 14px 16px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-weak-base) transparent;
   }
 
+  .shiki::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .shiki::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .shiki::-webkit-scrollbar-thumb {
+    background: var(--border-weak-base);
+    border-radius: 3px;
+  }
+
+  .shiki::-webkit-scrollbar-thumb:hover {
+    background: var(--border-base);
+  }
+
+  /* ── Code block wrapper with copy button & lang label ──────── */
   [data-component="markdown-code"] {
     position: relative;
   }
 
-  [data-slot="markdown-copy-button"] {
+  [data-component="markdown-code"] [data-slot="code-lang"] {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 0;
+    right: 0;
+    padding: 2px 8px;
+    font-family: var(--font-family-mono);
+    font-size: 10px;
+    font-weight: var(--font-weight-medium);
+    color: var(--text-weak);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.6;
+  }
+
+  [data-component="markdown-code"]:hover [data-slot="code-lang"] {
     opacity: 0;
     transition: opacity 0.15s ease;
+  }
+
+  /* Copy button */
+  [data-slot="markdown-copy-button"] {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    opacity: 0;
+    transition: opacity 0.15s ease, background 0.1s ease;
     z-index: 1;
+  }
 
-    &::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      left: 50%;
-      bottom: calc(100% + 4px);
-      transform: translateX(-50%);
-      z-index: 1000;
+  [data-component="markdown-code"]:hover [data-slot="markdown-copy-button"] {
+    opacity: 1;
+  }
 
-      max-width: 320px;
-      border-radius: var(--radius-sm);
-      background: var(--surface-float-base);
-      color: var(--text-invert-strong);
-      padding: 2px 8px;
-      border: 1px solid var(--border-weak-base, rgba(0, 0, 0, 0.07));
-      box-shadow: var(--shadow-md);
-
-      pointer-events: none;
-      white-space: nowrap;
-
-      font-family: var(--font-family-sans);
-      font-size: var(--font-size-small);
-      font-style: normal;
-      font-weight: var(--font-weight-medium);
-      line-height: var(--line-height-large);
-      letter-spacing: var(--letter-spacing-normal);
-
-      opacity: 0;
-      transition: opacity 0.15s ease;
-    }
+  [data-slot="markdown-copy-button"]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 4px);
+    transform: translateX(-50%);
+    z-index: 1000;
+    max-width: 320px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-float-base);
+    color: var(--text-invert-strong);
+    padding: 2px 8px;
+    border: 1px solid var(--border-weak-base, rgba(0, 0, 0, 0.07));
+    box-shadow: var(--shadow-md);
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-small);
+    font-style: normal;
+    font-weight: var(--font-weight-medium);
+    line-height: var(--line-height-large);
+    letter-spacing: var(--letter-spacing-normal);
+    opacity: 0;
+    transition: opacity 0.15s ease;
   }
 
   [data-slot="markdown-copy-button"]:hover::after,
@@ -184,10 +497,6 @@
     color: var(--icon-base);
   }
 
-  [data-component="markdown-code"]:hover [data-slot="markdown-copy-button"] {
-    opacity: 1;
-  }
-
   [data-slot="markdown-copy-button"] [data-slot="check-icon"] {
     display: none;
   }
@@ -200,67 +509,160 @@
     display: inline-flex;
   }
 
-  pre {
-    margin-top: 12px;
-    margin-bottom: 32px;
-    overflow: auto;
-
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  :not(pre) > code {
-    font-family: var(--font-family-mono);
-    font-feature-settings: var(--font-family-mono--font-feature-settings);
-    color: var(--syntax-string);
-    font-weight: var(--font-weight-medium);
-    /* font-size: 13px; */
-
-    /* padding: 2px 2px; */
-    /* margin: 0 1.5px; */
-    /* border-radius: 2px; */
-    /* background: var(--surface-base); */
-    /* box-shadow: 0 0 0 0.5px var(--border-weak-base); */
-  }
-
-  /* Tables */
+  /* ══════════════════════════════════════════════════════════════════
+     Tables
+     ══════════════════════════════════════════════════════════════════ */
   table {
     width: 100%;
     border-collapse: collapse;
-    margin: 24px 0;
+    margin: 16px 0;
     font-size: var(--font-size-base);
     display: block;
     overflow-x: auto;
+    border: 1px solid var(--border-base);
+    border-radius: 6px;
   }
 
-  th,
-  td {
-    /* Minimal borders for structure, matching TUI "lines" roughly but keeping it web-clean */
-    border-bottom: 1px solid var(--border-weaker-base);
-    padding: 12px;
-    text-align: left;
-    vertical-align: top;
+  thead {
+    background: var(--surface-raised-base);
   }
 
   th {
     color: var(--text-strong);
-    font-weight: var(--font-weight-medium);
-    border-bottom: 1px solid var(--border-weak-base);
+    font-weight: var(--font-weight-semibold);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-base);
+    white-space: nowrap;
   }
 
-  /* Images */
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-weaker-base);
+    vertical-align: top;
+    transition: background 0.1s ease;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: var(--surface-raised-base-hover);
+  }
+
+  /* Alternating row stripes */
+  tbody tr:nth-child(even) td {
+    background: var(--surface-raised-base);
+  }
+
+  tbody tr:nth-child(even):hover td {
+    background: var(--surface-raised-base-hover);
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Images
+     ══════════════════════════════════════════════════════════════════ */
   img {
     max-width: 100%;
     height: auto;
-    border-radius: 4px;
-    margin: 1.5rem 0;
+    border-radius: 6px;
+    margin: 14px 0;
     display: block;
+    border: 1px solid var(--border-base);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
   }
-}
 
-[data-component="markdown"] a.external-link:hover > code {
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  img:hover {
+    border-color: var(--border-interactive-base);
+    box-shadow: 0 0 0 2px var(--border-weak-selected);
+  }
+
+  /* Image with link */
+  a > img {
+    cursor: zoom-in;
+  }
+
+  a > img:hover {
+    border-color: var(--text-interactive-base);
+    box-shadow: 0 0 0 3px var(--border-weak-selected);
+  }
+
+  /* Image caption (alt text fallback) */
+  img[alt]::after {
+    content: attr(alt);
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-weak);
+    margin-top: 4px;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Definition lists, details/summary, keyboard shortcuts
+     ══════════════════════════════════════════════════════════════════ */
+  dl {
+    margin: 14px 0;
+  }
+
+  dt {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: 4px;
+  }
+
+  dd {
+    margin-left: 20px;
+    margin-bottom: 10px;
+    color: var(--text-weak);
+  }
+
+  details {
+    margin: 12px 0;
+    padding: 10px 14px;
+    border: 1px solid var(--border-base);
+    border-radius: 6px;
+    background: var(--surface-raised-base);
+  }
+
+  details[open] {
+    background: var(--surface-base);
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: var(--font-weight-medium);
+    color: var(--text-strong);
+    user-select: none;
+    transition: color 0.1s ease;
+  }
+
+  summary:hover {
+    color: var(--text-interactive-base);
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    font-family: var(--font-family-mono);
+    font-size: 11px;
+    color: var(--text-strong);
+    background: var(--surface-raised-base);
+    border: 1px solid var(--border-base);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    line-height: 1.2;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════
+     Math (KaTeX)
+     ══════════════════════════════════════════════════════════════════ */
+  .katex-display {
+    margin: 16px 0;
+    overflow-x: auto;
+    padding: 8px 0;
+  }
+
+  .katex {
+    font-size: 1.05em;
+  }
 }
