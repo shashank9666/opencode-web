@@ -73,7 +73,7 @@ export function BrowserSidebar(props: BrowserSidebarProps) {
                   props.onCloseSession(session.id)
                 }}
               >
-                <Icon name="close-small" class="size-3" />
+                <Icon name="layout-left-partial" class="size-4 opacity-70" />
               </button>
             </div>
           )}
