@@ -13,8 +13,8 @@
     "typecheck": "bun turbo typecheck",
     "prepare": "husky",
     "test": "echo 'do not run tests from root' && exit 1",
-    "build:electron": "bun run --cwd packages/opencode build && bun run --cwd packages/electron dist",
-    "build:electron:pack": "bun run --cwd packages/opencode build && bun run --cwd packages/electron pack"
+    "build:electron": "bun run --cwd packages/opencode build --single && bun run --cwd packages/electron dist",
+    "build:electron:pack": "bun run --cwd packages/opencode build --single && bun run --cwd packages/electron pack"
   },
   "workspaces": {
     "packages": [

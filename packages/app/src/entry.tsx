@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/solid"
 import { render } from "solid-js/web"
+import { HashRouter } from "@solidjs/router"
 import { AppBaseProviders, AppInterface } from "@/app"
 import { type Platform, PlatformProvider } from "@/context/platform"
 import { dict as en } from "@/i18n/en"
@@ -12,15 +13,7 @@ import { ServerConnection } from "./context/server"
 
 const DEFAULT_SERVER_URL_KEY = "opencode.settings.dat:defaultServerUrl"
 
-const getLocale = () => {
-  if (typeof navigator !== "object") return "en" as const
-  const languages = navigator.languages?.length ? navigator.languages : [navigator.language]
-  for (const language of languages) {
-    if (!language) continue
-    if (language.toLowerCase().startsWith("zh")) return "zh" as const
-  }
-  return "en" as const
-}
+
 
 const getRootNotFoundError = () => {
   const key = "error.dev.rootNotFound" as const
@@ -97,8 +90,13 @@ if (!(root instanceof HTMLElement) && import.meta.env.DEV) {
   throw new Error(getRootNotFoundError())
 }
 
+const isTauri = typeof window !== "undefined" && "__TAURI__" in window
+const isElectron = typeof window !== "undefined" && "api" in window
+const platformName = (isTauri || isElectron) ? "desktop" as const : "web" as const
+
 const getCurrentUrl = () => {
-   if (location.hostname.includes("opencode.ai")) return "http://localhost:4098"
+  if (location.hostname.includes("opencode.ai")) return "http://localhost:4098"
+  if (isElectron || isTauri) return "http://localhost:4098"
   if (import.meta.env.DEV)
     return `http://${import.meta.env.VITE_OPENCODE_SERVER_HOST ?? "localhost"}:${import.meta.env.VITE_OPENCODE_SERVER_PORT ?? "4098"}`
   return location.origin
@@ -124,9 +122,7 @@ const getOS = () => {
   return "linux" as const
 }
 
-const isTauri = typeof window !== "undefined" && "__TAURI__" in window
-const isElectron = typeof window !== "undefined" && "api" in window
-const platformName = (isTauri || isElectron) ? "desktop" as const : "web" as const
+
 
 const openDirectoryPickerDialog = async (opts?: { title?: string; multiple?: boolean }) => {
   if (isTauri) {
@@ -231,6 +227,7 @@ if (root instanceof HTMLElement) {
       <PlatformProvider value={platform}>
         <AppBaseProviders>
           <AppInterface
+            router={isElectron ? HashRouter : undefined}
             defaultServer={ServerConnection.Key.make(getDefaultUrl())}
             canonicalLocalServer={ServerConnection.key(server)}
             servers={[server]}
