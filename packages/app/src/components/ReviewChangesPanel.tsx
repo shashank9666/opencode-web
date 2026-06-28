@@ -106,7 +106,7 @@ export function ReviewChangesPanel(props: { workspace: any }) {
         }
         relPath = relPath.replace(/\\/g, "/");
         const resp = await sdk().client.vcs.file({ path: relPath, ref: "HEAD" });
-        if (resp && resp.data && typeof resp.data === "string") {
+        if (resp && typeof resp.data === "string") {
           before = resp.data;
         }
       } catch {
