@@ -546,6 +546,24 @@ export default function FullIde() {
     window.addEventListener("mouseup", onUp)
   }
 
+  const [terminalListWidth, setTerminalListWidth] = createSignal(192)
+  let terminalListResizing = false
+  let terminalListResizeStartX = 0
+  let terminalListResizeStartW = 0
+  const handleTerminalListResizeStart = (e: MouseEvent) => {
+    terminalListResizing = true
+    terminalListResizeStartX = e.clientX
+    terminalListResizeStartW = terminalListWidth()
+    const onMove = (ev: MouseEvent) => {
+      if (!terminalListResizing) return
+      const delta = terminalListResizeStartX - ev.clientX
+      setTerminalListWidth(Math.max(120, Math.min(600, terminalListResizeStartW + delta)))
+    }
+    const onUp = () => { terminalListResizing = false; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup", onUp)
+  }
+
   // ── Panel toggles ──
   const toggleLeftPanel = (tab: ActivityBarTab) => {
     panelManager.panels().filter((p) => p.position === "left").forEach((p) => {
@@ -1609,7 +1627,8 @@ export default function FullIde() {
                           </div>
                         </Show>
                       </Show>
-                      <div class="w-48 shrink-0 border-l border-border-base bg-surface-base flex flex-col overflow-y-auto py-1">
+                      <div class="shrink-0 border-l border-border-base bg-surface-base flex flex-col overflow-y-auto py-1 relative" style={{ width: `${terminalListWidth()}px` }}>
+                        <div class="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-accent-base/30 transition-colors z-10 -ml-0.5" onMouseDown={handleTerminalListResizeStart} />
                         <For each={terminal.all()}>
                           {(pty, index) => {
                             const shellInfo = () => getShellInfo(pty.title)
