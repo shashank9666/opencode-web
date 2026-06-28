@@ -490,6 +490,7 @@ export default function FullIde() {
       const state = file.get(args.path)
       const original = (state?.content?.type === "text") ? state.content.content : ""
       workspace.openFile(args.path, original)
+      workspace.setOriginalContent(args.path, original)
     })()
   })
 

@@ -152,6 +152,24 @@ export function createEditorWorkspace() {
     setActiveGroupId(groupId);
   };
 
+  const setOriginalContent = (path: string, originalContent: string) => {
+    setRootNode(prev => {
+      const updateRec = (node: EditorNode): EditorNode => {
+        if (node.type === "group") {
+          return {
+            ...node,
+            group: {
+              ...node.group,
+              files: node.group.files.map(f => f.path === path && f.originalContent === undefined ? { ...f, originalContent } : f)
+            }
+          };
+        }
+        return { ...node, children: node.children.map(updateRec) };
+      };
+      return updateRec(prev);
+    });
+  };
+
   const mergeAllPanels = () => {
     const collectFiles = (node: EditorNode): OpenFile[] => {
       if (node.type === "group") return node.group.files
@@ -344,6 +362,7 @@ export function createEditorWorkspace() {
     getDirtyFiles,
     getGroups,
     getSnapshot,
-    loadSnapshot
+    loadSnapshot,
+    setOriginalContent
   };
 }
