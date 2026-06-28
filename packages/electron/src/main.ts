@@ -1,8 +1,18 @@
-import { app, BrowserWindow } from "electron"
+import { app, BrowserWindow, ipcMain, dialog } from "electron"
 import path from "node:path"
 import url from "node:url"
 import { spawn, type ChildProcess } from "node:child_process"
 import fs from "node:fs"
+
+ipcMain.handle("dialog:openDirectory", async (_, opts) => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: opts?.title,
+    properties: ["openDirectory", ...(opts?.multiple ? ["multiSelections" as const] : [])]
+  })
+  if (canceled || filePaths.length === 0) return null
+  return opts?.multiple ? filePaths : filePaths[0]
+})
+
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 

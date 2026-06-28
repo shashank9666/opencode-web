@@ -1,5 +1,5 @@
-import { contextBridge } from "electron"
+import { contextBridge, ipcRenderer } from "electron"
 
-contextBridge.exposeInMainWorld("electronAPI", {
-  // Add any IPC methods here if needed
+contextBridge.exposeInMainWorld("api", {
+  openDirectory: (opts: any) => ipcRenderer.invoke("dialog:openDirectory", opts)
 })
