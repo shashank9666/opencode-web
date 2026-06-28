@@ -2,6 +2,8 @@ import { createSignal, For, Show, type JSX, onCleanup } from "solid-js"
 import { IconButton } from "@opencode-ai/ui/icon-button"
 import { Tooltip } from "@opencode-ai/ui/tooltip"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
+import { Mark } from "@opencode-ai/ui/logo"
+
 import { StatusPopover } from "@/components/status-popover"
 import { buildMenus, type IdeActions, type SubmenuItem } from "./MenuBar"
 import { showToast } from "@/utils/toast"
@@ -166,7 +168,7 @@ export default function HeaderBar(props: {
               }}
               onMouseLeave={handleMouseLeave}
             >
-              <For each={item.submenu}>{ (sub) => MenuItemRow(sub, path) }</For>
+              <For each={item.submenu}>{(sub) => MenuItemRow(sub, path)}</For>
             </div>
           </Show>
         </Show>
@@ -191,22 +193,22 @@ export default function HeaderBar(props: {
       <div class="flex items-center h-full [app-region:no-drag]">
         {/* Logo */}
         <div class="flex items-center justify-center px-3 h-full cursor-pointer hover:bg-surface-raised-base-hover transition-colors">
-          <img src="./favicon-96x96-v3.png" alt="OpenCode" width="18" height="18" class="block rounded-[2px]" />
+          <Mark class="w-[18px] h-[18px]" />
         </div>
 
         {/* Menus */}
         <div class="menubar flex items-center h-full" data-testid="menubar" ref={menuBarRef}>
           <For each={menus()}>{(menu, index) => (
-            <div class="relative h-full" onMouseEnter={() => { 
-              if (menuCloseTimeout !== undefined) { 
-                window.clearTimeout(menuCloseTimeout); 
-                menuCloseTimeout = undefined; 
-              } 
-              if (activeMenu() && activeMenu() !== menu.label) { 
-                setActiveMenu(menu.label); 
+            <div class="relative h-full" onMouseEnter={() => {
+              if (menuCloseTimeout !== undefined) {
+                window.clearTimeout(menuCloseTimeout);
+                menuCloseTimeout = undefined;
+              }
+              if (activeMenu() && activeMenu() !== menu.label) {
+                setActiveMenu(menu.label);
                 updateMenuPosition(index());
-                setSubmenuActive(null); 
-              } 
+                setSubmenuActive(null);
+              }
             }}>
               <button
                 type="button"
@@ -214,12 +216,12 @@ export default function HeaderBar(props: {
                 class="px-2.5 h-full text-13-regular hover:bg-surface-raised-base-hover hover:text-text-strong transition-colors cursor-default"
                 classList={{ "bg-surface-raised-base text-text-strong": activeMenu() === menu.label }}
                 onClick={() => handleMenuClick(menu.label, index())}
-                onMouseEnter={() => { 
+                onMouseEnter={() => {
                   if (activeMenu() && activeMenu() !== menu.label) {
-                    setActiveMenu(menu.label); 
+                    setActiveMenu(menu.label);
                     updateMenuPosition(index());
                     setSubmenuActive(null);
-                  } 
+                  }
                 }}
               >
                 {menu.label}
@@ -241,7 +243,7 @@ export default function HeaderBar(props: {
                   }}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <For each={menu.submenu}>{ (item) => MenuItemRow(item, menu.label) }</For>
+                  <For each={menu.submenu}>{(item) => MenuItemRow(item, menu.label)}</For>
                 </div>
               </Show>
             </div>
@@ -319,7 +321,7 @@ export default function HeaderBar(props: {
             />
           </Tooltip>
         </div>
-        
+
         {/* Window controls spacer */}
         <div class="window-controls" data-testid="window-controls" style="display: none;" />
       </div>

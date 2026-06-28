@@ -202,6 +202,8 @@ const platform: Platform = {
       } else if (action.startsWith("edit.")) {
         const editCommand = action.replace("edit.", "")
         document.execCommand(editCommand)
+      } else if (action.startsWith("app.")) {
+        window.dispatchEvent(new CustomEvent("app.action", { detail: { action } }))
       }
     },
   } : {}),

@@ -70,6 +70,7 @@ import DatabasePanel from "./DatabasePanel"
 import ExtensionsPanel from "./ExtensionsPanel"
 import RemoteConnectionModal from "./RemoteConnectionModal"
 import DefaultShellModal from "./DefaultShellModal"
+import { AboutDialog } from "@/components/about-dialog"
 
 const MERGED_DEFAULT: PanelState[] = [
   { id: "explorer", label: "Explorer", icon: "file-tree", position: "left", visible: true, width: 280, order: 0 },
@@ -321,6 +322,19 @@ export default function FullIde() {
   }
 
   // ── Session ──
+  createEffect(() => {
+    const handler = (e: Event) => {
+      if (e instanceof CustomEvent && e.type === "app.action") {
+        const action = e.detail?.action
+        if (action && action in ideActions) {
+          const fn = (ideActions as any)[action.replace("app.", "")]
+          if (typeof fn === "function") fn()
+        }
+      }
+    }
+    window.addEventListener("app.action", handler)
+    onCleanup(() => window.removeEventListener("app.action", handler))
+  })
   const [activeSessionId, setActiveSessionId] = createSignal<string | null>(null)
   const [sessionRenaming, setSessionRenaming] = createSignal<string | null>(null)
   const [sessionRenameValue, setSessionRenameValue] = createSignal("")
@@ -1278,7 +1292,25 @@ export default function FullIde() {
       } else {
         showToast({ title: "Not available", description: "Developer Tools can only be toggled programmatically in the Desktop app. Use F12 or Ctrl+Shift+I in your browser." })
       }
-    }
+    },
+    welcome: () => showToast({ title: "Welcome", description: "Welcome to opencode-web!" }),
+    showAllCommands: () => setCommandPaletteOpen(true),
+    documentation: () => window.open("https://opencode.ai/docs", "_blank"),
+    editorPlayground: () => showToast({ title: "Editor Playground", description: "Playground coming soon" }),
+    openWalkthrough: () => showToast({ title: "Walkthroughs", description: "Walkthroughs coming soon" }),
+    getStartedWithAccessibility: () => showToast({ title: "Accessibility", description: "Accessibility docs coming soon" }),
+    askAtVscode: () => window.open("https://discord.com/invite/opencode", "_blank"),
+    keyboardShortcutsReference: () => window.open("https://code.visualstudio.com/shortcuts/keyboard-shortcuts-windows.pdf", "_blank"),
+    videoTutorials: () => window.open("https://youtube.com", "_blank"),
+    tipsAndTricks: () => window.open("https://opencode.ai/blog", "_blank"),
+    joinUsOnYoutube: () => window.open("https://youtube.com", "_blank"),
+    searchFeatureRequests: () => window.open("https://github.com/shashank9666/opencode-web/issues", "_blank"),
+    reportIssue: () => window.open("https://github.com/shashank9666/opencode-web/issues", "_blank"),
+    viewLicense: () => window.open("https://github.com/shashank9666/opencode-web/blob/main/LICENSE", "_blank"),
+    privacyStatement: () => window.open("https://opencode.ai/privacy", "_blank"),
+    openProcessExplorer: () => showToast({ title: "Process Explorer", description: "Process Explorer coming soon" }),
+    checkForUpdates: () => showToast({ title: "Check for Updates", description: "You are on the latest version." }),
+    about: () => dialog.show(() => <AboutDialog />),
   }
 
   return (
@@ -1498,9 +1530,9 @@ export default function FullIde() {
                 let command;
                 let title = profileStr;
                 if (profileStr === "PowerShell") { command = "powershell.exe"; }
-                else if (profileStr === "Command Prompt") { command = "cmd"; }
-                else if (profileStr === "Git Bash") { command = "bash"; }
-                else if (profileStr === "WSL") { command = "wsl"; }
+                else if (profileStr === "Command Prompt") { command = "cmd.exe"; }
+                else if (profileStr === "Git Bash") { command = "C:\\Program Files\\Git\\bin\\bash.exe"; }
+                else if (profileStr === "WSL") { command = "wsl.exe"; }
                 else if (profileStr === "JavaScript Debug Terminal") {
                   command = "node";
                   title = "JavaScript Debug Terminal";

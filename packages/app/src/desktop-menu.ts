@@ -20,6 +20,13 @@ export type DesktopMenuAction =
   | "window.close"
   | "window.minimize"
   | "window.toggleMaximize"
+  | "app.welcome"
+  | "app.commandPalette"
+  | "app.playground"
+  | "app.walkthrough"
+  | "app.accessibility"
+  | "app.shortcuts"
+  | "app.about"
 
 export type DesktopMenuRole =
   | "about"
@@ -200,27 +207,29 @@ export const DESKTOP_MENU: DesktopMenu[] = [
     id: "help",
     label: "Help",
     items: [
-      { type: "item", label: "Welcome", command: "welcome.show" },
-      { type: "item", label: "Show All Commands", command: "command.palette", accelerator: { windows: "Ctrl+Shift+P", macos: "Cmd+Shift+P" } },
+      { type: "item", label: "Welcome", action: "app.welcome" },
+      { type: "item", label: "Show All Commands", action: "app.commandPalette", accelerator: { windows: "Ctrl+Shift+P", macos: "Cmd+Shift+P" } },
       { type: "item", label: "Documentation", href: "https://opencode.ai/docs" },
-      { type: "item", label: "Editor Playground", command: "playground.show" },
+      { type: "item", label: "Editor Playground", action: "app.playground" },
       { type: "separator" },
-      { type: "item", label: "Walkthroughs...", command: "walkthrough.show" },
-      { type: "item", label: "Get Started with Accessibility", command: "accessibility.show" },
+      { type: "item", label: "Walkthroughs...", action: "app.walkthrough" },
+      { type: "item", label: "Get Started with Accessibility", action: "app.accessibility" },
       { type: "separator" },
       { type: "item", label: "Ask at opencode-web Help", href: "https://discord.com/invite/opencode" },
-      { type: "item", label: "Keyboard Shortcuts Reference", command: "shortcuts.show" },
+      { type: "item", label: "Keyboard Shortcuts Reference", action: "app.shortcuts" },
       { type: "item", label: "Video Tutorials", href: "https://youtube.com/@opencode" },
       { type: "item", label: "Tips and Tricks", href: "https://opencode.ai/tips" },
       { type: "item", label: "Join Us on YouTube", href: "https://youtube.com/@opencode" },
       { type: "separator" },
-      { type: "item", label: "Search Feature Requests", href: "https://github.com/anomalyco/opencode/issues" },
-      { type: "item", label: "Report Issue", href: "https://github.com/anomalyco/opencode/issues/new?template=bug_report.yml" },
+      { type: "item", label: "Search Feature Requests", href: "https://github.com/shashank9666/opencode-web/issues" },
+      { type: "item", label: "Report Issue", href: "https://github.com/shashank9666/opencode-web/issues" },
       { type: "separator" },
-      { type: "item", label: "View License", href: "https://opencode.ai/license" },
+      { type: "item", label: "View License", href: "https://github.com/shashank9666/opencode-web/blob/main/LICENSE" },
       { type: "item", label: "Privacy Statement", href: "https://opencode.ai/privacy" },
       { type: "separator" },
       { type: "item", label: "Toggle Developer Tools", action: "view.toggleDevTools", accelerator: { windows: "Ctrl+Shift+I", macos: "Cmd+Option+I" } },
+      { type: "separator" },
+      { type: "item", label: "About", action: "app.about", platforms: ["windows"] },
     ],
   },
 ]

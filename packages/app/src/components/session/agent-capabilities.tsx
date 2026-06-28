@@ -53,11 +53,12 @@ export function AgentCapabilities() {
         </div>
 
         <div class="relative px-1 pb-2">
-          <Icon
-            name="magnifying-glass"
-            size="small"
-            class="absolute left-4 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none"
-          />
+          <div class="absolute left-4 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none flex items-center justify-center">
+            <Icon
+              name="magnifying-glass"
+              size="small"
+            />
+          </div>
           <input
             type="text"
             value={search()}

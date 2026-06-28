@@ -35,8 +35,10 @@ export const createSessionTabs = (input: TabsInput) => {
         .tabs()
         .all()
         .flatMap((tab) => {
-          if (tab === "context" || tab === "review" || tab === "tools") return []
-          const value = input.pathFromTab(tab) ? input.normalizeTab(tab) : tab
+          if (tab === "context" || tab === "review" || tab === "tools" || tab === "capabilities" || tab === "knowledge" || tab === "production" || tab === "background" || tab === "multi-agent" || tab === "verify" || tab === "changes") return []
+          const path = input.pathFromTab(tab)
+          if (!path) return []
+          const value = input.normalizeTab(tab)
           if (seen.has(value)) return []
           seen.add(value)
           return [value]
@@ -49,7 +51,7 @@ export const createSessionTabs = (input: TabsInput) => {
     const active = input.tabs().active()
     if (active === "context") return active
     if (active === "review" && review()) return active
-    if (active === "tools") return active
+    if (active === "tools" || active === "capabilities" || active === "knowledge" || active === "production" || active === "background" || active === "multi-agent" || active === "verify" || active === "changes") return active
     if (active && input.pathFromTab(active)) return input.normalizeTab(active)
 
     const first = openedTabs()[0]
