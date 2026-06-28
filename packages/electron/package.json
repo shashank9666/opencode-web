@@ -12,9 +12,9 @@
     "dist": "bun run build && electron-builder"
   },
   "devDependencies": {
-    "@types/node": "^20.19.43",
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3",
-    "typescript": "^5.9.3"
+    "@types/node": "^26.0.1",
+    "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
+    "typescript": "^6.0.3"
   }
 }
