@@ -4,7 +4,7 @@ import url from "node:url"
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
-const isDev = process.env.NODE_ENV === "development" || !app.isPackaged
+const isDev = !app.isPackaged
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
