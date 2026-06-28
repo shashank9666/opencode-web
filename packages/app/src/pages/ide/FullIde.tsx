@@ -447,7 +447,9 @@ export default function FullIde() {
       req?.permission === "replace_file_content" ||
       req?.permission === "multi_replace_file_content" ||
       req?.permission === "write_to_file" ||
-      req?.permission === "write"
+      req?.permission === "write" ||
+      req?.permission === "write_file" ||
+      req?.permission === "read_file"
     ) {
       return req
     }
@@ -480,7 +482,11 @@ export default function FullIde() {
     const args = pendingEditToolArgs()
     if (!args?.path) return
     void (async () => {
-      await file.load(args.path)
+      try {
+        await file.load(args.path)
+      } catch (e) {
+        // Ignore load error (e.g. for new files that don't exist yet)
+      }
       const state = file.get(args.path)
       const original = (state?.content?.type === "text") ? state.content.content : ""
       workspace.openFile(args.path, original)
