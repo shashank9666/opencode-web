@@ -463,9 +463,9 @@ export default function FullIde() {
     if (!toolPart || toolPart.type !== "tool") return undefined
     const input = (toolPart.state as any).input
     if (!input) return undefined
-    const filePath = input.path || input.filePath || ""
+    const filePath = input.path || input.filePath || input.TargetFile || ""
     if (!filePath) return undefined
-    const content = input.content || input.code || ""
+    const content = input.content || input.code || input.CodeContent || ""
     return {
       path: filePath,
       content,

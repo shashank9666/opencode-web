@@ -19,7 +19,7 @@ function createWindow() {
   })
 
   if (isDev) {
-    mainWindow.loadURL("http://localhost:3000")
+    mainWindow.loadURL("http://localhost:4444")
     mainWindow.webContents.openDevTools()
   } else {
     // In production, we assume the app package builds to `packages/app/dist`
