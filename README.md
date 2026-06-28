@@ -40,13 +40,13 @@ You can build a packaged desktop application for your local system. The build pr
    ```bash
    bun run build:electron:pack
    ```
-   > The portable app will be generated in `packages/electron/release/win-unpacked/` (or `mac-unpacked`, `linux-unpacked`). You can run the executable directly from this folder to test.
+   > ⚠️ **Note:** The `:pack` script explicitly skips creating an installer to save time. It only generates a portable unpacked directory in `packages/electron/release/win-unpacked/` (or `mac-unpacked`, `linux-unpacked`). You can run the `OpenCode` executable directly from this folder to test your changes.
 
 2. **Build a full installer**:
    ```bash
    bun run build:electron
    ```
-   > The installer (`.exe`, `.dmg`, or `.AppImage`) will be generated in the `packages/electron/release/` directory.
+   > 📦 **Note:** Running the build command *without* `:pack` will generate the actual, shareable installer (`.exe`, `.dmg`, or `.AppImage`) inside the `packages/electron/release/` directory.
 
 ## Building for Web Production
 

@@ -153,11 +153,9 @@ function SearchSection(props: {
     <div class="flex flex-col gap-3">
       <h3 class="text-13-medium text-text-strong">Conversation Search</h3>
       <div class="relative">
-        <Icon
-          name="magnifying-glass"
-          size="small"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none"
-        />
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none flex items-center justify-center">
+          <Icon name="magnifying-glass" size="small" />
+        </div>
         <input
           type="text"
           value={props.query}
@@ -311,11 +309,9 @@ function LogsSection(props: {
     <div class="flex flex-col gap-3">
       <h3 class="text-13-medium text-text-strong">Agent Logs</h3>
       <div class="relative">
-        <Icon
-          name="magnifying-glass"
-          size="small"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none"
-        />
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-icon-weak pointer-events-none flex items-center justify-center">
+          <Icon name="magnifying-glass" size="small" />
+        </div>
         <input
           type="text"
           value={props.search}

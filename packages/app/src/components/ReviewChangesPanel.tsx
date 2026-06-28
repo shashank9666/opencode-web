@@ -100,9 +100,13 @@ export function ReviewChangesPanel(props: { workspace: any }) {
         }
         relPath = relPath.replace(/\\/g, "/");
         const resp = await sdk().client.vcs.file({ path: relPath, ref: "HEAD" });
-        if (resp && resp.data && typeof resp.data === "string") before = resp.data;
+        if (resp && resp.data && typeof resp.data === "string") {
+          before = resp.data;
+        }
       } catch {
-        // fallback: show current content on both sides (no diff)
+        // fallback: if we can't get the original from git (e.g. it's a new file or untracked),
+        // we assume the file is entirely new to show its contents in the diff.
+        before = "";
       }
       const change: FileChange = { path, before, after };
       setLoadedFiles(prev => ({ ...prev, [path]: change }));
