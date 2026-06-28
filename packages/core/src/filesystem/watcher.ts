@@ -89,12 +89,27 @@ export const layer = Layer.effect(
       Effect.promise(() => Promise.allSettled(subscriptions.map((subscription) => subscription.unsubscribe()))),
     )
 
+    let pendingUpdates: ParcelWatcher.Event[] = []
+    let debounceTimer: NodeJS.Timeout | null = null
+
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
-      for (const update of updates) {
-        if (update.type === "create") runFork(events.publish(Event.Updated, { file: update.path, event: "add" }))
-        if (update.type === "update") runFork(events.publish(Event.Updated, { file: update.path, event: "change" }))
-        if (update.type === "delete") runFork(events.publish(Event.Updated, { file: update.path, event: "unlink" }))
-      }
+      pendingUpdates.push(...updates)
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(() => {
+        const batch = pendingUpdates
+        pendingUpdates = []
+        
+        const deduped = new Map<string, ParcelWatcher.Event>()
+        for (const update of batch) {
+          deduped.set(update.path, update)
+        }
+
+        for (const update of deduped.values()) {
+          if (update.type === "create") runFork(events.publish(Event.Updated, { file: update.path, event: "add" }))
+          if (update.type === "update") runFork(events.publish(Event.Updated, { file: update.path, event: "change" }))
+          if (update.type === "delete") runFork(events.publish(Event.Updated, { file: update.path, event: "unlink" }))
+        }
+      }, 100)
     }
 
     const subscribe = (directory: string, ignore: string[]) => {
