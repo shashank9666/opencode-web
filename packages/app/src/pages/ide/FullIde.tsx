@@ -1261,7 +1261,24 @@ export default function FullIde() {
       panelManager.showPanel("terminal-area")
     },
     runTask: () => { terminal.new(); panelManager.showPanel("terminal-area") },
-    selectDefaultShell: () => setDefaultShellModalOpen(true)
+    selectDefaultShell: () => setDefaultShellModalOpen(true),
+    
+    // Help & Settings
+    toggleDeveloperTools: () => {
+      const isElectron = typeof window !== "undefined" && ("api" in window || "electronAPI" in window)
+      if (isElectron) {
+        try {
+          const api = (window as any).api || (window as any).electronAPI
+          if (api?.toggleDevTools) {
+            api.toggleDevTools()
+          }
+        } catch (e) {
+          console.error("Electron toggleDevTools failed:", e)
+        }
+      } else {
+        showToast({ title: "Not available", description: "Developer Tools can only be toggled programmatically in the Desktop app. Use F12 or Ctrl+Shift+I in your browser." })
+      }
+    }
   }
 
   return (

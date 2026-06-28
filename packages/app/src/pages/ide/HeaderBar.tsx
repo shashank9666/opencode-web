@@ -191,7 +191,7 @@ export default function HeaderBar(props: {
       <div class="flex items-center h-full [app-region:no-drag]">
         {/* Logo */}
         <div class="flex items-center justify-center px-3 h-full cursor-pointer hover:bg-surface-raised-base-hover transition-colors">
-          <img src="/favicon-96x96-v3.png" alt="OpenCode" width="18" height="18" class="block rounded-[2px]" />
+          <img src="./favicon-96x96-v3.png" alt="OpenCode" width="18" height="18" class="block rounded-[2px]" />
         </div>
 
         {/* Menus */}

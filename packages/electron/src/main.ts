@@ -13,6 +13,13 @@ ipcMain.handle("dialog:openDirectory", async (_, opts) => {
   return opts?.multiple ? filePaths : filePaths[0]
 })
 
+ipcMain.handle("window:toggleDevTools", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  if (win) {
+    win.webContents.toggleDevTools()
+  }
+})
+
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url))
 
