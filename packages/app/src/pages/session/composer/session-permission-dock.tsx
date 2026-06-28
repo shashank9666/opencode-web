@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js"
+import { For, Show, onMount, onCleanup } from "solid-js"
 import type { PermissionRequest } from "@opencode-ai/sdk/v2"
 import { Button } from "@opencode-ai/ui/button"
 import { DockPrompt } from "@opencode-ai/ui/dock-prompt"
@@ -11,6 +11,33 @@ export function SessionPermissionDock(props: {
   onDecide: (response: "once" | "always" | "reject") => void
 }) {
   const language = useLanguage()
+
+  onMount(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (props.responding) return
+
+      // Do not intercept if user is typing in an input
+      const active = document.activeElement
+      if (
+        active?.tagName === "INPUT" ||
+        active?.tagName === "TEXTAREA" ||
+        (active as HTMLElement)?.isContentEditable
+      ) {
+        return
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault()
+        props.onDecide("once")
+      } else if (e.key === "Backspace") {
+        e.preventDefault()
+        props.onDecide("reject")
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown))
+  })
 
   const toolDescription = () => {
     const key = `settings.permissions.tool.${props.request.permission}.description`
