@@ -424,6 +424,7 @@ export function IdeDiffEditor(props: {
   fontSize?: number
   tabSize?: number
   wordWrap?: "off" | "on" | "wordWrapColumn" | "bounded"
+  renderSideBySide?: boolean
   onAccept?: () => void
   onReject?: () => void
   onChange?: (value: string) => void
@@ -441,7 +442,8 @@ export function IdeDiffEditor(props: {
       automaticLayout: true,
       fontSize: props.fontSize ?? 13,
       fontFamily: "'Cascadia Code', 'Fira Code', 'Menlo', 'Monaco', 'Consolas', 'Courier New', monospace",
-      renderSideBySide: true,
+      renderSideBySide: props.renderSideBySide ?? true,
+      enableSplitViewResizing: true,
       scrollBeyondLastLine: true,
       wordWrap: props.wordWrap ?? "off",
       readOnly: false,
@@ -451,10 +453,10 @@ export function IdeDiffEditor(props: {
       cursorSmoothCaretAnimation: "on",
       padding: { top: 8 },
       bracketPairColorization: { enabled: true },
-      glyphMargin: false,
-      folding: false,
-      renderMarginRevertIcon: false,
-      renderIndicators: false,
+      glyphMargin: true,
+      folding: true,
+      renderMarginRevertIcon: true,
+      renderIndicators: true,
       guides: { indentation: true },
       matchBrackets: "always",
       renderWhitespace: "selection",
@@ -600,6 +602,7 @@ export function IdeDiffEditor(props: {
     diffEditor.updateOptions({
       fontSize: props.fontSize ?? 13,
       wordWrap: props.wordWrap ?? "off",
+      renderSideBySide: props.renderSideBySide ?? true,
     })
   })
 

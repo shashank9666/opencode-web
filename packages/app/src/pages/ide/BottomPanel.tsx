@@ -32,14 +32,19 @@ export default function BottomPanel(props: {
   onMaximize?: () => void
   showHistory?: boolean
   onToggleHistory?: () => void
+  onResizeStart?: (e: MouseEvent) => void
   children: (tab: BottomPanelTab) => JSX.Element
 }) {
   return (
     <div
-      class="bottom-panel flex flex-col bg-surface-base border-t border-border-base shrink-0"
+      class="bottom-panel flex flex-col bg-surface-base border-t border-border-base shrink-0 relative"
       data-testid="bottom-panel"
       style={{ height: `${props.height}px` }}
     >
+      <div 
+        class="absolute top-0 left-0 right-0 h-1 cursor-row-resize -mt-0.5 z-10 hover:bg-accent-base/30 transition-colors"
+        onMouseDown={props.onResizeStart}
+      />
       {/* Tabs bar */}
       <div class="flex items-center justify-between border-b border-border-base bg-surface-base shrink-0" style={{ height: "36px" }}>
         <div class="flex items-center h-full">

@@ -36,6 +36,7 @@ export function ReviewChangesPanel(props: { workspace: any }) {
   const [selectedFile, setSelectedFile] = createSignal<FileChange | null>(null);
   const [loadedFiles, setLoadedFiles] = createSignal<Record<string, FileChange>>({});
   const [loading, setLoading] = createSignal(false);
+  const [renderSideBySide, setRenderSideBySide] = createSignal(true);
 
   // Collect all file writes from the active session's message history
   const changedFilePaths = createMemo(() => {
@@ -47,7 +48,7 @@ export function ReviewChangesPanel(props: { workspace: any }) {
         if (part.type !== "tool") continue;
         const input = part.state?.input;
         if (!input) continue;
-        const path = input.path || input.filePath || input.target_file || "";
+        const path = input.path || input.filePath || input.target_file || input.TargetFile || "";
         const toolName = part.tool || "";
         if (
           path &&
@@ -89,7 +90,16 @@ export function ReviewChangesPanel(props: { workspace: any }) {
       // Try to get git original via vcsFile
       let before = after;
       try {
-        const resp = await sdk().client.vcs.file({ path, ref: "HEAD" });
+        let relPath = path;
+        const dir = sdk().directory;
+        if (dir && path.toLowerCase().startsWith(dir.toLowerCase())) {
+          relPath = path.slice(dir.length);
+          if (relPath.startsWith("/") || relPath.startsWith("\\")) {
+            relPath = relPath.slice(1);
+          }
+        }
+        relPath = relPath.replace(/\\/g, "/");
+        const resp = await sdk().client.vcs.file({ path: relPath, ref: "HEAD" });
         if (resp && resp.data && typeof resp.data === "string") before = resp.data;
       } catch {
         // fallback: show current content on both sides (no diff)
@@ -185,9 +195,18 @@ export function ReviewChangesPanel(props: { workspace: any }) {
                   <span class="text-13-medium text-text-strong truncate">{getFilename(change().path)}</span>
                   <span class="text-12-regular text-text-weak truncate opacity-60">{change().path}</span>
                 </div>
-                <Show when={loading()}>
-                  <div class="text-11-regular text-text-weak animate-pulse">Loading…</div>
-                </Show>
+                <div class="flex items-center gap-3">
+                  <Show when={loading()}>
+                    <div class="text-11-regular text-text-weak animate-pulse">Loading…</div>
+                  </Show>
+                  <button 
+                    class="flex items-center gap-1.5 px-2 py-1 rounded text-11-medium text-text-weak hover:text-text-strong hover:bg-surface-raised-base-hover transition-colors"
+                    onClick={() => setRenderSideBySide(!renderSideBySide())}
+                  >
+                    <Icon name="layout-right" size="small" class="opacity-70" />
+                    {renderSideBySide() ? "Side-by-Side" : "Inline"}
+                  </button>
+                </div>
               </div>
 
               {/* Monaco diff */}
@@ -196,6 +215,7 @@ export function ReviewChangesPanel(props: { workspace: any }) {
                   path={change().path}
                   original={change().before}
                   modified={change().after}
+                  renderSideBySide={renderSideBySide()}
                   class="h-full"
                 />
               </div>

@@ -537,7 +537,7 @@ export default function FullIde() {
     bottomResizeStartH = bottomPanelHeight()
     const onMove = (ev: MouseEvent) => {
       if (!bottomResizing) return
-      const delta = bottomResizeStartY - e.clientY
+      const delta = bottomResizeStartY - ev.clientY
       setBottomPanelHeight(Math.max(80, Math.min(500, bottomResizeStartH + delta)))
     }
     const onUp = () => { bottomResizing = false; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
