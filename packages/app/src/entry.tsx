@@ -188,6 +188,22 @@ const platform: Platform = {
   ...(platformName === "desktop" ? {
     os: getOS(),
     openDirectoryPickerDialog,
+    runDesktopMenuAction: (action: string) => {
+      if (action === "view.toggleDevTools") {
+        if (isElectron) {
+          try { (window as any).api?.toggleDevTools?.() } catch {}
+        }
+      } else if (action === "view.reload" || action === "app.relaunch") {
+        window.location.reload()
+      } else if (action === "window.close") {
+        window.close()
+      } else if (action === "window.new") {
+        window.open(window.location.href, "_blank")
+      } else if (action.startsWith("edit.")) {
+        const editCommand = action.replace("edit.", "")
+        document.execCommand(editCommand)
+      }
+    },
   } : {}),
 } as Platform
 
