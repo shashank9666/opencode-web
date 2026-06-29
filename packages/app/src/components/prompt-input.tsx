@@ -459,7 +459,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return items.filter((item) => !item.comment?.trim())
   })
 
-  const [dismissedChips, setDismissedChips] = createStore<Record<string, boolean>>({})
+  const [dismissedChips, setDismissedChips] = persisted(
+    Persist.global("dismissed-context-chips", ["dismissed-context-chips.v1"]),
+    createStore<Record<string, boolean>>({}),
+  )
 
   const dismissChip = (id: string) => setDismissedChips(id, true)
 
