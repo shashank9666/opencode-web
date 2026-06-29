@@ -23,6 +23,10 @@ export const WriteBody = Schema.Struct({
   content: Schema.String,
 })
 
+export const MkdirBody = Schema.Struct({
+  path: RelativePath,
+})
+
 export const DeleteBody = Schema.Struct({
   path: RelativePath,
 })
@@ -104,6 +108,22 @@ export const FileSystemGroup = HttpApiGroup.make("server.fs")
                 identifier: "v2.fs.delete",
                 summary: "Delete file",
                 description: "Delete a file or empty directory relative to the requested location.",
+              }),
+            ),
+        )
+        .add(
+          HttpApiEndpoint.post("fs.mkdir", "/api/fs/mkdir", {
+            query: LocationQuery,
+            payload: MkdirBody,
+            success: Schema.Struct({ path: Schema.String }),
+            error: [UnauthorizedError, InvalidRequestError],
+          })
+            .annotateMerge(locationQueryOpenApi)
+            .annotateMerge(
+              OpenApi.annotations({
+                identifier: "v2.fs.mkdir",
+                summary: "Create directory",
+                description: "Create a directory relative to the requested location.",
               }),
             ),
         )
