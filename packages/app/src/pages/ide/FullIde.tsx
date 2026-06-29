@@ -43,7 +43,35 @@ import { useLocal } from "@/context/local"
 import { useDialog } from "@opencode-ai/ui/context/dialog"
 import { findLast } from "@opencode-ai/core/util/array"
 import { ImagePreview } from "@opencode-ai/ui/image-preview"
-import { PdfPreview } from "@/components/previews"
+import { PdfPreview, MarkdownPreviewPanel } from "@/components/previews"
+
+// Custom Artifact Renderer
+function ArtifactRenderer(props: { content: string }) {
+  // Support GitHub-style alerts
+  const parsedContent = () => {
+    let html = props.content
+    
+    // Replace GitHub alerts
+    const alertTypes = ['NOTE', 'TIP', 'IMPORTANT', 'WARNING', 'CAUTION']
+    alertTypes.forEach(type => {
+      const regex = new RegExp(`> \\\\[!\\{type\\}\\\\]\\\\n> (.*?)(?=\\n\\\\n|\\n$|$)`, 'gs')
+      html = html.replace(regex, `<div class="github-alert github-alert-${type.toLowerCase()}"><strong>${type}</strong>: $1</div>`)
+    })
+    
+    // Support carousels (basic mock)
+    const carouselRegex = new RegExp('<carousel>(.*?)</carousel>', 'gs')
+    html = html.replace(carouselRegex, `<div class="artifact-carousel" style="display:flex; overflow-x:auto; gap:1rem; padding:1rem; background:#f0f0f0; border-radius:8px;">$1</div>`)
+    
+    return html
+  }
+
+  return (
+    <div class="artifact-rendering-view p-4 overflow-y-auto">
+      <MarkdownPreviewPanel content={parsedContent()} filename="artifact.md" />
+    </div>
+  )
+}
+
 
 // Reuse existing panels + extend
 import HeaderBar from "./HeaderBar"
@@ -82,6 +110,7 @@ const MERGED_DEFAULT: PanelState[] = [
   { id: "database", label: "Database", icon: "database", position: "left", visible: false, width: 320, order: 6 },
   { id: "remote", label: "Remote Explorer", icon: "remote", position: "left", visible: false, width: 280, order: 7 },
   { id: "testing", label: "Testing", icon: "beaker", position: "left", visible: false, width: 300, order: 8 },
+  { id: "artifacts", label: "Artifacts", icon: "file-tree", position: "right", visible: false, width: 300, order: 9 },
   { id: "terminal-area", label: "Terminal", icon: "terminal", position: "bottom", visible: true, height: 220, order: 6 },
   { id: "problems", label: "Problems", icon: "circle-x", position: "bottom", visible: false, height: 220, order: 7 },
   { id: "output", label: "Output", icon: "console", position: "bottom", visible: false, height: 220, order: 8 },

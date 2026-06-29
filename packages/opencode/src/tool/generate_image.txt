@@ -1,0 +1,1 @@
+Generate an image based on a text prompt and save it to the specified local file path.

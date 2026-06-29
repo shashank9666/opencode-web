@@ -61,6 +61,7 @@ class Index extends Schema.Class<Index>("SkillDiscovery.Index")({
 
 export interface Interface {
   readonly pull: (url: string) => Effect.Effect<AbsolutePath[]>
+  readonly localRoots: (workspacePath: string) => Effect.Effect<AbsolutePath[]>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/v2/SkillDiscovery") {}
@@ -90,6 +91,17 @@ export const layer = Layer.effect(
     })
 
     return Service.of({
+      localRoots: Effect.fn("SkillDiscovery.localRoots")(function* (workspacePath) {
+        // Dual roots: Global and Workspace
+        const globalRoot = path.join(process.env.USERPROFILE || process.env.HOME || "", ".gemini", "config", "skills")
+        const workspaceRoot = path.join(workspacePath, ".agents", "skills")
+        
+        const roots: AbsolutePath[] = []
+        if (yield* fs.existsSafe(globalRoot)) roots.push(AbsolutePath.make(globalRoot))
+        if (yield* fs.existsSafe(workspaceRoot)) roots.push(AbsolutePath.make(workspaceRoot))
+        
+        return roots
+      }),
       pull: Effect.fn("SkillDiscovery.pull")(function* (url) {
         const base = url.endsWith("/") ? url : `${url}/`
         const source = new URL(base)

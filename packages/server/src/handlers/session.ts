@@ -11,6 +11,7 @@ import {
   UnknownError,
 } from "../errors"
 import { AbsolutePath } from "@opencode-ai/core/schema"
+import { interceptSlashCommand } from "../slash-commands/parser"
 
 const DefaultSessionsLimit = 50
 
@@ -100,7 +101,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               .prompt({
                 sessionID: ctx.params.sessionID,
                 id: ctx.payload.id,
-                prompt: ctx.payload.prompt,
+                prompt: interceptSlashCommand(ctx.payload.prompt),
                 delivery: ctx.payload.delivery,
                 resume: ctx.payload.resume,
               })

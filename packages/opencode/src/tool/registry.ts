@@ -15,6 +15,8 @@ import { Database } from "@opencode-ai/core/database/database"
 import { TodoWriteTool } from "./todo"
 import { WebFetchTool } from "./webfetch"
 import { WriteTool } from "./write"
+import { GenerateImageTool } from "./generate_image"
+import { BrowserSubagentTool } from "./browser_subagent"
 import { InvalidTool } from "./invalid"
 import { SkillTool } from "./skill"
 import { LintTool } from "./lint"
@@ -111,6 +113,8 @@ export const layer = Layer.effect(
     const skilltool = yield* SkillTool
     const linttool = yield* LintTool
     const testtool = yield* TestTool
+    const generateImage = yield* GenerateImageTool
+    const browserSubagent = yield* BrowserSubagentTool
     const agent = yield* Agent.Service
 
     const state = yield* InstanceState.make<State>(
@@ -221,6 +225,8 @@ export const layer = Layer.effect(
           plan: Tool.init(plan),
           lint: Tool.init(linttool),
           test: Tool.init(testtool),
+          generateImage: Tool.init(generateImage),
+          browserSubagent: Tool.init(browserSubagent),
         })
 
         return {
@@ -243,6 +249,8 @@ export const layer = Layer.effect(
             tool.patch,
             tool.lint,
             tool.test,
+            tool.generateImage,
+            tool.browserSubagent,
             ...(flags.experimentalLspTool ? [tool.lsp] : []),
             ...(flags.experimentalPlanMode && flags.client === "cli" ? [tool.plan] : []),
           ],

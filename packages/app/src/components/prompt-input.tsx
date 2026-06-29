@@ -800,7 +800,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       source: cmd.source,
     }))
 
-    return [...custom, ...builtin]
+    const hardcoded = [
+      { id: "slash-goal", trigger: "goal", title: "Goal", description: "Run a thorough long-running task", type: "custom" as const, source: "command" as const },
+      { id: "slash-schedule", trigger: "schedule", title: "Schedule", description: "Set a timer or recurring task", type: "custom" as const, source: "command" as const },
+      { id: "slash-grill-me", trigger: "grill-me", title: "Grill Me", description: "Interactive interview for decisions", type: "custom" as const, source: "command" as const },
+      { id: "slash-learn", trigger: "learn", title: "Learn", description: "Persist recent behavior as a skill", type: "custom" as const, source: "command" as const },
+    ]
+
+    return [...custom, ...builtin, ...hardcoded]
   })
 
   const handleSlashSelect = (cmd: SlashCommand | undefined) => {
