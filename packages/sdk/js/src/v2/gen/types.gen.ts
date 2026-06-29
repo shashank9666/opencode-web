@@ -1308,6 +1308,7 @@ export type GlobalEvent = {
         properties: {
           file: string
           event: "add" | "change" | "unlink"
+          aiCreated?: boolean
         }
       }
     | {
@@ -4846,6 +4847,7 @@ export type EventFileWatcherUpdated = {
   properties: {
     file: string
     event: "add" | "change" | "unlink"
+    aiCreated?: boolean
   }
 }
 
@@ -10605,6 +10607,44 @@ export type V2FsDeleteResponses = {
 }
 
 export type V2FsDeleteResponse = V2FsDeleteResponses[keyof V2FsDeleteResponses]
+
+export type V2FsMkdirData = {
+  body: {
+    path: string
+  }
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/fs/mkdir"
+}
+
+export type V2FsMkdirErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2FsMkdirError = V2FsMkdirErrors[keyof V2FsMkdirErrors]
+
+export type V2FsMkdirResponses = {
+  /**
+   * Success
+   */
+  200: {
+    path: string
+  }
+}
+
+export type V2FsMkdirResponse = V2FsMkdirResponses[keyof V2FsMkdirResponses]
 
 export type V2FsRenameData = {
   body: {

@@ -273,6 +273,8 @@ import type {
   V2FsFindResponses,
   V2FsListErrors,
   V2FsListResponses,
+  V2FsMkdirErrors,
+  V2FsMkdirResponses,
   V2FsReadErrors,
   V2FsReadResponses,
   V2FsRenameErrors,
@@ -6175,6 +6177,44 @@ export class Fs extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<V2FsDeleteResponses, V2FsDeleteErrors, ThrowOnError>({
       url: "/api/fs/delete",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Create directory
+   *
+   * Create a directory relative to the requested location.
+   */
+  public mkdir<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      path?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "body", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2FsMkdirResponses, V2FsMkdirErrors, ThrowOnError>({
+      url: "/api/fs/mkdir",
       ...options,
       ...params,
       headers: {

@@ -871,7 +871,7 @@ export default function FullIde() {
       } catch (e) { showToast({ variant: "error", title: "Create failed", description: String(e) }) }
     } else {
       try {
-        await sdk().client.v2.fs.write({ path: `${newPath}/.gitkeep`, content: "" })
+        await sdk().client.v2.fs.mkdir({ path: newPath })
         pushFileAction({ type: "create", path: newPath, isDir: true })
       } catch (e) { showToast({ variant: "error", title: "Create failed", description: String(e) }) }
     }
@@ -928,9 +928,7 @@ export default function FullIde() {
           for (const f of allFiles) {
             try { await sdk().client.v2.fs.delete({ path: f }) } catch { }
           }
-          // Delete the .gitkeep we may have created, then try the dir again
-          try { await sdk().client.v2.fs.delete({ path: `${target.path}/.gitkeep` }) } catch { }
-          try { await sdk().client.v2.fs.delete({ path: target.path }) } catch { }
+          try { await sdk().client.v2.fs.delete({ path: target.path }) } catch (e) { console.error("Second delete attempt failed:", e) }
         }
         // Close any open files from deleted directory
         const group = workspace.getActiveGroup()

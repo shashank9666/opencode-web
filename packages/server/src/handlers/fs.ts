@@ -56,6 +56,22 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
           )
         )
       )
+      .handle("fs.mkdir", (ctx) =>
+        pipe(
+          Effect.gen(function* () {
+            const location = yield* Location.Service
+            const fsUtil = yield* FSUtil.Service
+            const absolute = path.resolve(location.directory, ctx.payload.path)
+            if (!FSUtil.contains(location.directory, absolute))
+              return yield* Effect.fail(new InvalidRequestError({ message: "Path escapes the location" }))
+            yield* fsUtil.ensureDir(absolute)
+            return { path: ctx.payload.path }
+          }),
+          Effect.catch((e) =>
+            Effect.fail(e instanceof InvalidRequestError ? e : new InvalidRequestError({ message: String(e) }))
+          )
+        )
+      )
       .handle("fs.delete", (ctx) =>
         pipe(
           Effect.gen(function* () {
