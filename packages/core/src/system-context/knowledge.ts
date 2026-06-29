@@ -2,11 +2,11 @@ import { Effect, Context, Layer } from "effect"
 import { FSUtil } from "../fs-util"
 import * as path from "path"
 
-export interface KnowledgeDaemon {
+export interface Interface {
   readonly fetchAndInject: (sessionID: string) => Effect.Effect<void, Error>
 }
 
-export const KnowledgeDaemon = Context.Tag<KnowledgeDaemon>()("@opencode/KnowledgeDaemon")
+export class KnowledgeDaemon extends Context.Service<KnowledgeDaemon, Interface>()("@opencode/KnowledgeDaemon") {}
 
 export const layer = Layer.effect(
   KnowledgeDaemon,
