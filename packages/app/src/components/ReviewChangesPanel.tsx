@@ -13,6 +13,8 @@ type FileChange = {
   path: string;
   before: string;
   after: string;
+  additions?: number;
+  deletions?: number;
 };
 
 const norm = (s: string) => s.replace(/\r\n/g, "\n").replace(/\n+$/, "") + "\n"
@@ -71,6 +73,24 @@ export function ReviewChangesPanel(props: { workspace: any }) {
     return [...paths];
   });
 
+  const sessionDiffs = createMemo(() => {
+    const diffs = sync().data.session_diff ?? {};
+    const map = new Map<string, { additions: number, deletions: number }>();
+    for (const fileDiffs of Object.values(diffs)) {
+      if (!Array.isArray(fileDiffs)) continue;
+      for (const d of fileDiffs as any[]) {
+        if (d.file) {
+          const existing = map.get(d.file) ?? { additions: 0, deletions: 0 };
+          map.set(d.file, {
+            additions: existing.additions + (d.additions || 0),
+            deletions: existing.deletions + (d.deletions || 0),
+          });
+        }
+      }
+    }
+    return map;
+  });
+
   const workspaceChangedFiles = createMemo(() => {
     if (!props.workspace) return [] as FileChange[];
     return props.workspace.getGroups().flatMap((g: any) =>
@@ -111,7 +131,10 @@ export function ReviewChangesPanel(props: { workspace: any }) {
         }
       } catch {
         // fallback
-        before = "";
+        const wfile = props.workspace?.getGroups()
+          .flatMap((g: any) => g.files)
+          .find((f: any) => f.path === path);
+        before = wfile?.originalContent ?? "";
       }
       const change: FileChange = { path, before, after };
       setLoadedFiles(prev => ({ ...prev, [path]: change }));
@@ -134,11 +157,16 @@ export function ReviewChangesPanel(props: { workspace: any }) {
     const wChanges = workspaceChangedFiles();
     const paths = new Set(wChanges.map((f: FileChange) => f.path));
     const sdkPaths = changedFilePaths().filter(p => !paths.has(p));
-    const sdkChanges: FileChange[] = sdkPaths.map(p => ({
-      path: p,
-      before: loadedFiles()[p]?.before ?? "",
-      after: loadedFiles()[p]?.after ?? "",
-    }));
+    const sdkChanges: FileChange[] = sdkPaths.map(p => {
+      const stats = sessionDiffs().get(p);
+      return {
+        path: p,
+        before: loadedFiles()[p]?.before ?? "",
+        after: loadedFiles()[p]?.after ?? "",
+        additions: stats?.additions,
+        deletions: stats?.deletions,
+      };
+    });
     return [...wChanges, ...sdkChanges];
   });
 
@@ -163,7 +191,12 @@ export function ReviewChangesPanel(props: { workspace: any }) {
         >
           <For each={allChanges()}>
             {(change) => {
-              const diff = createMemo(() => lineDiff(change.before, change.after));
+              const diff = createMemo(() => {
+                if (change.additions !== undefined && change.deletions !== undefined) {
+                  return { added: change.additions, removed: change.deletions };
+                }
+                return lineDiff(change.before, change.after);
+              });
               const isSelected = createMemo(() => selectedFile()?.path === change.path);
               return (
                 <button
