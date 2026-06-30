@@ -278,6 +278,31 @@ export default function IdeEditor(props: {
       })
     }
 
+    // Git Blame Annotations: show author and commit in glyph margin
+    let blameDecorationIds: string[] = []
+    const updateBlameAnnotations = async () => {
+      const model = editor?.getModel()
+      if (!model) return
+      const path = model.uri.path.replace(/^\//, "").replace(/\\/g, "/")
+      try {
+        const resp = await fetch(`/api/git/blame?file=${encodeURIComponent(path)}&directory=${encodeURIComponent(process.cwd?.() ?? "")}`)
+        if (!resp.ok) return
+        const data = await resp.json()
+        const lines = data.lines as Array<{ author: string; commit: string; line: number }>
+        const decorations: monaco.editor.IModelDeltaDecoration[] = lines.map((l) => ({
+          range: new monaco.Range(l.line, 1, l.line, 1),
+          options: {
+            glyphMarginClassName: "blame-glyph-margin",
+            glyphMarginHoverMessage: { value: `\`\`\`markdown\n**${l.author}** (${l.commit})\n\`\`\`` },
+            stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+          },
+        }))
+        blameDecorationIds = editor!.deltaDecorations(blameDecorationIds, decorations)
+      } catch {
+        // ignore blame fetch errors
+      }
+    }
+
     // Error Lens: highlight error/warning lines with background and gutter markers
     let errorLensDecorations: string[] = []
     const updateErrorLens = () => {

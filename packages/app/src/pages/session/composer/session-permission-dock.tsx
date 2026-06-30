@@ -1,9 +1,11 @@
-import { For, Show, onMount, onCleanup } from "solid-js"
+import { For, Show, onMount, onCleanup, createSignal } from "solid-js"
 import type { PermissionRequest } from "@opencode-ai/sdk/v2"
 import { Button } from "@opencode-ai/ui/button"
 import { DockPrompt } from "@opencode-ai/ui/dock-prompt"
 import { Icon } from "@opencode-ai/ui/icon"
 import { useLanguage } from "@/context/language"
+import { DialogPermissionExplain } from "@/components/dialog-permission-explain"
+import { useDialog } from "@opencode-ai/ui/context/dialog"
 
 export function SessionPermissionDock(props: {
   request: PermissionRequest
@@ -11,6 +13,8 @@ export function SessionPermissionDock(props: {
   onDecide: (response: "once" | "always" | "reject") => void
 }) {
   const language = useLanguage()
+  const dialog = useDialog()
+  const [showExplain, setShowExplain] = createSignal(false)
 
   onMount(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,6 +99,24 @@ export function SessionPermissionDock(props: {
             </For>
           </div>
         </div>
+      </Show>
+
+      <div data-slot="permission-row">
+        <span data-slot="permission-spacer" aria-hidden="true" />
+        <button
+          type="button"
+          class="text-12-regular text-text-interactive-base hover:text-text-interactive-hover transition-colors"
+          onClick={() => setShowExplain(true)}
+        >
+          Learn more about this permission
+        </button>
+      </div>
+
+      <Show when={showExplain()}>
+        <DialogPermissionExplain
+          request={props.request}
+          onClose={() => setShowExplain(false)}
+        />
       </Show>
     </DockPrompt>
   )
