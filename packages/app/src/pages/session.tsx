@@ -383,6 +383,22 @@ export default function Page(props: { sessionId?: string; dir?: string; embedded
     if (path) void file.load(path)
   })
 
+  // Auto-open files created by AI (write tool with aiCreated: true)
+  createEffect(() => {
+    const handleAiFileCreated = (e: any) => {
+      const path = e.detail?.path
+      if (!path) return
+      // Load the file content
+      void file.load(path)
+      // Open it in a tab
+      const tabId = file.tab(path)
+      tabs().open(tabId)
+      tabs().setActive(tabId)
+    }
+    window.addEventListener("ai-file-created", handleAiFileCreated)
+    onCleanup(() => window.removeEventListener("ai-file-created", handleAiFileCreated))
+  })
+
   createEffect(
     on(
       () => lastUserMessage()?.id,
