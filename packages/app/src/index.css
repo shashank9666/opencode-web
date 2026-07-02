@@ -3,85 +3,42 @@
 
 @layer base {
   html, body {
-    font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    font-size: 13px;
-    line-height: 1.45;
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Inter", sans-serif;
+    font-size: 13px; /* standard VS Code size */
+    line-height: 1.4;
     overflow: hidden;
     height: 100%;
     margin: 0;
     padding: 0;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    font-variation-settings: "slnt" 0;
   }
 
-  #app, #root {
+  #app {
     height: 100%;
     overflow: hidden;
   }
 
-  /* Premium thin scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
   }
-
+  
   ::-webkit-scrollbar-track {
     background: transparent;
   }
-
+  
   ::-webkit-scrollbar-thumb {
-    background: var(--v2-grey-600, rgba(121, 121, 121, 0.3));
-    border: 2px solid transparent;
+    background-color: rgba(121, 121, 121, 0.4);
+    border: 4px solid transparent;
     background-clip: padding-box;
     border-radius: 9999px;
-    min-height: 32px;
   }
-
+  
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--v2-grey-500, rgba(100, 100, 100, 0.5));
-    border: 2px solid transparent;
-    background-clip: padding-box;
+    background-color: rgba(100, 100, 100, 0.7);
   }
-
+  
   ::-webkit-scrollbar-corner {
     background: transparent;
-  }
-
-  /* Text selection */
-  ::selection {
-    background: var(--v2-accent-alpha, rgba(59, 130, 246, 0.3));
-  }
-
-  /* Focus ring style */
-  *:focus-visible {
-    outline: 2px solid var(--v2-accent-base, #3b82f6);
-    outline-offset: -1px;
-    border-radius: 2px;
-  }
-
-  /* Smooth button/text transitions globally */
-  button, a, input, select, textarea {
-    transition: color 80ms ease-out, background-color 80ms ease-out, border-color 80ms ease-out, opacity 80ms ease-out;
-  }
-
-  /* Prevent text selection on UI panels */
-  [data-component="activity-bar"],
-  [data-component="side-bar"],
-  [data-component="panel"] {
-    user-select: none;
-  }
-
-  /* Keyboard shortcut styling */
-  kbd {
-    font-family: "JetBrainsMono Nerd Font Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 11px;
-    padding: 1px 5px;
-    border-radius: 4px;
-    border: 1px solid var(--v2-border-muted, rgba(128, 128, 128, 0.2));
-    background: var(--v2-surface-base, rgba(128, 128, 128, 0.08));
-    color: var(--v2-text-muted, rgba(204, 204, 204, 0.7));
   }
 }
 
@@ -295,48 +252,6 @@
       opacity: 1;
     }
   }
-
-
-  @keyframes fade-up-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes soft-scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.985);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  .app-enter {
-    animation: fade-up-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  .panel-enter {
-    animation: soft-scale-in 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  }
-
-  .stagger-in > * {
-    animation: fade-up-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-  }
-
-  .stagger-in > *:nth-child(1) { animation-delay: 0ms; }
-  .stagger-in > *:nth-child(2) { animation-delay: 35ms; }
-  .stagger-in > *:nth-child(3) { animation-delay: 70ms; }
-  .stagger-in > *:nth-child(4) { animation-delay: 105ms; }
-  .stagger-in > *:nth-child(5) { animation-delay: 140ms; }
-  .stagger-in > *:nth-child(6) { animation-delay: 175ms; }
 
   /* Error Lens */
   .error-lens-line {
