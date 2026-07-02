@@ -711,10 +711,11 @@ export const RunCommand = effectCmd({
             if (event.type === "session.error") {
               const props = event.properties
               if (props.sessionID !== sessionID || !props.error) continue
-              let err = String(props.error.name)
-              if ("data" in props.error && props.error.data && "message" in props.error.data) {
-                err = String(props.error.data.message)
-              }
+              const err = "message" in props.error && props.error.message
+                ? String(props.error.message)
+                : "data" in props.error && props.error.data && "message" in props.error.data
+                  ? String(props.error.data.message)
+                  : "unknown error"
               error = error ? error + EOL + err : err
               if (emit("error", { error: props.error })) continue
               UI.error(err)

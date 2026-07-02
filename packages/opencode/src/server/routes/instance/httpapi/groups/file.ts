@@ -10,6 +10,7 @@ import {
   WorkspaceRoutingQuery,
   WorkspaceRoutingQueryFields,
 } from "../middleware/workspace-routing"
+import { FileNotFoundError, PathEscapesError } from "../errors"
 import { described } from "./metadata"
 
 export const FileQuery = Schema.Struct({
@@ -141,6 +142,7 @@ export const FileApi = HttpApi.make("file")
         HttpApiEndpoint.get("list", FilePaths.list, {
           query: FileQuery,
           success: described(Schema.Array(LegacyEntry), "Files and directories"),
+          error: FileNotFoundError,
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "file.list",
@@ -151,6 +153,7 @@ export const FileApi = HttpApi.make("file")
         HttpApiEndpoint.get("content", FilePaths.content, {
           query: FileQuery,
           success: described(LegacyContent, "File content"),
+          error: [FileNotFoundError, PathEscapesError],
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "file.read",
@@ -161,6 +164,7 @@ export const FileApi = HttpApi.make("file")
         HttpApiEndpoint.get("status", FilePaths.status, {
           query: WorkspaceRoutingQuery,
           success: described(Schema.Array(LegacyStatus), "File status"),
+          error: FileNotFoundError,
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "file.status",

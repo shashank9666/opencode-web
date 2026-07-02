@@ -185,6 +185,24 @@ export class ApiNotFoundError extends Schema.ErrorClass<ApiNotFoundError>("NotFo
   { httpApiStatus: 404 },
 ) {}
 
+export class FileNotFoundError extends Schema.TaggedErrorClass<FileNotFoundError>()(
+  "FileNotFoundError",
+  {
+    path: Schema.String,
+    message: Schema.String,
+  },
+  { httpApiStatus: 404 },
+) {}
+
+export class PathEscapesError extends Schema.TaggedErrorClass<PathEscapesError>()(
+  "PathEscapesError",
+  {
+    path: Schema.String,
+    message: Schema.String,
+  },
+  { httpApiStatus: 400 },
+) {}
+
 export function notFound(message: string) {
   return new ApiNotFoundError({
     name: "NotFoundError",

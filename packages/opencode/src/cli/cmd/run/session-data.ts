@@ -175,10 +175,6 @@ export function formatError(error: {
     return error.message
   }
 
-  if (error.name) {
-    return error.name
-  }
-
   return "unknown error"
 }
 

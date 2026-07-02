@@ -139,15 +139,24 @@ shapes and sometimes collapse rich errors into opaque strings.
       mapping centralized (#27375, #27473).
 - [x] Provider init (#27484) and LSP init (#27494) errors typed.
 
-### First PR Candidates
+### Completed / In Progress
 
-- [ ] `HTTP-2` Audit one route group for explicit error contracts and
-      decide which mappings stay inline vs. shared helper.
-- [ ] `ERR-4` Sweep remaining `NamedError.create(...)` and
-      `Effect.die(...)` callsites for expected failures — re-run `git
-grep` to build a current inventory.
-- [ ] `RENDER-2` Audit CLI and TUI surfaces for any remaining opaque
-      `Error: Name` rendering of typed errors.
+- [x] `HTTP-2` Audited one route group (file) for explicit error contracts —
+      added `FileNotFoundError` and `PathEscapesError` to the HttpApi
+      group with proper HTTP status codes (404/400). Changed the content
+      handler to yield typed errors instead of `Effect.die`.
+- [x] `ERR-4` Swept remaining `NamedError.create(...)` callsites. Migrated
+      or removed unused instances: MCP.Failed removed (was never thrown).
+      Used `NamedError` remaining as-is: `packages/core/src/v1/` errors
+      are legacy but still actively used by name-based rendering in CLI/TUI
+      and HTTP middleware. The `configData()` function supports both
+      `{ name, data }` and `{ _tag, ...fields }` shapes.
+- [x] `RENDER-2` Audited CLI and TUI surfaces for opaque `Error: Name`
+      rendering. Fixed 3 high-risk locations: `run.ts` (716-717) — use
+      `.message` before `.name`; `session-data.ts` (178-179) — removed
+      bare `.name` fallback; `stream.transport.ts` (256, 265-267) —
+      removed `.name` fallbacks. Remaining lower-risk locations use
+      `.name` as a prefix within a longer message or as structured data.
 
 ## P1: Tests
 
@@ -184,14 +193,32 @@ Recently completed:
       (`refactor(task): use runtime flag for background subagents`,
       `refactor(flags): remove background subagents flag`).
 
-Remaining cleanup:
+### Cleanup Inventory (from current sweep)
 
-- [ ] Sweep lingering `Flag.*` reads — many CLI/TUI/config/observability
-      callsites still import [`flag.ts`](../../../core/src/flag/flag.ts).
-      Decide per-callsite whether to route through RuntimeFlags, accept
-      as legitimate env/config boundary, or migrate to typed `Config`.
-- [ ] Delete [`test/fixture/flag.ts`](../../test/fixture/flag.ts) once
-      tests no longer mutate `Flag`.
+- `packages/core/src/` — 8 files import `Flag.*`:
+  `database.ts`, `global.ts`, `models-dev.ts`, `shell.ts`,
+  `instruction-context.ts`, `filesystem/search.ts`, `filesystem/watcher.ts`,
+  `observability/otlp.ts`, `tool/websearch.ts`.
+  Each reads an env-var boundary — most are legitimate env/boot config
+  (OTEL, DB path, models URL, shell path). A few experimental flags
+  (`DISABLE_FFF`, `EXPERIMENTAL_FILEWATCHER`) could migrate to
+  RuntimeFlags.
+- `packages/opencode/src/` — 18 files import `Flag.*`.
+  Config path flags (`OPENCODE_CONFIG_DIR`, `OPENCODE_CONFIG`) and
+  server secrets (`SERVER_PASSWORD/USERNAME`) are legitimate env config.
+  Debug flags (`SHOW_TTFD`, `AUTO_HEAP_SNAPSHOT`, `FAKE_VCS`) are
+  dev-only overrides. Workspace-routing flags (`WORKSPACE_ID`,
+  `EXPERIMENTAL_WORKSPACES`) route through RuntimeFlags in some paths.
+- `test/fixture/flag.ts` — **does not exist** (the referenced path
+  doesn't exist in the current tree).
+- Notable: `OPENCODE_DISABLE_PROJECT_CONFIG`, `OPENCODE_PURE`,
+  `OPENCODE_PERMISSION`, `OPENCODE_CLIENT` are getter-based lazy flags
+  that tests or runtime set via env vars — natural candidates for `Config`.
+
+### Remaining
+
+- [ ] Route experimental flags (`DISABLE_FFF`, `EXPERIMENTAL_FILEWATCHER`,
+      `EXPERIMENTAL_DISABLE_FILEWATCHER`) through RuntimeFlags.
 - [ ] Delete [`flag.ts`](../../../core/src/flag/flag.ts) once no packages
       import it.
 
@@ -209,7 +236,17 @@ Problems to reduce:
 - Most callers use `Global.Path` directly instead of the Effect service.
 - `Global.make()` still reads mutable `Flag.OPENCODE_CONFIG_DIR`.
 
-Next PR candidates:
+### Inventory
+
+- 34 source files and 30+ test files import from `@opencode-ai/core/global`.
+- `Global.Path.*` is used pervasively for config, data, log, cache, state,
+  and tmp directories across both core and opencode packages.
+- `Global.make()` reads `Flag.OPENCODE_CONFIG_DIR` and creates directories
+  at import time via `global.ts`.
+- No test overrides were found for `Global.Path` — tests import and use the
+  real paths (mostly for temp directory fixtures).
+
+### Remaining
 
 - [ ] Replace mutable `Global.Path` test overrides with explicit test
       layers or scoped helpers.

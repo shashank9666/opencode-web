@@ -253,17 +253,13 @@ export function formatUnknownError(error: unknown): string {
   }
 
   if (error instanceof Error) {
-    return error.message || error.name
+    return error.message || "unknown error"
   }
 
   if (error && typeof error === "object") {
     const value = error as { message?: unknown; name?: unknown }
     if (typeof value.message === "string" && value.message.trim()) {
       return value.message
-    }
-
-    if (typeof value.name === "string" && value.name.trim()) {
-      return value.name
     }
   }
 
